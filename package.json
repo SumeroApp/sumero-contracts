@@ -1,0 +1,29 @@
+{
+  "name": "sumero-contracts",
+  "version": "1.0.0",
+  "description": "This project contains the smart contracts and related deployment scripts.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "preinstall": "npx only-allow pnpm",
+    "ganache": "ganache-cli -p 8545  -m 'program sorry leaf injury pyramid twin smoke deer robot emotion tunnel bid' -e 100000000",
+    "console": "truffle console"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Signo-App/sumero-contracts.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Signo-App/sumero-contracts/issues"
+  },
+  "homepage": "https://github.com/Signo-App/sumero-contracts#readme",
+  "dependencies": {
+    "babel-polyfill": "^6.26.0",
+    "babel-register": "^6.26.0"
+  },
+  "devDependencies": {
+    "@openzeppelin/contracts": "^3.4.0"
+  }
+}
