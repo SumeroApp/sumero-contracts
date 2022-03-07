@@ -6,7 +6,11 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "preinstall": "npx only-allow pnpm",
-    "ganache": "ganache-cli -p 8545  -m 'program sorry leaf injury pyramid twin smoke deer robot emotion tunnel bid' -e 100000000",
+    "ganache": "ganache -p 8545 -m 'program sorry leaf injury pyramid twin smoke deer robot emotion tunnel bid' -e 100000000 -l 67000000",
+    "clean": "rm -rf ./build",
+    "compile": "rm -rf build && truffle compile",
+    "deploy": "rm -rf build && truffle deploy",
+    "migrate": "truffle migrate",
     "console": "truffle console"
   },
   "repository": {
@@ -24,6 +28,10 @@
     "babel-register": "^6.26.0"
   },
   "devDependencies": {
-    "@openzeppelin/contracts": "^3.4.0"
+    "@openzeppelin/contracts": "^3.4.2",
+    "chai": "^4.3.6",
+    "chai-as-promised": "^7.1.1",
+    "ganache": "^7.0.2",
+    "truffle": "^5.5.1"
   }
 }
