@@ -3,7 +3,7 @@ pragma solidity ^0.6.12;
 contract USDC {
     string public name = 'USD Coin';
     string public symbol = 'USDC';
-    uint8 public decimals = 18;
+    uint8 public decimals = 6;
 
     event Approval(address indexed src, address indexed guy, uint256 wad);
     event Transfer(address indexed src, address indexed dst, uint256 wad);

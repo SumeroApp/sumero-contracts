@@ -9,6 +9,8 @@ specifiers:
   babel-register: ^6.26.0
   chai: ^4.3.6
   chai-as-promised: ^7.1.1
+  colors: ^1.4.0
+  dotenv: ^16.0.0
   ethereum-waffle: ^3.4.0
   ethers: ^5.5.4
   ganache: ^7.0.2
@@ -28,6 +30,8 @@ devDependencies:
   '@openzeppelin/contracts': 3.4.2
   chai: 4.3.6
   chai-as-promised: 7.1.1_chai@4.3.6
+  colors: 1.4.0
+  dotenv: 16.0.0
   ethereum-waffle: 3.4.0
   ethers: 5.5.4
   ganache: 7.0.2
@@ -4572,6 +4576,11 @@ packages:
       is-obj: 2.0.0
     dev: true
     optional: true
+
+  /dotenv/16.0.0:
+    resolution: {integrity: sha512-qD9WU0MPM4SWLPJy/r2Be+2WgQj8plChsyrCNQzW/0WjvcJQiKQJ9mH3ZgB3fxbUUxgc/11ZJ0Fi5KiimWGz2Q==}
+    engines: {node: '>=12'}
+    dev: true
 
   /dotignore/0.1.2:
     resolution: {integrity: sha512-UGGGWfSauusaVJC+8fgV+NVvBXkCTmVv7sk6nojDZZvuOUNGUy0Zk4UpHQD6EDjS0jpBwcACvH4eofvyzBcRDw==}
