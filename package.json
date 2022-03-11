@@ -7,8 +7,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "preinstall": "npx only-allow pnpm",
     "ganache": "ganache -p 8545 -m 'program sorry leaf injury pyramid twin smoke deer robot emotion tunnel bid' -e 100000000 -l 67000000",
-    "clean": "rm -rf ./build",
-    "compile": "rm -rf build && truffle compile",
+    "clean": "rm -rf ./artifcats && rm -rf ./cache",
+    "compile": "npx hardhat compile",
     "deploy": "rm -rf build && truffle deploy",
     "migrate": "truffle migrate",
     "console": "truffle console"
@@ -28,10 +28,20 @@
     "babel-register": "^6.26.0"
   },
   "devDependencies": {
+    "@nomiclabs/hardhat-ethers": "npm:hardhat-deploy-ethers@^0.3.0-beta.13",
+    "@nomiclabs/hardhat-waffle": "^2.0.3",
+    "@nomiclabs/hardhat-web3": "^2.0.0",
     "@openzeppelin/contracts": "^3.4.2",
     "chai": "^4.3.6",
     "chai-as-promised": "^7.1.1",
+    "colors": "^1.4.0",
+    "dotenv": "^16.0.0",
+    "ethereum-waffle": "^3.4.0",
+    "ethers": "^5.5.4",
     "ganache": "^7.0.2",
-    "truffle": "^5.5.1"
+    "hardhat": "^2.9.1",
+    "hardhat-deploy": "^0.10.5",
+    "truffle": "^5.5.1",
+    "web3": "^1.7.1"
   }
 }
