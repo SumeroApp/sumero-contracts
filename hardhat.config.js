@@ -37,6 +37,9 @@ module.exports = {
   namedAccounts: {
     deployer: {
       default: 0
+    },
+    sumeroTestUser: {
+      default: 1
     }
   },
   external: process.env.HARDHAT_FORK
