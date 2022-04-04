@@ -28,6 +28,8 @@ Read more about creationCode / initcode / bytecode in solidity / eth.
 
         npx hardhat node
 
+        npx hardhat clean (removes the artifacts file)
+
 3. Compiles and stores build artifcats in ./artifcats
 
         npx hardhat compile

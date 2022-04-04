@@ -9,7 +9,7 @@ module.exports = async ({
     network
 }) => {
     const { deploy } = deployments;
-    const { deployer } = await getNamedAccounts();
+    const { deployer, sumeroTestUser } = await getNamedAccounts();
 
     let WETHDeployed;
     let weth;
@@ -65,9 +65,13 @@ module.exports = async ({
             usdc = await ethers.getContract("USDC", deployer);
 
             // deposit / mint some USDC
-            await usdc.deposit({ from: deployer, value: web3.utils.toWei('2000', 'ether') });
+            await usdc.deposit({ from: deployer, value: web3.utils.toWei('2000', 'mwei') });
             const usdcBalance = (await usdc.balanceOf(deployer)).toString();
-            expect(web3.utils.fromWei(usdcBalance)).to.equal('2000', "USDC Balance doesn't match");
+            expect(web3.utils.fromWei(usdcBalance, 'mwei')).to.equal('2000', "USDC Balance doesn't match");
+
+            await usdc.transfer(sumeroTestUser, web3.utils.toWei('1000', 'mwei'))
+            const sumeroUsdcBalance = (await usdc.balanceOf(sumeroTestUser)).toString();
+            expect(web3.utils.fromWei(sumeroUsdcBalance, 'mwei')).to.equal('1000', "USDC Balance doesn't match");
 
         } else if ((network.name == 'kovan' || matchesForkedNetwork('kovan'))) {
             USDCDeployed = {
