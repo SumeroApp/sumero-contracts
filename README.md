@@ -50,6 +50,7 @@ Read more about creationCode / initcode / bytecode in solidity / eth.
 7. Variable HARDHAT_FORK in .env manages the forking details. If it's an empty string, hardhat network does not add any forking details to HRE. Otherwise it adds the forking network details at hre.config.networks.hardhat.forking . e.g. HARDHAT_FORK="kovan". running npx hardhat node would fork the "kovan" network and run locally, along with adding the forking details.
 
 ## Kovan Deployment Details
+----
 
     kovan: {
         deployer: "0x8D9656505A20C9562488bfa6EA0d1eF6B12966d7",
@@ -58,8 +59,82 @@ Read more about creationCode / initcode / bytecode in solidity / eth.
         UNISWAP_ROUTER: "0xF502CBB71AB6C41E5B93640d4fF2f6945490C7a0",
         WETH: "0xd0A1E359811322d97991E03f863a0C30C2cF029C",
         USDC: "0xc2569dd7d0fd715b054fbf16e75b001e5c0c1115",
-        USDC_CLAY_PAIR: "0x3Be8FaEc0E14f705Bbb0B3a453a7298a0B7DF4b8"
+        USDC_CLAY_PAIR: "0x3Be8FaEc0E14f705Bbb0B3a453a7298a0B7DF4b8",
+        UMA_EMP: "TEST"
     }
+
+Deployment addresses and parameters:
+
+(*deployer is the address that deploys the contract*)
+
+CLAY_TOKEN 
+- deployer
+
+UNISWAP_FACTORY
+- deployer
+
+UNISWAP_ROUTER
+- deployer
+- UNISWAP_FACTORY address
+----
+
+## Clay Token
+
+Clay is the native token of Sumero. It is a ERC20 token, which can be used to interact with all aspects of sumero.
+
+## Uniswap
+
+For providing liquidty and creating a AMM we are using UniswapV2 contracts.
+
+We use Uniswap router to interact with the uniswap Factory and create Pair contracts for each pair (for which we want to provide liquidity) e.g. Pair contracts for USDC-CLAY, USDC-zTSLA
+
+## Synthetic Assets
+
+We are using UMA as the backend to mint synthetic assets.
+
+UMA provides us with following: 
+1. An OO (Optimistic Oracle) for variable price discovery
+2. A DVM (Data Verification Mechanism) used as a dispute resolution service.
+3. Already deployed contracts to create additional synths (i.e. EMPC (Expiring Multi Party Creator) Contract)
+
+We use `Expiring Multi Party Creator (EMPC) Contract` to create derivates i.e. `Expiring Multi Party (EMP) Contract` . These synths are also known as swaps since they are usually between 2 parties for a given currency and price. They expire at a certain time.
+
+Steps to mint new synths: 
+
+1. Deploy a new EMP contract with parameters to launch a `synth` using EMPC contract.
+    - Call function creatExpiringMultiParty() on EMPC
+
+    - Can call creatExpiringMultiParty() using either
+        -  [community builder](syntheticbuilder.xyz)
+        -  [launch-emp](https://github.com/UMAprotocol/launch-emp) repo (NOT WORKING!?)
+        - Using our own hardhat script (TODO) 
+
+    - Important Parameters
+        - An approved collateral token (e.g. kovan USDC, mainnet WETH)
+        - An approved price identifier (e.g. ethVIX/USDC). Therse are approved via UIMPs UMA Improvement Proposals
+        - Minimum Collateral Amount
+
+    - EMP contract is deployed along with a SyntheticToken Contract 
+        - This is your actual synth, but is managed via EMP
+        - Get SyntheticToken address from event `CreatedExpiringMultiParty` in transaction logs of EMPC's creatExpiringMultiParty()
+
+
+2. Once an EMP contract has been deployed. Initial tokens can be minted by using the `create()` function on EMP contract. (https://docs.umaproject.org/build-walkthrough/minting-etherscan#checking-your-position)
+    - Before calling create() function
+        - Approve collateral for EMP contract
+        - Calculate GCR (Global Collateralization Ratio) for 1st time minting
+            - GCR = total Collateral / total tokens
+            - GCR = (rawTotalPositionCollateral * cumulativeFeeMultiplier) / totalTokensOutstanding
+        - calculate minimum no. of tokens (i.e. minSponorTokens)
+        - calculate minimum no. of collateral (i.e. numOfTokensToMint * GCR = amountOfCollateral)
+    - The create fu
+
+
+Anyone can dispute a transaction on UMA's DVM. The DVM looks at historical prices of oracle that is disputed, and a voting mechanism decides if the dispute is correct or incorrect. That's why UMA calls it an optimistic oracle.
+
+Expiring Synthetic Tokens - https://docs.umaproject.org/synthetic-tokens/expiring-synthetic-tokens
+
+node index.js --gasprice 50 --mnemonic "acquire ship bacon pumpkin jazz poverty junk leader bean frown merry artist" --priceFeedIdentifier USDETH --collateralAddress "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2" --expirationTimestamp "1650026236" --syntheticName "TEST Dollar [WETH Apr 2022]" --syntheticSymbol "TST-ETH-APR22" --minSponsorTokens "100"
 
 ## Scratch Pad
     web3.eth.sendTransaction({to:"0xC5E82E6b45609793da42aE8c1bb1B02FAb4f2514", from:accounts[0], value:web3.utils.toWei("3", "ether")})
