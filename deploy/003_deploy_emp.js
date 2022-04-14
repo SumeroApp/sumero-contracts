@@ -122,4 +122,43 @@ module.exports = async ({
     await empInstance.create(collateralAmount, numTokens);
 
     console.log(colors.green("\n Synth Balance: ", (await syntheticTokenInstance.balanceOf(deployer)).toString()));
+
+    // TODO: DRY code, can be moved to a HRE script
+    // Create Pair and Provide liquidity for CLAY-USDC topic
+    const factory = await ethers.getContract("UniswapV2Factory", deployer);
+    const router = await ethers.getContract("UniswapV2Router02", deployer);
+    const usdcSynthPairTx = await factory.createPair(KOVAN_USDC, syntheticTokenAddress);
+    const usdcSynthReceipt = await usdcSynthPairTx.wait()
+    console.log(colors.green(usdcSynthReceipt.events[0].args[3]));
+    const USDC_SYNTH_PAIR = await router.getPair(KOVAN_USDC, syntheticTokenAddress);
+    console.log(colors.green(USDC_SYNTH_PAIR));
+
+
+    await usdcInstance.approve(router.address, web3.utils.toWei('2000', 'ether'));
+    expect(await usdcInstance.allowance(deployer, router.address)).to.equal(web3.utils.toWei('2000', 'ether'), "Router doesn't have permission to spend owner's USDC");
+    console.log(colors.blue("\nUSDC Approved"));
+
+    await syntheticTokenInstance.approve(router.address, web3.utils.toWei('2000', 'ether'));
+    expect(await syntheticTokenInstance.allowance(deployer, router.address)).to.equal(web3.utils.toWei('2000', 'ether'), "Router doesn't have permission to spend owner's CLAY");
+    console.log(colors.blue("\nSYNTH Approved"));
+
+    const blockNumber = await web3.eth.getBlockNumber();
+    const block = await web3.eth.getBlock(blockNumber);
+    const timestamp = block.timestamp + 300;
+
+    const one_usdc = 1 * (10 ** 6);
+    console.log(one_usdc);
+    const one_clay = 1 * (10 ** 18);
+    console.log(one_clay);
+
+    await router.addLiquidity(
+        KOVAN_USDC,
+        syntheticTokenAddress,
+        one_usdc.toString(),
+        (10 * one_clay).toString(),
+        0,
+        0,
+        deployer,
+        timestamp
+    )
 };
