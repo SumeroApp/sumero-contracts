@@ -127,7 +127,7 @@ Steps to mint new synths:
             - GCR = (rawTotalPositionCollateral * cumulativeFeeMultiplier) / totalTokensOutstanding
         - calculate minimum no. of tokens (i.e. minSponorTokens)
         - calculate minimum no. of collateral (i.e. numOfTokensToMint * GCR = amountOfCollateral)
-    - The create fu
+    - TODO: The create function mints synthetic tokens for a given amount of collateral!?? But need to understand the significance of GCR, Collateral, minSponsorTokens
 
 
 Anyone can dispute a transaction on UMA's DVM. The DVM looks at historical prices of oracle that is disputed, and a voting mechanism decides if the dispute is correct or incorrect. That's why UMA calls it an optimistic oracle.

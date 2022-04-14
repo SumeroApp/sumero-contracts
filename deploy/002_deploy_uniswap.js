@@ -1,13 +1,21 @@
+/**
+ * This script deploys the factory and router contracts for Uniswap. Creates USDC-CLAY Pair.
+ * 
+ * @dev
+ * Deploys USDC and WETH on test net. Adds Liquidity to USDC-CLAY Pair.
+ */
 const { expect } = require("chai");
-const { ethers } = require("hardhat");
 const { isLocalNetwork, isForkedNetwork, matchesForkedNetwork } = require('../utils/helper');
 const colors = require('colors');
 
+// this function is injected with HRE
 module.exports = async ({
     getNamedAccounts,
     deployments,
     network
 }) => {
+    console.log(colors.bold("\n==> Running 002_deploy_uniswap script"));
+
     const { deploy } = deployments;
     const { deployer, sumeroTestUser } = await getNamedAccounts();
 

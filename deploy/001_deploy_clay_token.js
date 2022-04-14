@@ -1,4 +1,9 @@
-// hardhat
+/**
+ * This script deploys the native CLAY token contract
+ * 
+ * @dev
+ * Mints Clay tokens for testing
+ */
 const { expect } = require("chai");
 const { isLocalNetwork, isForkedNetwork } = require('../utils/helper');
 const colors = require('colors');
@@ -10,11 +15,13 @@ module.exports = async ({
     network,
 }) => {
 
+    console.log(colors.bold("\n==> Running 001_deploy_clay_token script"));
+
     console.log(colors.blue("\nNetwork Status isLocalNetwork: ", isLocalNetwork(), " isForkedNetwork: ", isForkedNetwork()));
 
     const { deploy } = deployments;
     const { deployer, sumeroTestUser } = await getNamedAccounts();
-    console.log(colors.green("\nDeployer address is:", deployer));
+    console.log(colors.green("\nDEPOLOYER ADDRESS is:", deployer));
 
     const ClayTokenDeployed = await deploy('ClayToken', {
         from: deployer,
@@ -22,7 +29,7 @@ module.exports = async ({
         args: [],
         skipIfAlreadyDeployed: true
     });
-    console.log(colors.green("\nClay Token Deployed at:", ClayTokenDeployed.address));
+    console.log(colors.green("\nCLAY TOKEN ADDRESS:", ClayTokenDeployed.address));
 
     const clayToken = await ethers.getContract("ClayToken", deployer);
 
