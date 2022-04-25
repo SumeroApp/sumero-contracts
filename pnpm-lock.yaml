@@ -5,6 +5,7 @@ specifiers:
   '@nomiclabs/hardhat-waffle': ^2.0.3
   '@nomiclabs/hardhat-web3': ^2.0.0
   '@openzeppelin/contracts': ^3.4.2
+  '@uma/contracts-node': ^0.3.2
   babel-polyfill: ^6.26.0
   babel-register: ^6.26.0
   chai: ^4.3.6
@@ -28,6 +29,7 @@ devDependencies:
   '@nomiclabs/hardhat-waffle': 2.0.3_c256e25f2e624c397c713347d923eb9d
   '@nomiclabs/hardhat-web3': 2.0.0_hardhat@2.9.1+web3@1.7.1
   '@openzeppelin/contracts': 3.4.2
+  '@uma/contracts-node': 0.3.2
   chai: 4.3.6
   chai-as-promised: 7.1.1_chai@4.3.6
   colors: 1.4.0
@@ -1871,6 +1873,10 @@ packages:
       '@types/node': 17.0.19
     dev: true
     optional: true
+
+  /@uma/contracts-node/0.3.2:
+    resolution: {integrity: sha512-Ncl7Kv2nxuY/wV5oczH2Nf6XCS7dJLad9DlzMI3jwPMPU98YT8ChHydcDe6ZiL0SAVTg7FgpIyh7lX0B7nV9Aw==}
+    dev: true
 
   /@ungap/promise-all-settled/1.1.2:
     resolution: {integrity: sha512-sL/cEvJWAnClXw0wHk85/2L0G6Sj8UB0Ctc1TEMbKSsmpRosqhwj9gWgFRZSrBr2f9tiXISwNhCPmlfqUqyb9Q==}

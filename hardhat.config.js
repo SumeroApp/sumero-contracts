@@ -1,4 +1,5 @@
 const { node_url, accounts, addForkConfiguration } = require('./utils/network');
+// requiring these here, automatically adds ethers, web3, deploy to HRE (Hardhat Runtime Env.)
 require("@nomiclabs/hardhat-waffle");
 require("@nomiclabs/hardhat-ethers");
 require("@nomiclabs/hardhat-web3");
