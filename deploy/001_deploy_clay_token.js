@@ -21,7 +21,7 @@ module.exports = async ({
 
     const { deploy } = deployments;
     const { deployer, sumeroTestUser } = await getNamedAccounts();
-    console.log(colors.green("\nDEPOLOYER ADDRESS is:", deployer));
+    console.log(colors.green("\nDEPLOYER ADDRESS is:", deployer));
 
     const ClayTokenDeployed = await deploy('ClayToken', {
         from: deployer,
