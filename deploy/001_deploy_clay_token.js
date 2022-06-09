@@ -50,3 +50,5 @@ module.exports = async ({
     }
 
 };
+
+module.exports.tags = ['ClayToken'];
