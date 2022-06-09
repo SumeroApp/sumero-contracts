@@ -34,13 +34,15 @@ module.exports = async ({
     console.log(colors.green("depositCloseDate: ", (await clayBonds.depositCloseDate()).toString()));
     console.log(colors.green("maturationDate: ", (await clayBonds.maturationDate()).toString()));
     console.log(colors.green("dailyYieldPercent: ", (await clayBonds.dailyYieldPercent()).toString()));
-    console.log(colors.green("bonds balance: ", (await clayBonds.balanceOf(deployer)).toString()));
+    console.log(colors.green("bonds balance of user: ", (await clayBonds.balanceOf(deployer)).toString()));
+    console.log(colors.green("clay balance of ClayBonds Contract: ", (await clayToken.balanceOf(ClayBondsDeployed.address)).toString()));
 
     console.log(colors.blue("\nIssuing zClayBonds: ....."));
     const issueTx = await clayBonds.issue(web3.utils.toWei('1', 'ether'));
     const issueReceipt = await issueTx.wait();
 
-    console.log(colors.green("bonds balance: ", (await clayBonds.balanceOf(deployer)).toString()));
+    console.log(colors.green("bonds balance of user: ", (await clayBonds.balanceOf(deployer)).toString()));
+    console.log(colors.green("clay balance of ClayBonds Contract: ", (await clayToken.balanceOf(ClayBondsDeployed.address)).toString()));
 };
 
 module.exports.tags = ['ClayBonds'];

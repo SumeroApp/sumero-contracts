@@ -24,7 +24,7 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
     // Approved EMPs are stored in the .env file
     const approvedEmps = JSON.parse(process.env.APPROVED_EMPs);
     for (const empAddress of approvedEmps) {
-        console.log("\n Adding EMP " + empAddress + " to Asset Manager");
+        console.log(colors.blue("Adding EMP " + empAddress + " to Asset Manager"));
         await assetManager.add(empAddress);
         expect(await assetManager.assetStatus(empAddress)).to.equal(2, 'Asset not in status 2 i.e. Open');
     }
