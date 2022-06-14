@@ -47,6 +47,10 @@ Read more about creationCode / initcode / bytecode in solidity / eth.
 
         npx hardhat deploy --network kovan
 
+6. Deploy a particular contract to a specified network using tags
+
+        npx hardhat deploy --network kovan --tags ClayBonds
+
 7. Variable HARDHAT_FORK in .env manages the forking details. If it's an empty string, hardhat network does not add any forking details to HRE. Otherwise it adds the forking network details at hre.config.networks.hardhat.forking . e.g. HARDHAT_FORK="kovan". running npx hardhat node would fork the "kovan" network and run locally, along with adding the forking details.
 
 ## Kovan Deployment Details
@@ -60,7 +64,8 @@ Read more about creationCode / initcode / bytecode in solidity / eth.
         WETH: "0xd0A1E359811322d97991E03f863a0C30C2cF029C",
         USDC: "0xc2569dd7d0fd715b054fbf16e75b001e5c0c1115",
         USDC_CLAY_PAIR: "0x3Be8FaEc0E14f705Bbb0B3a453a7298a0B7DF4b8",
-        UMA_EMP: "0xb94a77000651c3cb9cdf2c34f465e2260e8eeb77"
+        UMA_EMP: "0xb94a77000651c3cb9cdf2c34f465e2260e8eeb77",
+        CLAY_BONDS: "0x8cdd33e379E67A8Ec1Ce635518Fa86C159FF22dA"
     }
 
 Deployment addresses and parameters:

@@ -34,6 +34,16 @@ module.exports = async ({
     console.log(colors.green("depositCloseDate: ", (await clayBonds.depositCloseDate()).toString()));
     console.log(colors.green("maturationDate: ", (await clayBonds.maturationDate()).toString()));
     console.log(colors.green("dailyYieldPercent: ", (await clayBonds.dailyYieldPercent()).toString()));
+    console.log(colors.green("APY_PERCENT: ", (await clayBonds.APY_PERCENT()).toString()));
+    console.log(colors.green("BONUS_APY_PERCENT: ", (await clayBonds.BONUS_APY_PERCENT()).toString()));
+    console.log(colors.green("BONDS_ISSUANCE_PERIOD: ", (await clayBonds.BONDS_ISSUANCE_PERIOD()).toString()));
+    const daysLeftToMaturationDate = (await clayBonds.getDaysLeftToMaturationDate()).toString();
+    const rewardPercent = (await clayBonds.getRewardPercent(daysLeftToMaturationDate)).toString();
+    const reward = (await clayBonds.getReward(web3.utils.toWei('1', 'ether'), rewardPercent)).toString();
+    console.log(colors.green("getDaysLeftToMaturationDate: ", daysLeftToMaturationDate));
+    console.log(colors.green("getRewardPercent: ", rewardPercent));
+    console.log(colors.green("getReward: ", reward));
+
     console.log(colors.green("bonds balance of user: ", (await clayBonds.balanceOf(deployer)).toString()));
     console.log(colors.green("clay balance of ClayBonds Contract: ", (await clayToken.balanceOf(ClayBondsDeployed.address)).toString()));
 

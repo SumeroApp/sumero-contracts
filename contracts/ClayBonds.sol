@@ -43,9 +43,9 @@ contract ClayBonds is ERC20("zClay Token", "zCLAY"), Ownable {
 
     uint256 public dailyYieldPercent;
 
-    uint256 constant APY_PERCENT = 40;
-    uint256 constant BONUS_APY_PERCENT = 20;
-    uint256 constant BONDS_ISSUANCE_PERIOD = 1 days * 365;
+    uint256 public constant APY_PERCENT = 40;
+    uint256 public constant BONUS_APY_PERCENT = 20;
+    uint256 public constant BONDS_ISSUANCE_PERIOD = 1 days * 365;
 
     event Issue(
         uint256 amount,
@@ -78,13 +78,42 @@ contract ClayBonds is ERC20("zClay Token", "zCLAY"), Ownable {
             .div(365);
     }
 
+    function getDaysLeftToMaturationDate()
+        public
+        view
+        returns (uint256 daysLeftToMaturationDate)
+    {
+        // calculate days remaining till maturation day
+        daysLeftToMaturationDate = maturationDate.sub(block.timestamp).div(
+            1 days
+        );
+    }
+
+    function getRewardPercent(uint256 daysLeftToMaturationDate)
+        public
+        view
+        returns (uint256 rewardPercent)
+    {
+        // Total Percentage Reward => dailyYieldPercent * daysLeftToMaturationDate
+        // adding 1 here to consider interest for the current ongoing day
+        rewardPercent = dailyYieldPercent.mul(daysLeftToMaturationDate.add(1));
+    }
+
+    function getReward(uint256 _amount, uint256 _rewardPercent)
+        public
+        view
+        returns (uint256 reward)
+    {
+        // bondAmount => amount + (total percentage reward * amount)
+        reward = _amount.mul(_rewardPercent).div(100).div(1 ether);
+    }
+
     /**
      * Issues a zCLAY Bond depending on the amount of CLAY deposited and the current APY which depends on the time elapsed since bond programme inception
      * @param _clayAmount The amount of CLAY deposited
      */
     function issue(uint256 _clayAmount)
         public
-        payable
         returns (uint256 bondAmount)
     {
         require(_clayAmount > 100, "Clay Amount must be greater than 100 wei");
@@ -93,6 +122,17 @@ contract ClayBonds is ERC20("zClay Token", "zCLAY"), Ownable {
                 block.timestamp < depositCloseDate,
             "Deposit closed"
         );
+
+        uint256 daysLeftToMaturationDate = getDaysLeftToMaturationDate();
+        uint256 rewardPercent = getRewardPercent(daysLeftToMaturationDate);
+        uint256 reward = getReward(_clayAmount, rewardPercent);
+
+        bondAmount = _clayAmount.add(reward);
+
+        clay.transferFrom(msg.sender, address(this), _clayAmount);
+        _mint(msg.sender, bondAmount);
+
+        totalBondDeposits = totalBondDeposits.add(bondAmount);
         require(
             totalBondDeposits < totalBondRewards,
             "Bond Reward Pool Reached"
@@ -102,27 +142,6 @@ contract ClayBonds is ERC20("zClay Token", "zCLAY"), Ownable {
                 maximumClayDeposits,
             "Maximum Bonds Deposit Limit Reached"
         );
-
-        // calculate days remaining till maturation day
-        uint256 daysLeftToMaturationDate = maturationDate
-            .sub(block.timestamp)
-            .div(1 days);
-
-        // Total Percentage Reward => dailyYieldPercent * daysLeftToMaturationDate
-        // adding 1 here to consider interest for the current ongoing day
-        uint256 rewardPercent = dailyYieldPercent.mul(
-            daysLeftToMaturationDate.add(1)
-        );
-
-        // bondAmount => amount + (total percentage reward * amount)
-        uint256 reward = _clayAmount.mul(rewardPercent).div(100).div(1 ether);
-        bondAmount = _clayAmount.add(reward);
-
-        totalBondDeposits = totalBondDeposits.add(bondAmount);
-
-        clay.transferFrom(msg.sender, address(this), _clayAmount);
-        _mint(msg.sender, bondAmount);
-
         emit Issue(
             _clayAmount,
             daysLeftToMaturationDate,
