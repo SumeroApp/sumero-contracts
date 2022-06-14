@@ -3,10 +3,19 @@ This project contains the smart contracts and related deployment scripts.
 
 ## Project Setup
 
-1. Install dependencies like truffle and ganache
+1. Install nvm (node version manager) https://github.com/nvm-sh/nvm
+
+2. Install node version v16.14.0 via nvm.
+
+`nvm install 16.14.0`
+
+3. Install dependencies like truffle and ganache
+
 ```
-npm install
+pnpm install
 ```
+
+When runnin commands below, make sure to enable the right version of node via `nvm use v16.14.0`.
 
 ## Things to Know Before Deploying Sumero
 
