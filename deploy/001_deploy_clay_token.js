@@ -29,7 +29,7 @@ module.exports = async ({
         args: [],
         skipIfAlreadyDeployed: true
     });
-    console.log(colors.green("\nCLAY TOKEN ADDRESS:", ClayTokenDeployed.address));
+    console.log(colors.green("CLAY TOKEN ADDRESS:", ClayTokenDeployed.address));
 
     const clayToken = await ethers.getContract("ClayToken", deployer);
 
@@ -50,3 +50,5 @@ module.exports = async ({
     }
 
 };
+
+module.exports.tags = ['ClayToken'];
