@@ -83,6 +83,9 @@ contract ClayBonds is ERC20("zClay Token", "zCLAY"), Ownable {
         view
         returns (uint256 daysLeftToMaturationDate)
     {
+        if (maturationDate < block.timestamp) {
+            return 0; // just return 0 instead of dealing with negatives
+        }
         // calculate days remaining till maturation day
         daysLeftToMaturationDate = maturationDate.sub(block.timestamp).div(
             1 days
