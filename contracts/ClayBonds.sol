@@ -89,14 +89,14 @@ contract ClayBonds is ERC20("zClay Token", "zCLAY"), Ownable {
         );
     }
 
-    function getRewardPercent(uint256 daysLeftToMaturationDate)
+    function getRewardPercent()
         public
         view
         returns (uint256 rewardPercent)
     {
         // Total Percentage Reward => dailyYieldPercent * daysLeftToMaturationDate
         // adding 1 here to consider interest for the current ongoing day
-        rewardPercent = dailyYieldPercent.mul(daysLeftToMaturationDate.add(1));
+        rewardPercent = dailyYieldPercent.mul(getDaysLeftToMaturationDate().add(1));
     }
 
     function getReward(uint256 _amount, uint256 _rewardPercent)
@@ -124,7 +124,7 @@ contract ClayBonds is ERC20("zClay Token", "zCLAY"), Ownable {
         );
 
         uint256 daysLeftToMaturationDate = getDaysLeftToMaturationDate();
-        uint256 rewardPercent = getRewardPercent(daysLeftToMaturationDate);
+        uint256 rewardPercent = getRewardPercent();
         uint256 reward = getReward(_clayAmount, rewardPercent);
 
         bondAmount = _clayAmount.add(reward);
