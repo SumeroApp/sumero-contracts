@@ -74,7 +74,7 @@ Read more about creationCode / initcode / bytecode in solidity / eth.
         USDC: "0xc2569dd7d0fd715b054fbf16e75b001e5c0c1115",
         USDC_CLAY_PAIR: "0x3Be8FaEc0E14f705Bbb0B3a453a7298a0B7DF4b8",
         UMA_EMP: "0xb94a77000651c3cb9cdf2c34f465e2260e8eeb77",
-        CLAY_BONDS: "0x8cdd33e379E67A8Ec1Ce635518Fa86C159FF22dA"
+        CLAY_BONDS: "0x40c5e2b5854565c9411AEA13c16D41B3E83396f0"
     }
 
 Deployment addresses and parameters:
