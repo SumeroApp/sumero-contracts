@@ -2,7 +2,6 @@ pragma solidity 0.6.12;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 
 /**
@@ -28,13 +27,14 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
     The user can claim the zCLAY Bonds for equivalent value of CLAY after the maturation date.
     The user has to lock his CLAY in to zCLAY bonds for atleast 3 years. They are open to trade these bonds on a secondary market (i.e. via LP pools on Sumero)
  */
-contract ClayBonds is ERC20("zClay Token", "zCLAY"), Ownable {
+contract ClayBonds is ERC20("zClay Token", "zCLAY") {
     using SafeMath for uint256;
 
     IERC20 public clay;
 
-    uint256 public totalBondRewards;
-    uint256 public maximumClayDeposits;
+    // the maximum upper limit of bond rewards that this contract will give over it's lifetime
+    uint256 public maximumBondRewards;
+    // total zCLAY bonds locked into the contract
     uint256 public totalBondDeposits;
 
     uint256 public depositStartDate;
@@ -54,14 +54,9 @@ contract ClayBonds is ERC20("zClay Token", "zCLAY"), Ownable {
         uint256 reward
     );
 
-    constructor(
-        IERC20 _clay,
-        uint256 _totalBondRewards,
-        uint256 _maximumClayDeposits
-    ) public {
+    constructor(IERC20 _clay, uint256 _maximumBondRewards) public {
         clay = _clay;
-        totalBondRewards = _totalBondRewards;
-        maximumClayDeposits = _maximumClayDeposits;
+        maximumBondRewards = _maximumBondRewards;
         depositStartDate = block.timestamp;
 
         // TODO: take into consideration leap year?
@@ -83,6 +78,9 @@ contract ClayBonds is ERC20("zClay Token", "zCLAY"), Ownable {
         view
         returns (uint256 daysLeftToMaturationDate)
     {
+        if (maturationDate < block.timestamp) {
+            return 0; // just return 0 instead of dealing with negatives
+        }
         // calculate days remaining till maturation day
         daysLeftToMaturationDate = maturationDate.sub(block.timestamp).div(
             1 days
@@ -108,14 +106,18 @@ contract ClayBonds is ERC20("zClay Token", "zCLAY"), Ownable {
         reward = _amount.mul(_rewardPercent).div(100).div(1 ether);
     }
 
+    function hasEnoughClayLiquidity() public view returns (bool) {
+        if (clay.balanceOf(address(this)) >= totalBondDeposits) {
+            return true;
+        }
+        return false;
+    }
+
     /**
      * Issues a zCLAY Bond depending on the amount of CLAY deposited and the current APY which depends on the time elapsed since bond programme inception
      * @param _clayAmount The amount of CLAY deposited
      */
-    function issue(uint256 _clayAmount)
-        public
-        returns (uint256 bondAmount)
-    {
+    function issue(uint256 _clayAmount) public returns (uint256 bondAmount) {
         require(_clayAmount > 100, "Clay Amount must be greater than 100 wei");
         require(
             block.timestamp >= depositStartDate &&
@@ -133,14 +135,14 @@ contract ClayBonds is ERC20("zClay Token", "zCLAY"), Ownable {
         _mint(msg.sender, bondAmount);
 
         totalBondDeposits = totalBondDeposits.add(bondAmount);
+
         require(
-            totalBondDeposits < totalBondRewards,
-            "Bond Reward Pool Reached"
+            totalBondDeposits < maximumBondRewards,
+            "Maximum Bond Reward Pool Reached"
         );
         require(
-            clay.balanceOf(address(this)).add(_clayAmount) <
-                maximumClayDeposits,
-            "Maximum Bonds Deposit Limit Reached"
+            hasEnoughClayLiquidity(),
+            "Bonds contract has insufficient CLAY Liquidity"
         );
         emit Issue(
             _clayAmount,
