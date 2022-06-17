@@ -99,7 +99,7 @@ contract ClayBonds is ERC20("zClay Token", "zCLAY") {
 
     function getReward(uint256 _amount, uint256 _rewardPercent)
         public
-        view
+        pure
         returns (uint256 reward)
     {
         // bondAmount => amount + (total percentage reward * amount)
