@@ -5,7 +5,6 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 // SushiToken with Governance.
 contract ClayToken is ERC20, Ownable {
-    using SafeMath for uint256;
 
     string internal constant NAME = "Clay Token";
     string internal constant SYMBOL = "CLAY";
