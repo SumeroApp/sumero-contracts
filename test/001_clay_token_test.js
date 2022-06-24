@@ -1,7 +1,6 @@
 const { expect } = require("chai")
 const { ethers } = require("hardhat")
 const hre = require("hardhat")
-const assert = require("assert")
 
 let clayToken;
 let accounts;
