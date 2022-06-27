@@ -4,9 +4,7 @@ pragma solidity 0.6.12;
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-// SushiToken with Governance.
 contract ClayToken is ERC20, Ownable {
-
     string internal constant NAME = "Clay Token";
     string internal constant SYMBOL = "CLAY";
     uint8 internal constant DECIMALS = 18;
