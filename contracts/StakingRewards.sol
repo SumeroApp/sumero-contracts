@@ -103,7 +103,9 @@ contract StakingRewards {
     function getReward(uint256 _amount) external updateReward(msg.sender) {
         uint256 reward = rewards[msg.sender];
         rewards[msg.sender] = 0;
-        // how will staking contract transfer tokens
+        // how will the staking rewards contract transfer rewards
+        // does the staking contract needs access to mint rewards token
+        // OR transfer a large amount of rewards token to staking contract
         rewardsToken.transfer(msg.sender, reward);
     }
 }
