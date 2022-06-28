@@ -7,6 +7,7 @@ const colors = require('colors');
 const { ExpiringMultiPartyCreatorEthers__factory, ExpiringMultiPartyEthers__factory, getAddress, getAbi } = require('@uma/contracts-node');
 const { expect } = require('chai');
 const faucetTokenAbi = require('../utils/faucetToken.abi.json');
+const { ethers } = require('ethers');
 
 // this function is injected with HRE
 module.exports = async ({
@@ -47,6 +48,7 @@ module.exports = async ({
         priceFeedIdentifier: web3.utils.padRight(web3.utils.utf8ToHex('USDETH'), 64),
         syntheticName: 'Test USDETH',
         syntheticSymbol: 'zUSDETH',
+        // Contract tracks percentages and ratios below in FixedPoint vars, with 18 decimals of precision, so toWei will work
         // 1.25 collateralization ratio
         collateralRequirement: {
             rawValue: web3.utils.toWei('1.25')
@@ -64,8 +66,10 @@ module.exports = async ({
             rawValue: web3.utils.toWei('0.2')
         },
         // 100 tokens
+        // Because we're using USDC as the collateral, this EMP's token contract will inherit the 6 decimals setting from USDC.
+        // thus we have can't use toWei (18 decimals) to specify token amount values.
         minSponsorTokens: {
-            rawValue: web3.utils.toWei('100')
+            rawValue: ethers.utils.parseUnits(100, 6)
         },
         withdrawalLiveness: 7200,
         liquidationLiveness: 7200,
