@@ -54,8 +54,11 @@ module.exports = async ({
     console.log(colors.blue("\nBond Issuance reverts incase of insufficient CLAY liquidity: ....."));
     await expect(clayBonds.issue(web3.utils.toWei('1', 'ether'))).to.be.reverted;
 
-    console.log(colors.blue("Provide CLAY liquidity to bonds contract: ....."));
+    console.log(colors.blue("Provide CLAY liquidity to bonds contract and deployer user: ....."));
     await clayToken.mint(ClayBondsDeployed.address, web3.utils.toWei('1.8', 'ether'))
+    expect(await clayToken.balanceOf(ClayBondsDeployed.address)).to.equal(web3.utils.toWei('1.8', 'ether'), 'Clay Bonds CLAY balance doesnt match');
+    await clayToken.mint(deployer, web3.utils.toWei('1', 'ether'))
+    expect(await clayToken.balanceOf(deployer)).to.equal(web3.utils.toWei('1', 'ether'), 'Clay Bonds CLAY balance doesnt match');
 
     console.log(colors.blue("\nIssuing zClayBonds: ....."));
     const issueTx = await clayBonds.issue(web3.utils.toWei('1', 'ether'));
