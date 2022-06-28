@@ -7,6 +7,7 @@
 const { expect } = require("chai");
 const { isLocalNetwork, isForkedNetwork, matchesForkedNetwork } = require('../utils/helper');
 const colors = require('colors');
+const { ethers } = require("hardhat");
 
 // this function is injected with HRE
 module.exports = async ({
@@ -43,9 +44,11 @@ module.exports = async ({
             weth = await ethers.getContract("WETH", deployer);
 
             // deposit / mint some WETH
-            await weth.deposit({ from: deployer, value: web3.utils.toWei('2000', 'ether') });
+            await weth.deposit({
+                from: deployer, value: ethers.utils.parseEther('2000')
+            });
             const wethBalance = (await weth.balanceOf(deployer)).toString();
-            expect(web3.utils.fromWei(wethBalance)).to.equal('2000', "WETH Balance doesn't match");
+            expect(ethers.utils.formatEther(wethBalance)).to.equal('2000.0', "WETH Balance doesn't match");
 
         } else if (network.name == 'kovan' || matchesForkedNetwork('kovan')) {
             WETHDeployed = {
@@ -73,13 +76,13 @@ module.exports = async ({
             usdc = await ethers.getContract("USDC", deployer);
 
             // deposit / mint some USDC
-            await usdc.deposit({ from: deployer, value: web3.utils.toWei('2000', 'mwei') });
+            await usdc.deposit({ from: deployer, value: ethers.utils.parseUnits('2000', 'mwei') });
             const usdcBalance = (await usdc.balanceOf(deployer)).toString();
-            expect(web3.utils.fromWei(usdcBalance, 'mwei')).to.equal('2000', "USDC Balance doesn't match");
+            expect(ethers.utils.formatUnits(usdcBalance, 'mwei')).to.equal('2000.0', "USDC Balance doesn't match");
 
-            await usdc.transfer(sumeroTestUser, web3.utils.toWei('1000', 'mwei'))
+            await usdc.transfer(sumeroTestUser, ethers.utils.parseUnits('1000', 'mwei'))
             const sumeroUsdcBalance = (await usdc.balanceOf(sumeroTestUser)).toString();
-            expect(web3.utils.fromWei(sumeroUsdcBalance, 'mwei')).to.equal('1000', "USDC Balance doesn't match");
+            expect(ethers.utils.formatUnits(sumeroUsdcBalance, 'mwei')).to.equal('1000.0', "USDC Balance doesn't match");
 
         } else if ((network.name == 'kovan' || matchesForkedNetwork('kovan'))) {
             USDCDeployed = {
@@ -148,17 +151,17 @@ module.exports = async ({
     // Add Liquidty to USDC-CLAY Pair
     try {
         // Make sure address `adding liquidty` has balance of both the tokens. Also, should have approved sufficient amount of tokens to the router contract.
-        const blockNumber = await web3.eth.getBlockNumber();
-        const block = await web3.eth.getBlock(blockNumber);
+        const currentBlock = await ethers.provider.getBlockNumber()
+        const block = await ethers.provider.getBlock(currentBlock);
         const timestamp = block.timestamp + 300;
 
         if (isLocalNetwork() && !isForkedNetwork()) {
-            await usdc.approve(router.address, web3.utils.toWei('2000', 'ether'));
-            expect(await usdc.allowance(deployer, router.address)).to.equal(web3.utils.toWei('2000', 'ether'), "Router doesn't have permission to spend owner's USDC");
+            await usdc.approve(router.address, ethers.utils.parseEther('2000'));
+            expect(await usdc.allowance(deployer, router.address)).to.equal(ethers.utils.parseEther('2000'), "Router doesn't have permission to spend owner's USDC");
             console.log(colors.blue("\nUSDC Approved"));
 
-            await clayToken.approve(router.address, web3.utils.toWei('2000', 'ether'));
-            expect(await clayToken.allowance(deployer, router.address)).to.equal(web3.utils.toWei('2000', 'ether'), "Router doesn't have permission to spend owner's CLAY");
+            await clayToken.approve(router.address, ethers.utils.parseEther('2000'));
+            expect(await clayToken.allowance(deployer, router.address)).to.equal(ethers.utils.parseEther('2000'), "Router doesn't have permission to spend owner's CLAY");
             console.log(colors.blue("\nCLAY Approved"));
 
 
@@ -189,3 +192,5 @@ module.exports = async ({
         console.log(colors.red(error));
     }
 };
+
+module.exports.tags = ['Uniswap'];

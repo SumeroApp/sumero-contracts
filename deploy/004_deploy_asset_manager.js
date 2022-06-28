@@ -6,6 +6,7 @@
  */
 const { expect } = require("chai");
 const colors = require('colors');
+const { ethers } = require("hardhat")
 
 module.exports = async ({ getNamedAccounts, deployments }) => {
 
@@ -22,6 +23,7 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
     console.log(colors.green("\nASSET MANAGER CONTRACT ADDRESS:", AssetManagerDeployed.address));
 
     // Approved EMPs are stored in the .env file
+    // TODO: don't add asset if it's already added
     const approvedEmps = JSON.parse(process.env.APPROVED_EMPs);
     for (const empAddress of approvedEmps) {
         console.log(colors.blue("Adding EMP " + empAddress + " to Asset Manager"));
@@ -30,3 +32,5 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
     }
 
 };
+
+module.exports.tags = ['AssetManager'];
