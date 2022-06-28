@@ -192,3 +192,5 @@ module.exports = async ({
         console.log(colors.red(error));
     }
 };
+
+module.exports.tags = ['Uniswap'];

@@ -156,3 +156,5 @@ module.exports = async ({
 
     console.log(colors.green("\n Synth Balance: ", (await syntheticTokenInstance.balanceOf(deployer)).toString()));
 };
+
+module.exports.tags = ['ExpiringMultiParty'];
