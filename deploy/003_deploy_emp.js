@@ -12,8 +12,6 @@ const { ethers } = require("hardhat")
 // this function is injected with HRE
 module.exports = async ({
     getNamedAccounts,
-    deployments,
-    network,
 }) => {
 
     const { deployer, sumeroTestUser } = await getNamedAccounts();
