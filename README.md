@@ -68,7 +68,7 @@ Read more about creationCode / initcode / bytecode in solidity / eth.
 ## Kovan Deployment Details
 ----
 
-    kovan: {
+    old_kovan: {
         deployer: "0x8D9656505A20C9562488bfa6EA0d1eF6B12966d7",
         CLAY_TOKEN: "0x64C597aBf737Ec2551dfbd3c492dA7da1Bf06a98",
         UNISWAP_FACTORY: "0xc88D40380C75231862776C61f67a77030A64946e",
@@ -78,6 +78,18 @@ Read more about creationCode / initcode / bytecode in solidity / eth.
         USDC_CLAY_PAIR: "0x3Be8FaEc0E14f705Bbb0B3a453a7298a0B7DF4b8",
         UMA_EMP: "0xb94a77000651c3cb9cdf2c34f465e2260e8eeb77",
         CLAY_BONDS: "0x40c5e2b5854565c9411AEA13c16D41B3E83396f0"
+    }
+
+    kovan: {
+        deployer: "0x8D9656505A20C9562488bfa6EA0d1eF6B12966d7",
+        CLAY_TOKEN: "0xee62a7d7dCa1C7f6647368B8F2148A6E1bcbb728",
+        UNISWAP_FACTORY: "0xc88D40380C75231862776C61f67a77030A64946e",
+        UNISWAP_ROUTER: "0xF502CBB71AB6C41E5B93640d4fF2f6945490C7a0",
+        WETH: "0xd0A1E359811322d97991E03f863a0C30C2cF029C",
+        USDC: "0xc2569dd7d0fd715b054fbf16e75b001e5c0c1115",
+        USDC_CLAY_PAIR: "0x29E6071D9F7c0419d48E50D297Bca2AD555D1a67",
+        UMA_EMP: "0x9a689BfD9f3a963b20d5ba4Ed7ed0b7bE16CfCcB",
+        CLAY_BONDS: "0x01B90459b119A7A8E1ac1BFEe6D5ce9Dc2c48d13"
     }
 
 Deployment addresses and parameters:
