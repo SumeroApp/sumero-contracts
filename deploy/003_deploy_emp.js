@@ -14,11 +14,14 @@ module.exports = async ({
     getNamedAccounts,
 }) => {
 
-    const { deployer, sumeroTestUser } = await getNamedAccounts();
+    const { deployer } = await getNamedAccounts();
 
     console.log(colors.bold("\n==> Running 003_deploy_emp script"));
 
     const KOVAN_NETWORK_ID = 42;
+    // date 2 days in the future
+    const expirationTimestamp = Date.now() + (2 * 24 * 3600 * 1000);
+
     const KOVAN_USDC = '0xb7a4F3E9097C08dA09517b5aB877F7a917224ede';
     const UMA_EMPC_ADDRESS = await getAddress("ExpiringMultiPartyCreator", KOVAN_NETWORK_ID);
     console.log(colors.green("\nEMPC_ADDRESS: ", UMA_EMPC_ADDRESS));
@@ -26,23 +29,24 @@ module.exports = async ({
 
     const signer0 = ethers.provider.getSigner(deployer);
     const emp_creator_instance = ExpiringMultiPartyCreatorEthers__factory.connect(UMA_EMPC_ADDRESS, signer0);
+    const syntheticDecimals = await emp_creator_instance._getSyntheticDecimals(KOVAN_USDC);
+    const tokenFactoryAddress = await emp_creator_instance.tokenFactoryAddress();
 
-    console.log(colors.blue("\n Synthetic Decimals for USDC: ", await emp_creator_instance._getSyntheticDecimals(KOVAN_USDC)));
-    console.log(colors.blue("\n Token Factory Address: ", await emp_creator_instance.tokenFactoryAddress()));
+    console.log(colors.blue("\n Synthetic Decimals for USDC: ", syntheticDecimals));
+    console.log(colors.blue("\n Token Factory Address: ", tokenFactoryAddress));
 
     // Important Parameters
     // - An approved collateral token (e.g. kovan USDC, mainnet WETH)
     // - An approved price identifier (e.g. ethVIX/USDC). Therse are approved via UIMPs UMA Improvement Proposals
     // - Minimum Collateral Amount (i.e. 125%)
 
-    // date 2 days in the future
-    const expirationTimestamp = Date.now() + (2 * 24 * 3600 * 1000);
-
     // https://docs.umaproject.org/build-walkthrough/emp-parameters
     // values are scaled to 18 decimals
 
     const priceFeedIdentifierHex = ethers.utils.hexlify(ethers.utils.toUtf8Bytes("USDETH"));
     const priceFeedIdentifierPaddedHex = priceFeedIdentifierHex.padEnd(66, '0');
+
+    // Contract tracks percentages and ratios below in FixedPoint vars, with 18 decimals of precision, so parseEther will work
     const createEmpParams = {
         expirationTimestamp: expirationTimestamp,
         collateralAddress: KOVAN_USDC,
@@ -65,9 +69,10 @@ module.exports = async ({
         disputerDisputeRewardPercentage: {
             rawValue: ethers.utils.parseEther('0.2')
         },
+        // minSponsorTokens will inherit decimal places from the collateral currency
         // 100 tokens
         minSponsorTokens: {
-            rawValue: ethers.utils.parseEther('100')
+            rawValue: ethers.utils.parseUnits('100', syntheticDecimals)
         },
         withdrawalLiveness: 7200,
         liquidationLiveness: 7200,
@@ -112,7 +117,7 @@ module.exports = async ({
     console.log(colors.blue("  rawTotalPositionCollateral: ", (await empInstance.rawTotalPositionCollateral()).toString()));
     console.log(colors.blue("  cumulativeFeeMultiplier: ", (await empInstance.cumulativeFeeMultiplier()).toString()));
     console.log(colors.blue("  totalTokensOutstanding: ", (await empInstance.totalTokensOutstanding()).toString()));
-    console.log(colors.blue("  totalPositionCollateral: ", await empInstance.totalPositionCollateral()).toString());
+    console.log(colors.blue("  totalPositionCollateral: ", (await empInstance.totalPositionCollateral()).toString()));
     console.log(colors.blue("  minSponsorTokens: ", (await empInstance.minSponsorTokens()).toString()));
     console.log(colors.blue("  collateralCurrency: ", await empInstance.collateralCurrency()));
     console.log(colors.blue("  tokenCurrency: ", syntheticTokenAddress));
@@ -126,26 +131,31 @@ module.exports = async ({
     // Calculate min. no. of collateral
     const usdcInstance = new ethers.Contract(KOVAN_USDC, faucetTokenAbi, signer0);
     console.log(colors.blue("\n  Allocating USDC: ....."));
-    await usdcInstance.allocateTo(deployer, ethers.utils.parseEther('100000'));
+    await usdcInstance.allocateTo(deployer, ethers.utils.parseUnits('100000', syntheticDecimals));
     console.log(colors.blue("\n  Approving allowance of USDC to EMP: ....."));
-    await usdcInstance.approve(expiringMultiPartyAddress, ethers.utils.parseEther('1000'));
+    await usdcInstance.approve(expiringMultiPartyAddress, ethers.utils.parseUnits('1000', syntheticDecimals));
 
     const syntheticTokenInstance = new ethers.Contract(syntheticTokenAddress, getAbi('SyntheticToken'), signer0);
     console.log(colors.green("\n Synth Balance: ", (await syntheticTokenInstance.balanceOf(deployer)).toString()));
 
-    console.log(colors.blue("\n Creating Synths: ....."));
     // creating synths
-    const collateralAmount = { rawValue: ethers.utils.parseEther('10') };
-    const numTokens = { rawValue: ethers.utils.parseEther('100') };
-    console.log(colors.blue("  collateralAmount: ", collateralAmount));
-    console.log(colors.blue("  numTokens: ", numTokens));
-    await empInstance.create(collateralAmount, numTokens);
+    console.log(colors.blue("\n Creating Synths: ....."));
+
+    const collateralAmount = ethers.utils.parseUnits('10', syntheticDecimals);
+    console.log(colors.blue("  collateralAmount: ", collateralAmount.toString()));
+    const collateralAmountObject = { rawValue: collateralAmount };
+
+    const numTokens = ethers.utils.parseUnits('100', syntheticDecimals);
+    console.log(colors.blue("  numTokens: ", numTokens.toString()));
+    const numTokensObject = { rawValue: numTokens };
+
+    await empInstance.create(collateralAmountObject, numTokensObject);
 
     console.log(colors.blue("\nEMP Details after minting synth: "));
     console.log(colors.blue("  rawTotalPositionCollateral: ", (await empInstance.rawTotalPositionCollateral()).toString()));
     console.log(colors.blue("  cumulativeFeeMultiplier: ", (await empInstance.cumulativeFeeMultiplier()).toString()));
     console.log(colors.blue("  totalTokensOutstanding: ", (await empInstance.totalTokensOutstanding()).toString()));
-    console.log(colors.blue("  totalPositionCollateral: ", await empInstance.totalPositionCollateral()).toString());
+    console.log(colors.blue("  totalPositionCollateral: ", (await empInstance.totalPositionCollateral()).toString()));
     console.log(colors.blue("  minSponsorTokens: ", (await empInstance.minSponsorTokens()).toString()));
     console.log(colors.blue("  collateralCurrency: ", await empInstance.collateralCurrency()));
     console.log(colors.blue("  tokenCurrency: ", syntheticTokenAddress));
