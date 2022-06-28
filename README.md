@@ -7,15 +7,18 @@ This project contains the smart contracts and related deployment scripts.
 
 2. Install node version v16.14.0 via nvm.
 
-`nvm install 16.14.0`
+```
+nvm install 16.14.0
+```
 
-3. Install dependencies like truffle and ganache
+3. Install pnpm globally
 
 ```
+npm install -g pnpm@6.31.0
 pnpm install
 ```
 
-When runnin commands below, make sure to enable the right version of node via `nvm use v16.14.0`.
+When running commands below, make sure to enable the right version of node via `nvm use v16.14.0`.
 
 ## Things to Know Before Deploying Sumero
 
@@ -149,73 +152,3 @@ Anyone can dispute a transaction on UMA's DVM. The DVM looks at historical price
 Expiring Synthetic Tokens - https://docs.umaproject.org/synthetic-tokens/expiring-synthetic-tokens
 
 node index.js --gasprice 50 --mnemonic "acquire ship bacon pumpkin jazz poverty junk leader bean frown merry artist" --priceFeedIdentifier USDETH --collateralAddress "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2" --expirationTimestamp "1650026236" --syntheticName "TEST Dollar [WETH Apr 2022]" --syntheticSymbol "TST-ETH-APR22" --minSponsorTokens "100"
-
-## Scratch Pad
-    web3.eth.sendTransaction({to:"0xC5E82E6b45609793da42aE8c1bb1B02FAb4f2514", from:accounts[0], value:web3.utils.toWei("3", "ether")})
-    web3.eth.getBalance("0xC5E82E6b45609793da42aE8c1bb1B02FAb4f2514")
-
-    const router = await UniswapV2Router02.deployed();
-    <!-- getAmountOut(amountIn, reserveIn, reserveOut) -->
-    (await router.getAmountOut('1000000000000000000', '1000000', '100000000000000000000')).toString();
-
-    1 USDC to Clay Price
-    (await router.getAmountOut('1000000', '1000000', '100000000000000000000')).toString();
-    49924887330996494742
-    49.924887330996494742
-
-    1 Clay to USDC Price
-    (await router.getAmountOut('1000000000000000000', '100000000000000000000', '1000000')).toString();
-    9871
-    0.009871
-
-    const pair = await UniswapV2Pair.at("0x31f7207389158Fd1d4Be8229C4f52B6745E1BC87")
-    const result = await pair.methods['getReserves()'].call({ from: "0xC5E82E6b45609793da42aE8c1bb1B02FAb4f2514" });
-
-    CLAY
-    console.log(result._reserve0.toString())
-    100000000000000000000
-
-    USDC
-    console.log(result._reserve1.toString())
-    1000000
-
-    console.log(result._blockTimestampLast.toString())
-
-    getAmountOut
-
-
-    0x8d9656505a20c9562488bfa6ea0d1ef6b12966d7
-
-
-    Nothing to compile
-    Deployer address is: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
-    Clay Token Deployed at: 0x5FbDB2315678afecb367f032d93F642f64180aa3
-    Clay Token Minted and Tested
-
-    WETH ADDRESS: 0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9
-
-    USDC ADDRESS: 0x5FC8d32690cc91D4c39d9d3abcBD16989F875707
-
-    FACTORY ADDRESS: 0xa513E6E4b8f2a923D98304ec87F64353C4D5C853
-    Duplicate definition of PairCreated (PairCreated(address,address,bytes,address,uint256), PairCreated(address,address,address,uint256))
-
-    ROUTER ADDRESS: 0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6
-    INIT_CODE_HASH 0x731406021004244dac72ce242900a56e9adbdc067adee6d96205c455956168a1
-
-    USDC_CLAY_PAIR: 0x19bD17b75F42E3011Eef02e35E71ba0a1bBdd7B7
-    1000000000000000000
-    1000000000000000000
-    Started HTTP and WebSocket JSON-RPC server at http://127.0.0.1:8545/
-
-    Accounts
-    ========
-
-    WARNING: These accounts, and their private keys, are publicly known.
-    Any funds sent to them on Mainnet or any other live network WILL BE LOST.
-
-    Account #0: 0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266 (10000 ETH)
-    Private Key: 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
-
-    ///////
-    const signer = await ethers.getSigner("0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266");
-    await signer.sendTransaction({to: "0x8D9656505A20C9562488bfa6EA0d1eF6B12966d7",value: ethers.utils.parseEther("1.0")});

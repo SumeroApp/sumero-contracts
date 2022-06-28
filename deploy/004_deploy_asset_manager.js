@@ -6,6 +6,7 @@
  */
 const { expect } = require("chai");
 const colors = require('colors');
+const { ethers } = require("hardhat")
 
 module.exports = async ({ getNamedAccounts, deployments }) => {
 

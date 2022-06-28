@@ -7,6 +7,7 @@ const colors = require('colors');
 const { ExpiringMultiPartyCreatorEthers__factory, ExpiringMultiPartyEthers__factory, getAddress, getAbi } = require('@uma/contracts-node');
 const { expect } = require('chai');
 const faucetTokenAbi = require('../utils/faucetToken.abi.json');
+const { ethers } = require("hardhat")
 
 // this function is injected with HRE
 module.exports = async ({
@@ -41,31 +42,34 @@ module.exports = async ({
 
     // https://docs.umaproject.org/build-walkthrough/emp-parameters
     // values are scaled to 18 decimals
+
+    const priceFeedIdentifierHex = ethers.utils.hexlify(ethers.utils.toUtf8Bytes("USDETH"));
+    const priceFeedIdentifierPaddedHex = priceFeedIdentifierHex.padEnd(66, '0');
     const createEmpParams = {
         expirationTimestamp: expirationTimestamp,
         collateralAddress: KOVAN_USDC,
-        priceFeedIdentifier: web3.utils.padRight(web3.utils.utf8ToHex('USDETH'), 64),
+        priceFeedIdentifier: priceFeedIdentifierPaddedHex,
         syntheticName: 'Test USDETH',
         syntheticSymbol: 'zUSDETH',
         // 1.25 collateralization ratio
         collateralRequirement: {
-            rawValue: web3.utils.toWei('1.25')
+            rawValue: ethers.utils.parseEther('1.25')
         },
         // 0.1 => 10%
         disputeBondPercentage: {
-            rawValue: web3.utils.toWei('0.1')
+            rawValue: ethers.utils.parseEther('0.1')
         },
         // 0.05 => 5%
         sponsorDisputeRewardPercentage: {
-            rawValue: web3.utils.toWei('0.05')
+            rawValue: ethers.utils.parseEther('0.05')
         },
         // 0.2 => 20%
         disputerDisputeRewardPercentage: {
-            rawValue: web3.utils.toWei('0.2')
+            rawValue: ethers.utils.parseEther('0.2')
         },
         // 100 tokens
         minSponsorTokens: {
-            rawValue: web3.utils.toWei('100')
+            rawValue: ethers.utils.parseEther('100')
         },
         withdrawalLiveness: 7200,
         liquidationLiveness: 7200,
@@ -124,20 +128,17 @@ module.exports = async ({
     // Calculate min. no. of collateral
     const usdcInstance = new ethers.Contract(KOVAN_USDC, faucetTokenAbi, signer0);
     console.log(colors.blue("\n  Allocating USDC: ....."));
-    await usdcInstance.allocateTo(deployer, web3.utils.toWei('100000'));
-    // expect(await usdcInstance.balanceOf(deployer)).to.equal(web3.utils.toWei('100000'), "USDC Balance doesn't match");
+    await usdcInstance.allocateTo(deployer, ethers.utils.parseEther('100000'));
     console.log(colors.blue("\n  Approving allowance of USDC to EMP: ....."));
-    await usdcInstance.approve(expiringMultiPartyAddress, web3.utils.toWei('1000'));
-    // expect(await usdcInstance.allowance(deployer, expiringMultiPartyAddress)).to.equal(web3.utils.toWei('1000'), "USDC Allowance Balance doesn't match");
+    await usdcInstance.approve(expiringMultiPartyAddress, ethers.utils.parseEther('1000'));
 
-    // TODO: Liquidity pairs would be created between USDC - SYNTHs or USDC - EMPs????
     const syntheticTokenInstance = new ethers.Contract(syntheticTokenAddress, getAbi('SyntheticToken'), signer0);
     console.log(colors.green("\n Synth Balance: ", (await syntheticTokenInstance.balanceOf(deployer)).toString()));
 
     console.log(colors.blue("\n Creating Synths: ....."));
     // creating synths
-    const collateralAmount = { rawValue: web3.utils.toWei('10') };
-    const numTokens = { rawValue: web3.utils.toWei('100') };
+    const collateralAmount = { rawValue: ethers.utils.parseEther('10') };
+    const numTokens = { rawValue: ethers.utils.parseEther('100') };
     console.log(colors.blue("  collateralAmount: ", collateralAmount));
     console.log(colors.blue("  numTokens: ", numTokens));
     await empInstance.create(collateralAmount, numTokens);
@@ -154,44 +155,4 @@ module.exports = async ({
     console.log(colors.blue("  expirationTimestamp: ", (await empInstance.expirationTimestamp()).toString()));
 
     console.log(colors.green("\n Synth Balance: ", (await syntheticTokenInstance.balanceOf(deployer)).toString()));
-
-    // TODO: DRY code, can be moved to a HRE script
-    // Create Pair and Provide liquidity for CLAY-USDC topic
-    // const factory = await ethers.getContract("UniswapV2Factory", deployer);
-    // const router = await ethers.getContract("UniswapV2Router02", deployer);
-    // const usdcSynthPairTx = await factory.createPair(KOVAN_USDC, syntheticTokenAddress);
-    // const usdcSynthReceipt = await usdcSynthPairTx.wait()
-    // console.log(colors.green(usdcSynthReceipt.events[0].args[3]));
-    // const USDC_SYNTH_PAIR = await router.getPair(KOVAN_USDC, syntheticTokenAddress);
-    // console.log(colors.green(USDC_SYNTH_PAIR));
-
-    // await usdcInstance.approve(router.address, web3.utils.toWei('2000', 'ether'));
-    // expect(await usdcInstance.allowance(deployer, router.address)).to.equal(web3.utils.toWei('2000', 'ether'), "Router doesn't have permission to spend owner's USDC");
-    // console.log(colors.blue("\nUSDC Approved"));
-
-    // await syntheticTokenInstance.approve(router.address, web3.utils.toWei('2000', 'ether'));
-    // expect(await syntheticTokenInstance.allowance(deployer, router.address)).to.equal(web3.utils.toWei('2000', 'ether'), "Router doesn't have permission to spend owner's CLAY");
-    // console.log(colors.blue("\nSYNTH Approved"));
-
-    // const blockNumber = await web3.eth.getBlockNumber();
-    // const block = await web3.eth.getBlock(blockNumber);
-    // const timestamp = block.timestamp + 300;
-
-    // const one_usdc = 1 * (10 ** 6);
-    // console.log(one_usdc);
-    // const one_clay = 1 * (10 ** 18);
-    // console.log(one_clay);
-
-    // await router.addLiquidity(
-    //     KOVAN_USDC,
-    //     syntheticTokenAddress,
-    //     one_usdc.toString(),
-    //     (10 * one_clay).toString(),
-    //     0,
-    //     0,
-    //     deployer,
-    //     timestamp
-    // )
-
-    // TODO: Use AssetManager Contract to add EMPs on chain?
 };
