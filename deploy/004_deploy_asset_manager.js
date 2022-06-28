@@ -19,16 +19,32 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
         args: [],
         skipIfAlreadyDeployed: true
     });
+
+    const assetStatus = {
+        Closed: 0,
+        Paused: 1,
+        Open: 2,
+    }
+
     const assetManager = await ethers.getContract("AssetManager", deployer);
     console.log(colors.green("\nASSET MANAGER CONTRACT ADDRESS:", AssetManagerDeployed.address));
 
+    console.log(colors.green("\nTotal Assets in the Asset Manager Contract:", (await assetManager.totalAssets()).toString()));
+
     // Approved EMPs are stored in the .env file
-    // TODO: don't add asset if it's already added
     const approvedEmps = JSON.parse(process.env.APPROVED_EMPs);
     for (const empAddress of approvedEmps) {
-        console.log(colors.blue("Adding EMP " + empAddress + " to Asset Manager"));
-        await assetManager.add(empAddress);
-        expect(await assetManager.assetStatus(empAddress)).to.equal(2, 'Asset not in status 2 i.e. Open');
+        const currentAssetStatus = await assetManager.assetStatus(empAddress);
+
+        if (currentAssetStatus == assetStatus.Closed) {
+            console.log(colors.blue("Adding EMP " + empAddress + " to Asset Manager"));
+            await assetManager.add(empAddress);
+            expect(await assetManager.assetStatus(empAddress)).to.equal(2, 'Asset not in status 2 i.e. Open');
+        } else {
+            console.log(colors.blue("EMP " + empAddress + " in status " + currentAssetStatus));
+        }
+
+
     }
 
 };
