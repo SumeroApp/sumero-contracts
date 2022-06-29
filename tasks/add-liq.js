@@ -6,20 +6,26 @@ const colors = require('colors');
 task("add-liq", "Adds liquidity to the pool.")
     .setAction(
         async (hre) => {
+            // args 
+            // asset 1
+            // asset 2
+            // asset amount 1
+            // asset amount 2
+            // ....
             const { deployer } = await getNamedAccounts();
             console.log("Deployer Account: " + deployer)
             // Get Clay Token contract from Kovan
-            const ClayToken = await hre.ethers.getContractFactory('ClayToken')
-            const clayToken = await ClayToken.attach("0x3f6fd91d42fc0070122435cfcF6EeA33804f280d")
+            // const ClayToken = await hre.ethers.getContractFactory('ClayToken')
+            // const clayToken = await ClayToken.attach("0x3f6fd91d42fc0070122435cfcF6EeA33804f280d")
 
             // Get USDC contract from Kovan
-            const USDC = await ethers.getContractFactory("USDC");
-            const usdc = await USDC.attach("0xc2569dd7d0fd715B054fBf16E75B001E5c0C1115")
+            // const USDC = await ethers.getContractFactory("USDC");
+            // const usdc = await USDC.attach("0xc2569dd7d0fd715B054fBf16E75B001E5c0C1115")
 
             // Get Uniswap Factory from Kovan
-            const UniswapV2Factory = await ethers.getContractFactory("UniswapV2Factory");
-            const UniswapFactoryDeployed = await UniswapV2Factory.attach("0xc88D40380C75231862776C61f67a77030A64946e")
-            console.log("UniswapFactoryDeployed: " + UniswapFactoryDeployed.address)
+            // const UniswapV2Factory = await ethers.getContractFactory("UniswapV2Factory");
+            // const UniswapFactoryDeployed = await UniswapV2Factory.attach("0xc88D40380C75231862776C61f67a77030A64946e")
+            // console.log("UniswapFactoryDeployed: " + UniswapFactoryDeployed.address)
 
             // Get Uniswap Router  from Kovan
             const UniswapRouter = await ethers.getContractFactory("UniswapV2Router02");
@@ -27,9 +33,9 @@ task("add-liq", "Adds liquidity to the pool.")
             console.log("router: " + router.address)
 
             // mint 100 clay token to deployer
-            await clayToken.mint(deployer, ethers.utils.parseUnits("100.0", 'ether'))
-            console.log("Account's usdt balance: " + await usdc.balanceOf(deployer))
-            console.log("Account's usdt balance: " + await clayToken.balanceOf(deployer))
+            // await clayToken.mint(deployer, ethers.utils.parseUnits("100.0", 'ether'))
+            // console.log("Account's usdt balance: " + await usdc.balanceOf(deployer))
+            // console.log("Account's usdt balance: " + await clayToken.balanceOf(deployer))
 
             try {
 
@@ -38,13 +44,14 @@ task("add-liq", "Adds liquidity to the pool.")
                 const block = await ethers.provider.getBlock(currentBlock);
                 const timestamp = block.timestamp + 300;
 
-                await usdc.approve(router.address, ethers.utils.parseEther('2000'));
-                expect(await usdc.allowance(deployer, router.address)).to.eq(ethers.utils.parseEther('2000'), "Router doesn't have permission to spend owner's USDC");
-                console.log(colors.blue("\nUSDC Approved"));
+                // Move to another task
+                // await usdc.approve(router.address, ethers.utils.parseEther('2000'));
+                // expect(await usdc.allowance(deployer, router.address)).to.eq(ethers.utils.parseEther('2000'), "Router doesn't have permission to spend owner's USDC");
+                // console.log(colors.blue("\nUSDC Approved"));
 
-                await clayToken.approve(router.address, ethers.utils.parseEther('2000'));
-                expect(await clayToken.allowance(deployer, router.address)).to.eq(ethers.utils.parseEther('2000'), "Router doesn't have permission to spend owner's CLAY");
-                console.log(colors.blue("\nCLAY Approved"));
+                // await clayToken.approve(router.address, ethers.utils.parseEther('2000'));
+                // expect(await clayToken.allowance(deployer, router.address)).to.eq(ethers.utils.parseEther('2000'), "Router doesn't have permission to spend owner's CLAY");
+                // console.log(colors.blue("\nCLAY Approved"));
 
                 // Provide Liquidity
                 // 1 USDC => 100 CLAY

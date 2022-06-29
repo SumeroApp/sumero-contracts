@@ -1,5 +1,5 @@
 //npx hardhat mint-clay --account 0xB957C7591bf8b8ad1e5B8942dE6FF3b1D22d4951 --amount 1.0 --network kovan
-task("mint-clay", "Mints clay token to the given address")
+task("clay-mint", "Mints clay token to the given address")
     .addParam("account", "The account's address")
     .addParam("amount", "The amount to be minted")
     .setAction(

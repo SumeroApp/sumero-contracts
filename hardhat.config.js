@@ -3,8 +3,8 @@ const { node_url, accounts, addForkConfiguration } = require('./utils/network');
 require("@nomiclabs/hardhat-waffle");
 require("@nomiclabs/hardhat-ethers");
 require("hardhat-deploy");
-require( "./tasks/balance");
-require( "./tasks/mint-clay");
+require( "./tasks/clay-balance");
+require( "./tasks/clay-mint");
 require( "./tasks/add-liq");
 /**
  * @type import('hardhat/config').HardhatUserConfig
