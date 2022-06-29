@@ -1,70 +1,56 @@
-//npx hardhat add-liq --network kovan
+// Before running this task approve operations must be done!
+// Approve CLAY:  npx hardhat clay-approve --account 0xF502CBB71AB6C41E5B93640d4fF2f6945490C7a0 --amount 1 --network kovan
+// Approve ERC20: npx hardhat erc20-approve --name USDC --address 0xc2569dd7d0fd715B054fBf16E75B001E5c0C1115 --account 0xF502CBB71AB6C41E5B93640d4fF2f6945490C7a0 --amount 1 --network kovan
+// Add Liquidity: npx hardhat add-liq --first ClayToken --amount1 1 --second USDC --amount2 1 --network kovan
+
 const { deploy } = require('hardhat-deploy');
 const { expect } = require('chai');
 const colors = require('colors');
 
 task("add-liq", "Adds liquidity to the pool.")
+    .addParam("first", "Token A Name(CLAY)")
+    .addParam("amount1", "Token A Amount(Ether)")
+    .addParam("second", "Token B Name(USDC)")
+    .addParam("amount2", "Token B Amount(Ether)")
     .setAction(
-        async (hre) => {
-            // args 
-            // asset 1
-            // asset 2
-            // asset amount 1
-            // asset amount 2
-            // ....
+        async (args, hre) => {
             const { deployer } = await getNamedAccounts();
             console.log("Deployer Account: " + deployer)
+
             // Get Clay Token contract from Kovan
-            // const ClayToken = await hre.ethers.getContractFactory('ClayToken')
-            // const clayToken = await ClayToken.attach("0x3f6fd91d42fc0070122435cfcF6EeA33804f280d")
-
-            // Get USDC contract from Kovan
-            // const USDC = await ethers.getContractFactory("USDC");
-            // const usdc = await USDC.attach("0xc2569dd7d0fd715B054fBf16E75B001E5c0C1115")
-
-            // Get Uniswap Factory from Kovan
-            // const UniswapV2Factory = await ethers.getContractFactory("UniswapV2Factory");
-            // const UniswapFactoryDeployed = await UniswapV2Factory.attach("0xc88D40380C75231862776C61f67a77030A64946e")
-            // console.log("UniswapFactoryDeployed: " + UniswapFactoryDeployed.address)
-
+            const assetFirst = await ethers.getContract(args.first, deployer);
+            // Get USDC contract from Kovan            
+            const assetSecond = await ethers.getContract(args.second, deployer);
             // Get Uniswap Router  from Kovan
-            const UniswapRouter = await ethers.getContractFactory("UniswapV2Router02");
-            const router = await UniswapRouter.attach("0xF502CBB71AB6C41E5B93640d4fF2f6945490C7a0")
-            console.log("router: " + router.address)
+            const router = await ethers.getContract("UniswapV2Router02", deployer);
 
-            // mint 100 clay token to deployer
-            // await clayToken.mint(deployer, ethers.utils.parseUnits("100.0", 'ether'))
-            // console.log("Account's usdt balance: " + await usdc.balanceOf(deployer))
-            // console.log("Account's usdt balance: " + await clayToken.balanceOf(deployer))
+            // Get Router Addresses
+            console.log("Router Address: " + router.address)
+
+            // Get decimals
+            const decimalFirst = await assetFirst.decimals()
+            console.log(args.assetFirst + " decimal: " + decimalFirst)
+            const decimalSecond = await assetSecond.decimals()
+            console.log(args.assetSecond + " decimal: " + decimalSecond)
+
+            // 1 USDC => 100 CLAY
+            const one_clay = 1 * (10 ** decimalFirst);
+            console.log(one_clay);
+            const one_usdc = 1 * (10 ** decimalSecond);
+            console.log(one_usdc);
 
             try {
-
                 //Make sure address `adding liquidty` has balance of both the tokens.Also, should have approved sufficient amount of tokens to the router contract.
                 const currentBlock = await ethers.provider.getBlockNumber()
                 const block = await ethers.provider.getBlock(currentBlock);
                 const timestamp = block.timestamp + 300;
 
-                // Move to another task
-                // await usdc.approve(router.address, ethers.utils.parseEther('2000'));
-                // expect(await usdc.allowance(deployer, router.address)).to.eq(ethers.utils.parseEther('2000'), "Router doesn't have permission to spend owner's USDC");
-                // console.log(colors.blue("\nUSDC Approved"));
-
-                // await clayToken.approve(router.address, ethers.utils.parseEther('2000'));
-                // expect(await clayToken.allowance(deployer, router.address)).to.eq(ethers.utils.parseEther('2000'), "Router doesn't have permission to spend owner's CLAY");
-                // console.log(colors.blue("\nCLAY Approved"));
-
                 // Provide Liquidity
-                // 1 USDC => 100 CLAY
-                const one_usdc = 1 * (10 ** 6);
-                console.log(one_usdc);
-                const one_clay = 1 * (10 ** 18);
-                console.log(one_clay);
-
                 await router.addLiquidity(
-                    usdc.address,
-                    clayToken.address,
-                    one_usdc.toString(),
-                    (10 * one_clay).toString(),
+                    assetSecond.address,
+                    assetFirst.address,
+                    (args.amount2 * one_usdc).toString(), //USDC
+                    (args.amount1 * one_clay).toString(), //CLAY
                     0,
                     0,
                     deployer,

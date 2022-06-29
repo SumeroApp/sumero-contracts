@@ -5,6 +5,8 @@ require("@nomiclabs/hardhat-ethers");
 require("hardhat-deploy");
 require( "./tasks/clay-balance");
 require( "./tasks/clay-mint");
+require( "./tasks/clay-approve");
+require( "./tasks/erc20-approve");
 require( "./tasks/add-liq");
 /**
  * @type import('hardhat/config').HardhatUserConfig
