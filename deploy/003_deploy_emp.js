@@ -46,8 +46,8 @@ module.exports = async ({
         expirationTimestamp: expirationTimestamp,
         collateralAddress: KOVAN_USDC,
         priceFeedIdentifier: web3.utils.padRight(web3.utils.utf8ToHex('USDETH'), 64),
-        syntheticName: 'Test USDETH',
-        syntheticSymbol: 'zUSDETH',
+        syntheticName: 'Test USDETH 2',
+        syntheticSymbol: 'zUSDETH2',
         // Contract tracks percentages and ratios below in FixedPoint vars, with 18 decimals of precision, so toWei will work
         // 1.25 collateralization ratio
         collateralRequirement: {
@@ -199,3 +199,5 @@ module.exports = async ({
 
     // TODO: Use AssetManager Contract to add EMPs on chain?
 };
+
+module.exports.tags = ['TestEMP'];
