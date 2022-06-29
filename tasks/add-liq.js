@@ -3,7 +3,7 @@ const { deploy } = require('hardhat-deploy');
 const { expect } = require('chai');
 const colors = require('colors');
 
-task("add-liq", "Prints an account's balance")
+task("add-liq", "Adds liquidity to the pool.")
     .setAction(
         async (hre) => {
             const { deployer } = await getNamedAccounts();

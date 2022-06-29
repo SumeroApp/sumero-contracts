@@ -2,8 +2,10 @@ const { node_url, accounts, addForkConfiguration } = require('./utils/network');
 // requiring these here, automatically adds ethers, deploy to HRE (Hardhat Runtime Env.)
 require("@nomiclabs/hardhat-waffle");
 require("@nomiclabs/hardhat-ethers");
-require('hardhat-deploy');
-
+require("hardhat-deploy");
+require( "./tasks/balance");
+require( "./tasks/mint-clay");
+require( "./tasks/add-liq");
 /**
  * @type import('hardhat/config').HardhatUserConfig
  */
