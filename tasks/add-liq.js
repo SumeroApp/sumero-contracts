@@ -8,20 +8,20 @@ const { expect } = require('chai');
 const colors = require('colors');
 
 task("add-liq", "Adds liquidity to the pool.")
-    .addParam("first", "Token A Name(CLAY)")
-    .addParam("amount1", "Token A Amount(Ether)")
-    .addParam("second", "Token B Name(USDC)")
-    .addParam("amount2", "Token B Amount(Ether)")
+    .addParam("first", "Token A Name")
+    .addParam("amount1", "Token A Amount(in eth)")
+    .addParam("second", "Token B Name")
+    .addParam("amount2", "Token B Amount(in eth)")
     .setAction(
         async (args, hre) => {
             const { deployer } = await getNamedAccounts();
             console.log("Deployer Account: " + deployer)
 
-            // Get Clay Token contract from Kovan
+            // Get First Token from Kovan
             const assetFirst = await ethers.getContract(args.first, deployer);
-            // Get USDC contract from Kovan            
+            //  Get Second Token from Kovan           
             const assetSecond = await ethers.getContract(args.second, deployer);
-            // Get Uniswap Router  from Kovan
+            // Get Uniswap Router from Kovan
             const router = await ethers.getContract("UniswapV2Router02", deployer);
 
             // Get Router Addresses
@@ -29,18 +29,18 @@ task("add-liq", "Adds liquidity to the pool.")
 
             // Get decimals
             const decimalFirst = await assetFirst.decimals()
-            console.log(args.assetFirst + " decimal: " + decimalFirst)
+            console.log(args.first + " has " + decimalFirst + " decimals")
             const decimalSecond = await assetSecond.decimals()
-            console.log(args.assetSecond + " decimal: " + decimalSecond)
+            console.log(args.second + " has  " + decimalSecond + " decimals")
 
-            // 1 USDC => 100 CLAY
-            const one_clay = 1 * (10 ** decimalFirst);
-            console.log(one_clay);
-            const one_usdc = 1 * (10 ** decimalSecond);
-            console.log(one_usdc);
+            // e.g 1 ether =  1 * (10 ** 18)
+            const one_assetFirst = 1 * (10 ** decimalFirst);
+            console.log(one_assetFirst);
+            const one_assetSecond = 1 * (10 ** decimalSecond);
+            console.log(one_assetSecond);
 
             try {
-                //Make sure address `adding liquidty` has balance of both the tokens.Also, should have approved sufficient amount of tokens to the router contract.
+                //Make sure address `adding liquidty` has balance of both the tokens. Also, should have approved sufficient amount of tokens to the router contract.
                 const currentBlock = await ethers.provider.getBlockNumber()
                 const block = await ethers.provider.getBlock(currentBlock);
                 const timestamp = block.timestamp + 300;
@@ -49,17 +49,17 @@ task("add-liq", "Adds liquidity to the pool.")
                 await router.addLiquidity(
                     assetSecond.address,
                     assetFirst.address,
-                    (args.amount2 * one_usdc).toString(), //USDC
-                    (args.amount1 * one_clay).toString(), //CLAY
+                    (args.amount2 * one_assetSecond).toString(),
+                    (args.amount1 * one_assetFirst).toString(),
                     0,
                     0,
                     deployer,
                     timestamp
                 )
-                console.log(colors.blue("\nLiquidity Added to USDC-CLAY Pair"));
+                console.log(colors.blue("\nLiquidity Added to: " + args.first + " - " + args.second + " pair"));
 
             } catch (error) {
-                console.log(colors.red("Issue when adding liquidity to USDC-CLAY Pair"));
+                console.log(colors.blue("\nIssue when adding liquidity to : " + args.first + " - " + args.second + " pair"));
                 console.log(colors.red(error));
             }
         }
