@@ -133,9 +133,7 @@ module.exports = async ({
 
     // Pre-Approval steps for creating EMP synths
     // Approve EMP contract to spend collateral
-    // Calculate GCR for 1st time minting
-    // Calculate min. no. of tokens
-    // Calculate min. no. of collateral
+    
     const usdcInstance = new ethers.Contract(KOVAN_USDC, faucetTokenAbi, signer0);
     console.log(colors.blue("\n  Allocating USDC: ....."));
     await usdcInstance.allocateTo(deployer, ethers.utils.parseUnits('100000', syntheticDecimals));
@@ -148,12 +146,11 @@ module.exports = async ({
     // creating synths
     console.log(colors.blue("\n About to Mint Initial Synth Tokens:"));
 
-    console.log(colors.blue('\n  Minimum mintable synthetic tokens: ' + minSponsorTokens.toString()));
-    console.log(colors.blue('  With a CR of ' + initialTokenRatio.toString() + "..."));
-
     const collateralAmount = minSponsorTokens * initialTokenRatio;
 
-    console.log(colors.blue('  ' + collateralAmount.toString() + ' of collateral is needed.'));
+    console.log(colors.blue('\n  Minimum mintable synthetic tokens: ' + minSponsorTokens.toString()));
+    console.log(colors.blue('  With an initial token ratio of ' + initialTokenRatio.toString() + "..."));
+    console.log(colors.blue('  ' + collateralAmount.toString() + ' tokens of collateral is needed.'));
     console.log(colors.blue('\n  Minting...'));
 
     const collateralAmountObject = { rawValue: ethers.utils.parseUnits(collateralAmount.toString(), syntheticDecimals) };
