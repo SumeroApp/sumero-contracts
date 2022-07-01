@@ -50,7 +50,7 @@ module.exports = async ({
     const collateralRequirement = 1.25;
 
     // How many units of collateral do we initially want for every unit of the synthetic asset?
-    const initialCR = 1500; // at $1k/ETH, this is 150% collateraliztion
+    const initialTokenRatio = 1500; // at $1k/ETH, this is 150% collateraliztion
     const minSponsorTokens = 0.5;
 
     // Contract tracks percentages and ratios below in FixedPoint vars, with 18 decimals of precision, so parseEther will work
@@ -149,8 +149,10 @@ module.exports = async ({
     console.log(colors.blue("\n About to Mint Initial Synth Tokens:"));
 
     console.log(colors.blue('\n  Minimum mintable synthetic tokens: ' + minSponsorTokens.toString()));
-    console.log(colors.blue('  With a CR of ' + initialCR.toString() + "..."));
-    const collateralAmount = minSponsorTokens * initialCR;
+    console.log(colors.blue('  With a CR of ' + initialTokenRatio.toString() + "..."));
+
+    const collateralAmount = minSponsorTokens * initialTokenRatio;
+
     console.log(colors.blue('  ' + collateralAmount.toString() + ' of collateral is needed.'));
     console.log(colors.blue('\n  Minting...'));
 
