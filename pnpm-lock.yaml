@@ -3,7 +3,7 @@ lockfileVersion: 5.3
 specifiers:
   '@nomiclabs/hardhat-ethers': npm:hardhat-deploy-ethers@^0.3.0-beta.13
   '@nomiclabs/hardhat-waffle': ^2.0.3
-  '@openzeppelin/contracts': ^3.4.2
+  '@openzeppelin/contracts': ^4.7.0
   '@uma/contracts-node': ^0.3.2
   babel-polyfill: ^6.26.0
   babel-register: ^6.26.0
@@ -20,13 +20,13 @@ specifiers:
   prettier-plugin-solidity: ^1.0.0-beta.19
 
 dependencies:
+  '@openzeppelin/contracts': 4.7.0
   babel-polyfill: 6.26.0
   babel-register: 6.26.0
 
 devDependencies:
   '@nomiclabs/hardhat-ethers': /hardhat-deploy-ethers/0.3.0-beta.13_ethers@5.5.4+hardhat@2.9.1
   '@nomiclabs/hardhat-waffle': 2.0.3_c256e25f2e624c397c713347d923eb9d
-  '@openzeppelin/contracts': 3.4.2
   '@uma/contracts-node': 0.3.2
   chai: 4.3.6
   chai-as-promised: 7.1.1_chai@4.3.6
@@ -549,9 +549,9 @@ packages:
       hardhat: 2.9.1
     dev: true
 
-  /@openzeppelin/contracts/3.4.2:
-    resolution: {integrity: sha512-z0zMCjyhhp4y7XKAcDAi3Vgms4T2PstwBdahiO0+9NaGICQKjynK3wduSRplTgk4LXmoO1yfDGO5RbjKYxtuxA==}
-    dev: true
+  /@openzeppelin/contracts/4.7.0:
+    resolution: {integrity: sha512-52Qb+A1DdOss8QvJrijYYPSf32GUg2pGaG/yCxtaA3cu4jduouTdg4XZSMLW9op54m1jH7J8hoajhHKOPsoJFw==}
+    dev: false
 
   /@resolver-engine/core/0.3.3:
     resolution: {integrity: sha512-eB8nEbKDJJBi5p5SrvrvILn4a0h42bKtbCTri3ZxCGt6UvoQyp7HnGOfki944bUjBSHKK3RvgfViHn+kqdXtnQ==}

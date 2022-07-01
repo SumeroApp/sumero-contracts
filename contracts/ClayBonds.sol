@@ -1,8 +1,8 @@
-pragma solidity 0.6.12;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin/contracts/math/SafeMath.sol";
 
 /**
     You can deposit CLAY (ERC20 token native to Sumero) to get zCLAY Bonds (a new ERC20 representing the bond).
@@ -28,8 +28,6 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
     The user has to lock his CLAY in to zCLAY bonds for atleast 3 years. They are open to trade these bonds on a secondary market (i.e. via LP pools on Sumero)
  */
 contract ClayBonds is ERC20("zClay Token", "zCLAY") {
-    using SafeMath for uint256;
-
     IERC20 public clay;
 
     // the maximum upper limit of bond rewards that this contract will give over it's lifetime
@@ -54,7 +52,7 @@ contract ClayBonds is ERC20("zClay Token", "zCLAY") {
         uint256 reward
     );
 
-    constructor(IERC20 _clay, uint256 _maximumBondRewards) public {
+    constructor(IERC20 _clay, uint256 _maximumBondRewards) {
         clay = _clay;
         maximumBondRewards = _maximumBondRewards;
         depositStartDate = block.timestamp;
@@ -62,15 +60,15 @@ contract ClayBonds is ERC20("zClay Token", "zCLAY") {
         // TODO: take into consideration leap year?
 
         // deposit close date is 1 year in future
-        depositCloseDate = depositStartDate.add(BONDS_ISSUANCE_PERIOD);
+        depositCloseDate = depositStartDate + BONDS_ISSUANCE_PERIOD;
         // maturation date of bond is 3 years in future
-        maturationDate = depositStartDate.add(BONDS_ISSUANCE_PERIOD.mul(3));
+        maturationDate = depositStartDate + (BONDS_ISSUANCE_PERIOD * 3);
 
         // calculate daily yield
         // APY details can be taken as constructor argument
-        dailyYieldPercent = (APY_PERCENT.add(BONUS_APY_PERCENT))
-            .mul(1 ether)
-            .div(365);
+        dailyYieldPercent =
+            ((APY_PERCENT + BONUS_APY_PERCENT) * (1 ether)) /
+            365;
     }
 
     function getDaysLeftToMaturationDate()
@@ -82,9 +80,9 @@ contract ClayBonds is ERC20("zClay Token", "zCLAY") {
             return 0; // just return 0 instead of dealing with negatives
         }
         // calculate days remaining till maturation day
-        daysLeftToMaturationDate = maturationDate.sub(block.timestamp).div(
-            1 days
-        );
+        daysLeftToMaturationDate =
+            (maturationDate - block.timestamp) /
+            (1 days);
     }
 
     function getRewardPercent(uint256 daysLeftToMaturationDate)
@@ -94,7 +92,7 @@ contract ClayBonds is ERC20("zClay Token", "zCLAY") {
     {
         // Total Percentage Reward => dailyYieldPercent * daysLeftToMaturationDate
         // adding 1 here to consider interest for the current ongoing day
-        rewardPercent = dailyYieldPercent.mul(daysLeftToMaturationDate.add(1));
+        rewardPercent = dailyYieldPercent * (daysLeftToMaturationDate + 1);
     }
 
     function getReward(uint256 _amount, uint256 _rewardPercent)
@@ -103,7 +101,7 @@ contract ClayBonds is ERC20("zClay Token", "zCLAY") {
         returns (uint256 reward)
     {
         // bondAmount => amount + (total percentage reward * amount)
-        reward = _amount.mul(_rewardPercent).div(100).div(1 ether);
+        reward = ((_amount * _rewardPercent) / 100) / 1 ether;
     }
 
     function hasEnoughClayLiquidity() public view returns (bool) {
@@ -129,12 +127,12 @@ contract ClayBonds is ERC20("zClay Token", "zCLAY") {
         uint256 rewardPercent = getRewardPercent(daysLeftToMaturationDate);
         uint256 reward = getReward(_clayAmount, rewardPercent);
 
-        bondAmount = _clayAmount.add(reward);
+        bondAmount = _clayAmount + reward;
 
         clay.transferFrom(msg.sender, address(this), _clayAmount);
         _mint(msg.sender, bondAmount);
 
-        totalBondDeposits = totalBondDeposits.add(bondAmount);
+        totalBondDeposits = totalBondDeposits + bondAmount;
 
         require(
             totalBondDeposits < maximumBondRewards,
