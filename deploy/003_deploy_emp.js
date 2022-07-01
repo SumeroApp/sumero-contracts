@@ -20,7 +20,7 @@ module.exports = async ({
 
     const KOVAN_NETWORK_ID = 42;
     // date 2 days in the future
-    const expirationTimestamp = Date.now() + (2 * 24 * 3600 * 1000);
+    const expirationTimestamp = floor(Date.now()/1000) + (2 * 24 * 3600);
 
     const KOVAN_USDC = '0xb7a4F3E9097C08dA09517b5aB877F7a917224ede';
     const UMA_EMPC_ADDRESS = await getAddress("ExpiringMultiPartyCreator", KOVAN_NETWORK_ID);
