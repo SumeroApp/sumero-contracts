@@ -4,23 +4,19 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 import "./interfaces/IClayToken.sol";
 
-contract StakingRewards is ReentrancyGuard, Pausable {
+contract StakingRewards is Ownable, ReentrancyGuard, Pausable {
     IClayToken public clayToken;
     // Staking token would be Sumero LP tokens
     IERC20 public stakingToken;
 
     // TODO:
-    // 1. Give minting CLAY access to StakingRewards
-    //    - give minting role to StakingRewards contract
-    // 2. Edit ClayToken.sol to add minting role
     // 3. Deterministic way to figure out how much CLAY would be rewarded on a daily basis
     // User would stake
     // User would unstake
     // User would request for reward withdrawal
-    // 4. Make StakingRewards pausable
-    // 5. Non-rentrant
 
     // Reward Rate per day
     // 10 reward tokens per second
@@ -96,5 +92,13 @@ contract StakingRewards is ReentrancyGuard, Pausable {
         rewards[msg.sender] = 0;
         // Sumero Owner needs to grant MINTER_ROLE for CLAY to StakingRewards
         clayToken.mint(msg.sender, reward);
+    }
+
+    function pause() external onlyOwner {
+        _pause();
+    }
+
+    function unpause() external onlyOwner {
+        _unpause();
     }
 }
