@@ -13,14 +13,13 @@ const { ethers } = require("hardhat")
 module.exports = async ({
     getNamedAccounts,
 }) => {
-
     const { deployer } = await getNamedAccounts();
 
     console.log(colors.bold("\n==> Running 003_deploy_emp script"));
 
     const KOVAN_NETWORK_ID = 42;
     // date 2 days in the future
-    const expirationTimestamp = floor(Date.now()/1000) + (2 * 24 * 3600);
+    const expirationTimestamp = Math.floor(Date.now()/1000) + (30 * 24 * 3600); // three months hence
 
     const KOVAN_USDC = '0xb7a4F3E9097C08dA09517b5aB877F7a917224ede';
     const UMA_EMPC_ADDRESS = await getAddress("ExpiringMultiPartyCreator", KOVAN_NETWORK_ID);
