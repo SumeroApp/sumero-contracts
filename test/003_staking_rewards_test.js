@@ -1,9 +1,4 @@
-/* StakingRewards Test Cases:
-Test Stake, Unstake (withdraw)
-Check balance of rewards after staking
-Check rewardPerTokenStored
-Withdraw all stake and test getReward function
-Test pause / unpause */
+//npx hardhat test test/003_staking_rewards_test.js
 
 const { expect } = require("chai")
 const { ethers } = require("hardhat")
@@ -15,11 +10,11 @@ async function increaseTime(amount) {
 }
 
 let clayToken;
-let stakingToken;
+let sumeroLpToken;
 let stakingRewards;
 let accounts;
 let TokenAddress;
-let StakingTokenAddress;
+let LpTokenAddress;
 let StakingRewardsAddress;
 
 describe("Staking Rewards Contract", function () {
@@ -42,17 +37,16 @@ describe("Staking Rewards Contract", function () {
         TokenAddress = clayToken.address
         console.log("Clay Token contract deployed at: " + TokenAddress)
 
-        // Deploy LP Token Contract
-        const StakingToken = await hre.ethers.getContractFactory('contracts/test/StakingToken.sol:StakingToken')
+        // Deploy Sumero LP Token Contract
+        const SumeroLpToken = await hre.ethers.getContractFactory('contracts/test/SumeroLpToken.sol:SumeroLpToken')
+        sumeroLpToken = await SumeroLpToken.deploy()
+        await sumeroLpToken.deployed()
+        LpTokenAddress = sumeroLpToken.address
+        console.log("Staking Token contract deployed at: " + LpTokenAddress)
 
-        stakingToken = await StakingToken.deploy()
-        await stakingToken.deployed()
-        StakingTokenAddress = stakingToken.address
-        console.log("Staking Token contract deployed at: " + StakingTokenAddress)
-
-        // Deploy Staking Rewards Contract
+        // Deploy Staking Contract
         const StakingRewards = await hre.ethers.getContractFactory('ClayStakingRewards')
-        stakingRewards = await StakingRewards.deploy(StakingTokenAddress, TokenAddress)
+        stakingRewards = await StakingRewards.deploy(LpTokenAddress, TokenAddress)
         StakingRewardsAddress = stakingRewards.address
         await stakingRewards.deployed()
         console.log("Staking Rewards contract deployed at: " + StakingRewardsAddress)
@@ -72,72 +66,69 @@ describe("Staking Rewards Contract", function () {
     });
 
     it('Mints staking token to Account 1', async function () {
-        expect(await stakingToken.balanceOf(accounts[1].address)).to.equal(0)
-        await stakingToken.mint(accounts[1].address, ethers.utils.parseUnits('10.0', 'ether'))
-        const balance = await stakingToken.balanceOf(accounts[1].address)
+        expect(await sumeroLpToken.balanceOf(accounts[1].address)).to.equal(0)
+        await sumeroLpToken.mint(accounts[1].address, ethers.utils.parseUnits('10.0', 'ether'))
+        const balance = await sumeroLpToken.balanceOf(accounts[1].address)
         expect(balance).to.equal(ethers.utils.parseEther("10.0"))
     });
 
     it('Stakes LP token from Account 1', async function () {
         expect(await stakingRewards.rewardPerToken()).to.be.eq(0)
         const amount = ethers.utils.parseUnits('10.0', 'ether')
-        expect(await stakingToken.balanceOf(accounts[1].address)).to.equal(amount)
-        await stakingToken.connect(accounts[1]).approve(StakingRewardsAddress, amount)
-        expect(await stakingToken.allowance(accounts[1].address, StakingRewardsAddress)).to.eq(amount)
+        expect(await sumeroLpToken.balanceOf(accounts[1].address)).to.equal(amount)
+        await sumeroLpToken.connect(accounts[1]).approve(StakingRewardsAddress, amount)
+        expect(await sumeroLpToken.allowance(accounts[1].address, StakingRewardsAddress)).to.eq(amount)
         await stakingRewards.connect(accounts[1]).stake(amount)
         expect(await stakingRewards.balanceOf(accounts[1].address)).to.eq(amount)
+        expect(await stakingRewards.totalSupply()).to.eq(amount)
+
+    });
+
+    it('It must calculate the reward value correctly ', async function () {
 
         const rewardRate = await stakingRewards.rewardRate()
         const lastUpdateTime = await stakingRewards.lastUpdateTime()
         const currentBlock = await ethers.provider.getBlockNumber()
         const timestamp = (await ethers.provider.getBlock(currentBlock)).timestamp
-        const totalSupply = amount
+        const totalSupply = await stakingRewards.totalSupply()
         let multiplier = ethers.BigNumber.from("1000000000000000000")
         //rewardPerTokenStored + ((rewardRate * (block.timestamp - lastUpdateTime) * 1e18) / _totalSupply);
         let updatedRewardPerToken = ethers.BigNumber.from(rewardRate.mul(timestamp - lastUpdateTime).mul(multiplier).div(totalSupply))
         expect(await stakingRewards.rewardPerToken()).to.be.eq(updatedRewardPerToken)
     });
-
+    // todo: Withdraw partial amount
     it('Withdraws(Unstakes) LP tokens', async function () {
-        console.log("Clay Balance: " + await clayToken.balanceOf(accounts[1].address))
-
         const amount = ethers.utils.parseUnits('10.0', 'ether')
-        expect(await stakingToken.balanceOf(accounts[1].address)).to.eq(0)
+        expect(await sumeroLpToken.balanceOf(accounts[1].address)).to.eq(0)
         expect(await stakingRewards.balanceOf(accounts[1].address)).to.eq(amount)
-        // Withdraw half of the stake
-        await stakingRewards.connect(accounts[1]).withdraw(amount.div(2))
-        expect(await stakingRewards.balanceOf(accounts[1].address)).to.eq(amount.div(2))
-        expect(await stakingToken.balanceOf(accounts[1].address)).to.eq(amount.div(2))
-
-
+        await stakingRewards.connect(accounts[1]).withdraw(amount)
+        expect(await stakingRewards.balanceOf(accounts[1].address)).to.eq(0)
+        expect(await sumeroLpToken.balanceOf(accounts[1].address)).to.eq(amount)
     });
-    it('Gets rewards', async function () {
+
+    it('Gets staking rewards', async function () {
         const reward = await stakingRewards.rewards(accounts[1].address)
         await stakingRewards.connect(accounts[1]).getReward()
-        console.log("Reward: " + reward)
-        console.log("Balance: " + await clayToken.balanceOf(accounts[1].address))
-        console.log()
         expect(await clayToken.balanceOf(accounts[1].address)).to.eq(reward)
         expect(await stakingRewards.rewards(accounts[1].address)).to.eq(0)
     });
-    //withdrawing partial amount
-    it('Can pause the contract', async function () {
 
+    it('Can pause the contract', async function () {
         // Owner: Account[0]
         await expect(stakingRewards.connect(accounts[1]).pause()).to.be.reverted
         await stakingRewards.pause()
         await expect(stakingRewards.connect(accounts[1]).unpause()).to.be.reverted
 
         // Mint Staking tokens to account 2
-        expect(await stakingToken.balanceOf(accounts[2].address)).to.equal(0)
-        await stakingToken.mint(accounts[2].address, ethers.utils.parseUnits('6.0', 'ether'))
-        const balance = await stakingToken.balanceOf(accounts[2].address)
+        expect(await sumeroLpToken.balanceOf(accounts[2].address)).to.equal(0)
+        await sumeroLpToken.mint(accounts[2].address, ethers.utils.parseUnits('6.0', 'ether'))
+        const balance = await sumeroLpToken.balanceOf(accounts[2].address)
         expect(balance).to.equal(ethers.utils.parseEther("6.0"))
 
         // Give allowance to the staking contract from account 2
         const amount = ethers.utils.parseUnits('6.0', 'ether')
-        await stakingToken.connect(accounts[2]).approve(StakingRewardsAddress, amount)
-        expect(await stakingToken.allowance(accounts[2].address, StakingRewardsAddress)).to.eq(amount)
+        await sumeroLpToken.connect(accounts[2]).approve(StakingRewardsAddress, amount)
+        expect(await sumeroLpToken.allowance(accounts[2].address, StakingRewardsAddress)).to.eq(amount)
 
         // Cannot stake when paused
         await expect(stakingRewards.connect(accounts[2]).stake(amount)).to.be.revertedWith('Pausable: paused')
@@ -163,5 +154,37 @@ describe("Staking Rewards Contract", function () {
         expect(await clayToken.balanceOf(accounts[2].address)).to.eq(reward)
         expect(await stakingRewards.rewards(accounts[2].address)).to.eq(0)
 
+        // Unpause the contract
+        await stakingRewards.unpause()
+
+    });
+    //todo: get user reward without calling withdraw function
+    it('can exit', async function () {
+
+        // Mint LP Tokens to Account 3
+        expect(await sumeroLpToken.balanceOf(accounts[3].address)).to.equal(0)
+        await sumeroLpToken.mint(accounts[3].address, ethers.utils.parseUnits('4.0', 'ether'))
+        const balance = await sumeroLpToken.balanceOf(accounts[3].address)
+        expect(balance).to.equal(ethers.utils.parseEther("4.0"))
+
+        // Give allowance to the StakingRewards Contract from Account 3
+        const amount = ethers.utils.parseUnits('4.0', 'ether')
+        await sumeroLpToken.connect(accounts[3]).approve(StakingRewardsAddress, amount)
+        expect(await sumeroLpToken.allowance(accounts[3].address, StakingRewardsAddress)).to.eq(amount)
+
+        // Staking LP Tokens from Account 3
+        await stakingRewards.connect(accounts[3]).stake(amount)
+        expect(await stakingRewards.balanceOf(accounts[3].address)).to.eq(amount)
+        expect(await sumeroLpToken.balanceOf(accounts[3].address)).to.eq(0)
+        expect(await clayToken.balanceOf(accounts[3].address)).to.eq(0)
+
+        await stakingRewards.connect(accounts[3]).exit()
+
+        // After exit, contract sends back lp tokens to the investor
+        expect(await sumeroLpToken.balanceOf(accounts[3].address)).to.eq(amount)
+        expect(await stakingRewards.balanceOf(accounts[3].address)).to.eq(0)
+        expect(await stakingRewards.rewards(accounts[3].address)).to.eq(0)
+        console.log("Clay Balance " + await clayToken.balanceOf(accounts[3].address))
+        console.log("Clay reward balance: " + await clayToken.balanceOf(accounts[3].address))
     });
 });
