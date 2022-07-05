@@ -3,11 +3,11 @@ const { node_url, accounts, addForkConfiguration } = require('./utils/network');
 require("@nomiclabs/hardhat-waffle");
 require("@nomiclabs/hardhat-ethers");
 require("hardhat-deploy");
-require( "./tasks/clay-balance");
-require( "./tasks/clay-mint");
-require( "./tasks/clay-approve");
-require( "./tasks/erc20-approve");
-require( "./tasks/add-liq");
+require("./tasks/clay-balance");
+require("./tasks/clay-mint");
+require("./tasks/clay-approve");
+require("./tasks/erc20-approve");
+require("./tasks/add-liq");
 /**
  * @type import('hardhat/config').HardhatUserConfig
  */
@@ -30,13 +30,26 @@ module.exports = {
     },
   }),
   solidity: {
-    version: "0.6.12",
-    settings: {
-      optimizer: {
-        enabled: true,
-        runs: 1000,
+    compilers: [
+      {
+        version: "0.6.12",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 1000,
+          }
+        },
+      },
+      {
+        version: "0.8.0",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 1000,
+          }
+        },
       }
-    },
+    ]
   },
   namedAccounts: {
     deployer: {
