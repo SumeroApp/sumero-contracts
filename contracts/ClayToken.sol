@@ -1,23 +1,30 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.6.12;
+pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/access/AccessControl.sol";
 
-// SushiToken with Governance.
-contract ClayToken is ERC20, Ownable {
-
+contract ClayToken is ERC20, AccessControl {
     string internal constant NAME = "Clay Token";
     string internal constant SYMBOL = "CLAY";
     uint8 internal constant DECIMALS = 18;
 
-    constructor() public ERC20("Clay Token", "CLAY") {}
+    bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
+    bytes32 public constant BURNER_ROLE = keccak256("BURNER_ROLE");
 
-    function mint(address _to, uint256 _amount) public onlyOwner {
+    constructor() ERC20("Clay Token", "CLAY") {
+        _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _setupRole(MINTER_ROLE, msg.sender);
+        _setupRole(BURNER_ROLE, msg.sender);
+    }
+
+    function mint(address _to, uint256 _amount) public {
+        require(hasRole(MINTER_ROLE, msg.sender), "Caller is not a minter");
         _mint(_to, _amount);
     }
 
-    function burn(address account, uint256 amount) public onlyOwner {
+    function burn(address account, uint256 amount) public {
+        require(hasRole(BURNER_ROLE, msg.sender), "Caller is not a burner");
         _burn(account, amount);
     }
 }
