@@ -24,8 +24,18 @@ function matchesForkedNetwork(name) {
     return (getForkedNetwork() == name) ? true : false;
 }
 
+
+function getTxUrl(network, txHash) {
+    if (!isLocalNetwork() && isForkedNetwork()) {
+        let txLink = "https://" + network.name + ".etherscan.io/tx/" + txHash
+        return "Etherscan URL: "+txLink;
+    }
+    return null;
+}
+
 module.exports = {
     isLocalNetwork,
     isForkedNetwork,
-    matchesForkedNetwork
+    matchesForkedNetwork,
+    getTxUrl
 }

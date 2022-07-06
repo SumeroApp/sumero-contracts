@@ -6,6 +6,7 @@ task("clay-approve", "Approves clay token to given account")
         async (args, deployments, network) => {
             const { expect } = require('chai');
             const { deployer } = await hre.getNamedAccounts();
+            const {getTxUrl} = require('../utils/helper');
 
             const clayToken = await ethers.getContract("ClayToken", deployer);
             const clayBalance = await clayToken.balanceOf(deployer);
@@ -15,19 +16,12 @@ task("clay-approve", "Approves clay token to given account")
             const amountInWei = ethers.utils.parseUnits(args.amount, 'ether');
 
             const tx = await clayToken.approve(args.spender, amountInWei);
-            const txReceipt = await tx.wait()
             expect(await clayToken.allowance(deployer, args.spender)).to.eq(amountInWei);
             console.log("\nCLAY Approved");
 
+            console.log("\nTransaction Receipt: \n",tx)
+            console.log(getTxUrl(deployments.network,tx.hash))
 
-            // Get transaction details
-            const networkName = deployments.network.name
-            let txLink;
-            if (network != "hardhat") {
-                txLink = "https://" + networkName + ".etherscan.io/tx/" + tx.hash
-            }
-            console.log(txReceipt)
-            console.log("Transaction Link: " + txLink)
 
 
 

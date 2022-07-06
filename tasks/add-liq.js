@@ -15,6 +15,8 @@ task("add-liq", "Adds liquidity to the pool.")
     .setAction(
         async (args, deployments, network) => {
             const { deployer } = await getNamedAccounts();
+            const {getTxUrl} = require('../utils/helper');
+
             console.log("Deployer Account: " + deployer)
 
             // Get First Token from Kovan
@@ -56,17 +58,10 @@ task("add-liq", "Adds liquidity to the pool.")
                     deployer,
                     timestamp
                 )
-                const txReceipt = await tx.wait()
                 console.log(colors.blue("\nLiquidity Added to: " + args.first + " - " + args.second + " pair"));
-
-                // Get transaction details
-                const networkName = deployments.network.name
-                let txLink;
-                if (network != "hardhat") {
-                    txLink = "https://" + networkName + ".etherscan.io/tx/" + tx.hash
-                }
-                console.log(txReceipt)
-                console.log("Transaction Link: " + txLink)
+                // Print transaction details
+                console.log("\nTransaction Receipt: \n",tx)
+                console.log(getTxUrl(deployments.network,tx.hash))
 
             } catch (error) {
                 console.log(colors.blue("\nIssue when adding liquidity to : " + args.first + " - " + args.second + " pair"));

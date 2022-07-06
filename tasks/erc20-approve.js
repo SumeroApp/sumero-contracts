@@ -8,6 +8,7 @@ task("erc20-approve", "Approves ERC20 tokens to the given account")
         async (args, deployments, network) => {
             const { expect } = require('chai');
             const { deployer } = await hre.getNamedAccounts();
+            const {getTxUrl} = require('../utils/helper');
 
             const Token = await hre.ethers.getContractFactory(args.name)
             const token = await Token.attach(args.address)
@@ -24,20 +25,12 @@ task("erc20-approve", "Approves ERC20 tokens to the given account")
             const amountInWei = ethers.utils.parseUnits(args.amount, 'ether');
 
             const tx = await token.approve(args.spender, amountInWei);
-            const txReceipt = await tx.wait()
 
             expect(await token.allowance(deployer, args.spender)).to.eq(amountInWei);
             console.log(tokenName + " Approved");
 
-            // Get transaction details
-            const networkName = deployments.network.name
-            let txLink;
-            if (network != "hardhat") {
-                txLink = "https://" + networkName + ".etherscan.io/tx/" + tx.hash
-            }
-            console.log(txReceipt)
-            console.log("Transaction Link: " + txLink)
-
+            console.log("\nTransaction Receipt: \n",tx)
+            console.log(getTxUrl(deployments.network,tx.hash))
 
         }
     );
