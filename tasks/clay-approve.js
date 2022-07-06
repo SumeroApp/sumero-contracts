@@ -9,7 +9,7 @@ task("clay-approve", "Approves clay token to given account")
             const { deployer } = await hre.getNamedAccounts();
 
             const clayToken = await ethers.getContract("ClayToken", deployer);
-            const clayBalance = await clayToken.balanceOf(args.account);
+            const clayBalance = await clayToken.balanceOf(deployer);
             console.log("My account's clay balance is : " + ethers.utils.formatEther(clayBalance));
 
             //Convert ether  to wei
@@ -18,8 +18,5 @@ task("clay-approve", "Approves clay token to given account")
             await clayToken.approve(args.account, amountInWei);
             expect(await clayToken.allowance(deployer, args.account)).to.eq(amountInWei);
             console.log("\nCLAY Approved");
-
-
-
         }
     );
