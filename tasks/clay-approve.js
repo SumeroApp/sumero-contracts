@@ -1,23 +1,33 @@
-// npx hardhat clay-approve --account 0xF502CBB71AB6C41E5B93640d4fF2f6945490C7a0 --amount 1 --network kovan
-// router address: 0xF502CBB71AB6C41E5B93640d4fF2f6945490C7a0
+// npx hardhat clay-approve --spender <spender-address> --amount <amount> --network <network-name>
 task("clay-approve", "Approves clay token to given account")
-    .addParam("account", "The account's address")
+    .addParam("spender", "The account's address")
     .addParam("amount", "The amount to be approved")
     .setAction(
-        async (args) => {
+        async (args, deployments, network) => {
             const { expect } = require('chai');
             const { deployer } = await hre.getNamedAccounts();
 
             const clayToken = await ethers.getContract("ClayToken", deployer);
-            const clayBalance = await clayToken.balanceOf(args.account);
+            const clayBalance = await clayToken.balanceOf(deployer);
             console.log("My account's clay balance is : " + ethers.utils.formatEther(clayBalance));
 
             //Convert ether  to wei
             const amountInWei = ethers.utils.parseUnits(args.amount, 'ether');
 
-            await clayToken.approve(args.account, amountInWei);
-            expect(await clayToken.allowance(deployer, args.account)).to.eq(amountInWei);
+            const tx = await clayToken.approve(args.spender, amountInWei);
+            const txReceipt = await tx.wait()
+            expect(await clayToken.allowance(deployer, args.spender)).to.eq(amountInWei);
             console.log("\nCLAY Approved");
+
+
+            // Get transaction details
+            const networkName = deployments.network.name
+            let txLink;
+            if (network != "hardhat") {
+                txLink = "https://" + networkName + ".etherscan.io/tx/" + tx.hash
+            }
+            console.log(txReceipt)
+            console.log("Transaction Link: " + txLink)
 
 
 

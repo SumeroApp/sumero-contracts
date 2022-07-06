@@ -1,12 +1,11 @@
-// npx hardhat erc20-approve --name USDC --address 0xc2569dd7d0fd715B054fBf16E75B001E5c0C1115 --account 0xF502CBB71AB6C41E5B93640d4fF2f6945490C7a0 --amount 1 --network kovan
-// router address: 0xF502CBB71AB6C41E5B93640d4fF2f6945490C7a0
+// npx hardhat erc20-approve --name <deployed-token-name> --address <token-address> --spender <spender-address> --amount <amount> --network <network-name>
 task("erc20-approve", "Approves ERC20 tokens to the given account")
     .addParam("name", "Token name")
     .addParam("address", "Token Address")
-    .addParam("account", "The account's address") // Router parameter
+    .addParam("spender", "The account's address") // Router parameter
     .addParam("amount", "The amount to be approved")
     .setAction(
-        async (args) => {
+        async (args, deployments, network) => {
             const { expect } = require('chai');
             const { deployer } = await hre.getNamedAccounts();
 
@@ -24,10 +23,20 @@ task("erc20-approve", "Approves ERC20 tokens to the given account")
             //Convert ether  to wei
             const amountInWei = ethers.utils.parseUnits(args.amount, 'ether');
 
-            await token.approve(args.account, amountInWei);
-            expect(await token.allowance(deployer, args.account)).to.eq(amountInWei);
+            const tx = await token.approve(args.spender, amountInWei);
+            const txReceipt = await tx.wait()
+
+            expect(await token.allowance(deployer, args.spender)).to.eq(amountInWei);
             console.log(tokenName + " Approved");
 
+            // Get transaction details
+            const networkName = deployments.network.name
+            let txLink;
+            if (network != "hardhat") {
+                txLink = "https://" + networkName + ".etherscan.io/tx/" + tx.hash
+            }
+            console.log(txReceipt)
+            console.log("Transaction Link: " + txLink)
 
 
         }

@@ -56,6 +56,7 @@ describe("Staking Rewards Contract", function () {
     it('Gives minting access to staking contract', async function () {
         const roleHash = ethers.utils.keccak256(ethers.utils.toUtf8Bytes("MINTER_ROLE"))
         await clayToken.grantRole(roleHash, StakingRewardsAddress)
+        expect(await clayToken.hasRole(roleHash, StakingRewardsAddress)).eq(true)
 
     });
 

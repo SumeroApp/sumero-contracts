@@ -1,7 +1,7 @@
 // Before running this task approve operations must be done!
-// Approve CLAY:  npx hardhat clay-approve --account 0xF502CBB71AB6C41E5B93640d4fF2f6945490C7a0 --amount 1 --network kovan
-// Approve ERC20: npx hardhat erc20-approve --name USDC --address 0xc2569dd7d0fd715B054fBf16E75B001E5c0C1115 --account 0xF502CBB71AB6C41E5B93640d4fF2f6945490C7a0 --amount 1 --network kovan
-// Add Liquidity: npx hardhat add-liq --first ClayToken --amount1 1 --second USDC --amount2 1 --network kovan
+// Approve CLAY:  npx hardhat clay-approve --spender <spender-address> --amount <amount> --network <network-name>
+// Approve ERC20: npx hardhat erc20-approve --name <deployed-token-name> --address <token-address> --spender <spender-address> --amount <amount> --network <network-name>
+// Add Liquidity: npx hardhat add-liq --first <token-1> --amount1 <token-1-amount> --second <token-2> --amount2 <token-2-amount> --network <network-name>
 
 const { deploy } = require('hardhat-deploy');
 const { expect } = require('chai');
@@ -13,7 +13,7 @@ task("add-liq", "Adds liquidity to the pool.")
     .addParam("second", "Token B Name")
     .addParam("amount2", "Token B Amount(in eth)")
     .setAction(
-        async (args, hre) => {
+        async (args, deployments, network) => {
             const { deployer } = await getNamedAccounts();
             console.log("Deployer Account: " + deployer)
 
@@ -46,7 +46,7 @@ task("add-liq", "Adds liquidity to the pool.")
                 const timestamp = block.timestamp + 300;
 
                 // Provide Liquidity
-                await router.addLiquidity(
+                const tx = await router.addLiquidity(
                     assetSecond.address,
                     assetFirst.address,
                     (args.amount2 * one_assetSecond).toString(),
@@ -56,7 +56,17 @@ task("add-liq", "Adds liquidity to the pool.")
                     deployer,
                     timestamp
                 )
+                const txReceipt = await tx.wait()
                 console.log(colors.blue("\nLiquidity Added to: " + args.first + " - " + args.second + " pair"));
+
+                // Get transaction details
+                const networkName = deployments.network.name
+                let txLink;
+                if (network != "hardhat") {
+                    txLink = "https://" + networkName + ".etherscan.io/tx/" + tx.hash
+                }
+                console.log(txReceipt)
+                console.log("Transaction Link: " + txLink)
 
             } catch (error) {
                 console.log(colors.blue("\nIssue when adding liquidity to : " + args.first + " - " + args.second + " pair"));
