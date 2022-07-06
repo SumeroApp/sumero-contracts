@@ -24,14 +24,14 @@ contract ClayStakingRewards is Ownable, ReentrancyGuard, Pausable {
     IERC20 public stakingToken;
 
     // Reward Rate per day
-    // 10 wei CLAY per second
-    // 10 * (24 * 60 * 60)
-    // 10 * 86400
-    // 864,000 wei CLAY per day per token
+    // 10 gwei CLAY per second
+    // 10 gwei * (24 * 60 * 60)
+    // 10 gwei * 86400
+    // 864000 gwei => 0.000864 CLAY per day per token
     // Make this a max deterministic reward so that we can control outflow of CLAY?
 
     // reward rate i.e. reward in wei rewarded per second for staking a whole token
-    uint256 public rewardRate = 10;
+    uint256 public rewardRate = 10 gwei;
     uint256 public lastUpdateTime;
     uint256 public rewardPerTokenStored;
 
