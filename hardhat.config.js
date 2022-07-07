@@ -11,6 +11,7 @@ require("./tasks/clay-get-allowance");
 require("./tasks/erc20-approve");
 require("./tasks/add-liquidity");
 require("./tasks/clay-grant-role");
+require("./tasks/create-emp");
 /**
  * @type import('hardhat/config').HardhatUserConfig
  */
