@@ -90,8 +90,8 @@ task("create-emp", "Deploys the EMP (Expiring Multi Party) Contract using UMA's 
             console.log(colors.blue("\n Creating EMP via EMPC: ....."));
             const createEmpTx = await emp_creator_instance.createExpiringMultiParty(createEmpParams);
 
-            console.log("\nTransaction Receipt: \n", createEmpTx);
-            const txUrl = getTxUrl(deployments.network, tx.hash);
+            console.log("\nTransaction Receipt: \n", createEmpTx)
+            const txUrl = getTxUrl(deployments.network, createEmpTx.hash);
             if (txUrl != null) {
                 console.log(txUrl);
             }
