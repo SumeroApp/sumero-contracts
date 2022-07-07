@@ -7,7 +7,8 @@ require("./tasks/clay-balance");
 require("./tasks/clay-mint");
 require("./tasks/clay-approve");
 require("./tasks/erc20-approve");
-require("./tasks/add-liq");
+require("./tasks/add-liquidity");
+require("./tasks/clay-grant-role");
 /**
  * @type import('hardhat/config').HardhatUserConfig
  */

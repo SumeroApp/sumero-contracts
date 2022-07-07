@@ -8,12 +8,12 @@ task("erc20-approve", "Approves ERC20 tokens to the given account")
         async (args, deployments, network) => {
             const { expect } = require('chai');
             const { deployer } = await hre.getNamedAccounts();
-            const {getTxUrl} = require('../utils/helper');
+            const { getTxUrl } = require('../utils/helper');
 
-            const Token = await hre.ethers.getContractFactory(args.name)
-            const token = await Token.attach(args.address)
+            const Token = await hre.ethers.getContractFactory(args.name);
+            const token = await Token.attach(args.address);
 
-            const tokenName = await token.name()
+            const tokenName = await token.name();
             expect(tokenName).to.eq(args.name);
             // to get USDC with ETH 
             // await token.deposit({ value: ethers.utils.parseEther(args.amount) })
@@ -29,8 +29,10 @@ task("erc20-approve", "Approves ERC20 tokens to the given account")
             expect(await token.allowance(deployer, args.spender)).to.eq(amountInWei);
             console.log(tokenName + " Approved");
 
-            console.log("\nTransaction Receipt: \n",tx)
-            console.log(getTxUrl(deployments.network,tx.hash))
-
+            console.log("\nTransaction Receipt: \n", tx)
+            const txUrl = getTxUrl(deployments.network, tx.hash);
+            if (txUrl != null) {
+                console.log(txUrl);
+            }
         }
     );
