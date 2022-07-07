@@ -13,14 +13,13 @@ const { ethers } = require("hardhat")
 module.exports = async ({
     getNamedAccounts,
 }) => {
-
     const { deployer } = await getNamedAccounts();
 
     console.log(colors.bold("\n==> Running 003_deploy_emp script"));
 
     const KOVAN_NETWORK_ID = 42;
     // date 2 days in the future
-    const expirationTimestamp = Date.now() + (2 * 24 * 3600 * 1000);
+    const expirationTimestamp = Math.floor(Date.now()/1000) + (30 * 24 * 3600); // three months hence
 
     const KOVAN_USDC = '0xb7a4F3E9097C08dA09517b5aB877F7a917224ede';
     const UMA_EMPC_ADDRESS = await getAddress("ExpiringMultiPartyCreator", KOVAN_NETWORK_ID);
@@ -43,19 +42,27 @@ module.exports = async ({
     // https://docs.umaproject.org/build-walkthrough/emp-parameters
     // values are scaled to 18 decimals
 
-    const priceFeedIdentifierHex = ethers.utils.hexlify(ethers.utils.toUtf8Bytes("USDETH"));
+    const priceFeedIdentifierHex = ethers.utils.hexlify(ethers.utils.toUtf8Bytes("BTC/USD"));
     const priceFeedIdentifierPaddedHex = priceFeedIdentifierHex.padEnd(66, '0');
+    
+    // Taking into account the price feed, under what collateralization can a sponsor be liquidated?
+    const collateralRequirement = 1.25;
+
+    // How many units of collateral do we initially want for every unit of the synthetic asset?
+    const initialTokenRatio = 30000; // at $1k/ETH, this is 150% collateraliztion
+    const minSponsorTokens = 0.02;
 
     // Contract tracks percentages and ratios below in FixedPoint vars, with 18 decimals of precision, so parseEther will work
+    // (unless specifying token amount)
     const createEmpParams = {
         expirationTimestamp: expirationTimestamp,
         collateralAddress: KOVAN_USDC,
         priceFeedIdentifier: priceFeedIdentifierPaddedHex,
-        syntheticName: 'Test USDETH',
-        syntheticSymbol: 'zUSDETH',
-        // 1.25 collateralization ratio
+        syntheticName: 'Synthetic BTC',
+        syntheticSymbol: 'sBTC',
+        // 1.25 collateralRequirement
         collateralRequirement: {
-            rawValue: ethers.utils.parseEther('1.25')
+            rawValue: ethers.utils.parseEther(collateralRequirement.toString())
         },
         // 0.1 => 10%
         disputeBondPercentage: {
@@ -70,9 +77,8 @@ module.exports = async ({
             rawValue: ethers.utils.parseEther('0.2')
         },
         // minSponsorTokens will inherit decimal places from the collateral currency
-        // 100 tokens
         minSponsorTokens: {
-            rawValue: ethers.utils.parseUnits('100', syntheticDecimals)
+            rawValue: ethers.utils.parseUnits(minSponsorTokens.toString(), syntheticDecimals)
         },
         withdrawalLiveness: 7200,
         liquidationLiveness: 7200,
@@ -126,28 +132,28 @@ module.exports = async ({
 
     // Pre-Approval steps for creating EMP synths
     // Approve EMP contract to spend collateral
-    // Calculate GCR for 1st time minting
-    // Calculate min. no. of tokens
-    // Calculate min. no. of collateral
+    
     const usdcInstance = new ethers.Contract(KOVAN_USDC, faucetTokenAbi, signer0);
     console.log(colors.blue("\n  Allocating USDC: ....."));
     await usdcInstance.allocateTo(deployer, ethers.utils.parseUnits('100000', syntheticDecimals));
     console.log(colors.blue("\n  Approving allowance of USDC to EMP: ....."));
-    await usdcInstance.approve(expiringMultiPartyAddress, ethers.utils.parseUnits('1000', syntheticDecimals));
+    await usdcInstance.approve(expiringMultiPartyAddress, ethers.utils.parseUnits('100000', syntheticDecimals));
 
     const syntheticTokenInstance = new ethers.Contract(syntheticTokenAddress, getAbi('SyntheticToken'), signer0);
     console.log(colors.green("\n Synth Balance: ", (await syntheticTokenInstance.balanceOf(deployer)).toString()));
 
     // creating synths
-    console.log(colors.blue("\n Creating Synths: ....."));
+    console.log(colors.blue("\n About to Mint Initial Synth Tokens:"));
 
-    const collateralAmount = ethers.utils.parseUnits('10', syntheticDecimals);
-    console.log(colors.blue("  collateralAmount: ", collateralAmount.toString()));
-    const collateralAmountObject = { rawValue: collateralAmount };
+    const collateralAmount = minSponsorTokens * initialTokenRatio;
 
-    const numTokens = ethers.utils.parseUnits('100', syntheticDecimals);
-    console.log(colors.blue("  numTokens: ", numTokens.toString()));
-    const numTokensObject = { rawValue: numTokens };
+    console.log(colors.blue('\n  Minimum mintable synthetic tokens: ' + minSponsorTokens.toString()));
+    console.log(colors.blue('  With an initial token ratio of ' + initialTokenRatio.toString() + "..."));
+    console.log(colors.blue('  ' + collateralAmount.toString() + ' tokens of collateral is needed.'));
+    console.log(colors.blue('\n  Minting...'));
+
+    const collateralAmountObject = { rawValue: ethers.utils.parseUnits(collateralAmount.toString(), syntheticDecimals) };
+    const numTokensObject = { rawValue: ethers.utils.parseUnits(minSponsorTokens.toString(), syntheticDecimals) };
 
     await empInstance.create(collateralAmountObject, numTokensObject);
 
@@ -162,7 +168,7 @@ module.exports = async ({
     console.log(colors.blue("  collateralRequirement: ", (await empInstance.collateralRequirement()).toString()));
     console.log(colors.blue("  expirationTimestamp: ", (await empInstance.expirationTimestamp()).toString()));
 
-    console.log(colors.green("\n Synth Balance: ", (await syntheticTokenInstance.balanceOf(deployer)).toString()));
+    console.log(colors.green("\n Synth Balance: ", ethers.utils.formatUnits((await syntheticTokenInstance.balanceOf(deployer)).toString(), syntheticDecimals)));
 };
 
 module.exports.tags = ['ExpiringMultiParty'];

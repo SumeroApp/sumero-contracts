@@ -3,10 +3,10 @@ task("clay-approve", "Approves clay token to given account")
     .addParam("spender", "The account's address")
     .addParam("amount", "The amount to be approved")
     .setAction(
-        async (args, deployments, network) => {
+        async (args, deployments) => {
             const { expect } = require('chai');
             const { deployer } = await hre.getNamedAccounts();
-            const {getTxUrl} = require('../utils/helper');
+            const { getTxUrl } = require('../utils/helper');
 
             const clayToken = await ethers.getContract("ClayToken", deployer);
             const clayBalance = await clayToken.balanceOf(deployer);
@@ -19,11 +19,10 @@ task("clay-approve", "Approves clay token to given account")
             expect(await clayToken.allowance(deployer, args.spender)).to.eq(amountInWei);
             console.log("\nCLAY Approved");
 
-            console.log("\nTransaction Receipt: \n",tx)
-            console.log(getTxUrl(deployments.network,tx.hash))
-
-
-
-
+            console.log("\nTransaction Receipt: \n", tx)
+            const txUrl = getTxUrl(deployments.network, tx.hash);
+            if (txUrl != null) {
+                console.log(txUrl);
+            }
         }
     );
