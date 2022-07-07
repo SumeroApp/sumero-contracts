@@ -1,4 +1,4 @@
-//npx hardhat clay-balance --account 0x70acfbe30eb83ddda71da8d55a15a73b994bf456
+// npx hardhat clay-balance --account <account-address>
 task("clay-balance", "Prints an account's balance")
     .addParam("account", "The account's address")
     .setAction(
