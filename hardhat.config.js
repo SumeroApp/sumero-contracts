@@ -2,10 +2,12 @@ const { node_url, accounts, addForkConfiguration } = require('./utils/network');
 // requiring these here, automatically adds ethers, deploy to HRE (Hardhat Runtime Env.)
 require("@nomiclabs/hardhat-waffle");
 require("@nomiclabs/hardhat-ethers");
+require("@nomiclabs/hardhat-etherscan");
 require("hardhat-deploy");
 require("./tasks/clay-balance");
 require("./tasks/clay-mint");
 require("./tasks/clay-approve");
+require("./tasks/clay-get-allowance");
 require("./tasks/erc20-approve");
 require("./tasks/add-liquidity");
 require("./tasks/clay-grant-role");
@@ -70,4 +72,7 @@ module.exports = {
       },
     }
     : undefined,
+  etherscan: {
+    apiKey: process.env.ETHERSCAN_API_KEY
+  }
 };
