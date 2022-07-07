@@ -53,13 +53,17 @@ module.exports = async ({
 
     console.log(colors.blue("\nIssuing zClayBonds: ....."));
     console.log(colors.blue("\nBond Issuance reverts incase of insufficient CLAY liquidity: ....."));
-    await expect(clayBonds.issue(ethers.utils.parseEther('1'))).to.be.reverted;
+    const clayLiquidity = await clayToken.balanceOf(ClayBondsDeployed.address)
+    if (clayLiquidity == 0) { await expect(clayBonds.issue(ethers.utils.parseEther('1'))).to.be.reverted; }
 
     console.log(colors.blue("Provide CLAY liquidity to bonds contract and deployer user: ....."));
+    const liquidityBefore = await clayToken.balanceOf(ClayBondsDeployed.address);
     await clayToken.mint(ClayBondsDeployed.address, ethers.utils.parseEther('1.8'))
-    expect(await clayToken.balanceOf(ClayBondsDeployed.address)).to.equal(ethers.utils.parseEther('1.8'), 'Clay Bonds CLAY balance doesnt match');
+    expect(await clayToken.balanceOf(ClayBondsDeployed.address)).to.equal(ethers.utils.parseEther('1.8').add(liquidityBefore), 'Clay Bonds CLAY balance doesnt match');
+    
+    const deployerBalanceBefore = await clayToken.balanceOf(deployer);
     await clayToken.mint(deployer, ethers.utils.parseEther('1'))
-    expect(await clayToken.balanceOf(deployer)).to.equal(ethers.utils.parseEther('1'), 'Clay Bonds CLAY balance doesnt match');
+    expect(await clayToken.balanceOf(deployer)).to.equal(ethers.utils.parseEther('1').add(deployerBalanceBefore), 'Clay Bonds CLAY balance doesnt match');
 
     console.log(colors.blue("\nIssuing zClayBonds: ....."));
     const issueTx = await clayBonds.issue(ethers.utils.parseEther('1'));
