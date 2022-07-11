@@ -10,11 +10,11 @@ task("add-liquidity", "Adds liquidity to the pool.")
     .addParam("token1", "Token 1 Name e.g. USDC")
     .addParam("decimal1", "Token 1 Decimal e.g. 6")
     .addParam("amount1", "Token 1 Amount (in eth)")
-    .addOptionalParam("address1", "Token 1 Address")
+    .addParam("address1", "Token 1 Address")
     .addParam("token2", "Token 2 Name e.g. ClayToken")
     .addParam("decimal2", "Token 2 Decimal e.g. 18")
     .addParam("amount2", "Token 2 Amount (in eth)")
-    .addOptionalParam("address2", "Token 2 Address")
+    .addParam("address2", "Token 2 Address")
     .setAction(
         async (args, deployments) => {
             const { deployer } = await getNamedAccounts();
