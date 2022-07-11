@@ -20,8 +20,8 @@ module.exports = async ({
     const SumeroLpToken = await hre.ethers.getContractFactory("UniswapV2ERC20");
     // How do you get LP token address?
     // this is hardcoded, ideally should automate fetching this address
-    // USDC-CLAY LP Token => 0x4087e9d765200daB6D02E4fFa4Adc88d3BC29f2F
-    const sumeroLpToken = await SumeroLpToken.attach("0x4087e9d765200daB6D02E4fFa4Adc88d3BC29f2F");
+    // USDCoin-CLAY LP Token => 0x995b62fC9681db170e5312229acF7250F91DF719
+    const sumeroLpToken = await SumeroLpToken.attach("0x995b62fC9681db170e5312229acF7250F91DF719");
 
     const ClayStakingRewardsDeployed = await deployments.deploy('ClayStakingRewards', {
         from: deployer,

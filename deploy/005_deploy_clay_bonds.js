@@ -17,6 +17,8 @@ module.exports = async ({
     console.log(colors.green("\nDEPLOYER ADDRESS is:", deployer));
 
     const clayToken = await ethers.getContract("ClayToken", deployer);
+    console.log(colors.green("\nCLAY TOKEN ADDRESS is:", clayToken.address));
+
     const ClayBondsDeployed = await deployments.deploy('ClayBonds', {
         from: deployer,
         gasLimit: 4000000,
@@ -60,7 +62,7 @@ module.exports = async ({
     const liquidityBefore = await clayToken.balanceOf(ClayBondsDeployed.address);
     await clayToken.mint(ClayBondsDeployed.address, ethers.utils.parseEther('1.8'))
     expect(await clayToken.balanceOf(ClayBondsDeployed.address)).to.equal(ethers.utils.parseEther('1.8').add(liquidityBefore), 'Clay Bonds CLAY balance doesnt match');
-    
+
     const deployerBalanceBefore = await clayToken.balanceOf(deployer);
     await clayToken.mint(deployer, ethers.utils.parseEther('1'))
     expect(await clayToken.balanceOf(deployer)).to.equal(ethers.utils.parseEther('1').add(deployerBalanceBefore), 'Clay Bonds CLAY balance doesnt match');
