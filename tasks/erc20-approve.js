@@ -14,7 +14,8 @@ task("erc20-approve", "Approves ERC20 tokens to the given account")
             const token = await Token.attach(args.address);
 
             const tokenName = await token.name();
-            expect(tokenName).to.eq(args.name);
+            // expect(tokenName).to.eq(args.name);
+
             // to get USDC with ETH 
             // await token.deposit({ value: ethers.utils.parseEther(args.amount) })
 

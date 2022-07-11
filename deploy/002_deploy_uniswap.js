@@ -31,7 +31,7 @@ module.exports = async ({
 
 
     const USDCDeployed = {
-        address: '0xc2569dd7d0fd715b054fbf16e75b001e5c0c1115'
+        address: '0xb7a4F3E9097C08dA09517b5aB877F7a917224ede'
     };
 
     // Uniswap Factory 
