@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "./interfaces/IClayToken.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+
 
 /**
     You can deposit CLAY (ERC20 token native to Sumero) to get zCLAY Bonds (a new ERC20 representing the bond).
@@ -27,8 +29,8 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
     The user can claim the zCLAY Bonds for equivalent value of CLAY after the maturation date.
     The user has to lock his CLAY in to zCLAY bonds for atleast 3 years. They are open to trade these bonds on a secondary market (i.e. via LP pools on Sumero)
  */
-contract ClayBonds is ERC20("zClay Token", "zCLAY") {
-    IERC20 public clay;
+contract ClayBonds is ERC20("zClay Token", "zCLAY"), Ownable{
+    IClayToken public clay;
 
     // the maximum upper limit of bond rewards that this contract will give over it's lifetime
     uint256 public maximumBondRewards;
@@ -52,7 +54,7 @@ contract ClayBonds is ERC20("zClay Token", "zCLAY") {
         uint256 reward
     );
 
-    constructor(IERC20 _clay, uint256 _maximumBondRewards) {
+    constructor(IClayToken _clay, uint256 _maximumBondRewards) {
         clay = _clay;
         maximumBondRewards = _maximumBondRewards;
         depositStartDate = block.timestamp;
@@ -104,13 +106,6 @@ contract ClayBonds is ERC20("zClay Token", "zCLAY") {
         reward = ((_amount * _rewardPercent) / 100) / 1 ether;
     }
 
-    function hasEnoughClayLiquidity() public view returns (bool) {
-        if (clay.balanceOf(address(this)) >= totalBondDeposits) {
-            return true;
-        }
-        return false;
-    }
-
     /**
      * Issues a zCLAY Bond depending on the amount of CLAY deposited and the current APY which depends on the time elapsed since bond programme inception
      * @param _clayAmount The amount of CLAY deposited
@@ -138,10 +133,7 @@ contract ClayBonds is ERC20("zClay Token", "zCLAY") {
             totalBondDeposits < maximumBondRewards,
             "Maximum Bond Reward Pool Reached"
         );
-        require(
-            hasEnoughClayLiquidity(),
-            "Bonds contract has insufficient CLAY Liquidity"
-        );
+
         emit Issue(
             _clayAmount,
             daysLeftToMaturationDate,
@@ -161,6 +153,18 @@ contract ClayBonds is ERC20("zClay Token", "zCLAY") {
         uint256 balance = balanceOf(msg.sender);
         require(balance > 0, "Balance must be greater than zero");
         _burn(msg.sender, balance);
-        clay.transfer(msg.sender, balance);
+        clay.mint(msg.sender, balance);
+    }
+
+    /**
+     * @dev Burns the remaining Clay in the contract
+     **/
+    function burn() public onlyOwner{
+        require(
+            maturationDate <= block.timestamp,
+            "Bond Maturity date not reached"
+        );
+        uint256 clayBalance = clay.balanceOf(address(this));
+        clay.burn(address(this), clayBalance);
     }
 }
