@@ -11,7 +11,23 @@ This project contains the smart contracts and related deployment scripts.
 nvm install 16.14.0
 ```
 
-3. Install pnpm globally
+3. Install VSCode extensions - JuanBlanco.solidity
+
+4. Setup VScode to use correct formatting
+    - Create `settings.json` inside `.vscode` folder and add following
+```
+{
+    "[solidity]": {
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "JuanBlanco.solidity"
+    },
+    "[javascript]": {
+        "editor.formatOnSave": true,
+    },
+}
+```
+
+5. Install pnpm globally
 
 ```
 npm install -g pnpm@6.31.0
