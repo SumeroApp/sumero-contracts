@@ -138,8 +138,8 @@ describe("Clay Bonds Contract", function () {
         const timestamp = (await ethers.provider.getBlock(currentBlock)).timestamp
         console.log("Current timestamp : " + timestamp)
         console.log("Maturation Date  : " + maturationDate)
-        const differance = maturationDate - timestamp
-        increaseTime(differance)
+        const difference = maturationDate - timestamp
+        increaseTime(difference)
     })
     it("Claims after the maturation", async () => {
         console.log("\nClaiming after the maturation: .....")
@@ -165,7 +165,7 @@ describe("Clay Bonds Contract", function () {
         console.log("Clay balance of the contract:" + await clayToken.balanceOf(ClayBondsAddress))
     })
     it("Burns remained Clay balance of ClayBonds Contract after the Maturation Date", async () => {
-        console.log("\Burning the remained Clays after the maturation: .....")
+        console.log("\nBurning the remaining Clays after the maturation: .....")
         let beforeClaySupply = await clayToken.totalSupply();
         let beforeContractBalance = await clayToken.balanceOf(ClayBondsAddress)
 
