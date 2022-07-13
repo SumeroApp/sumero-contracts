@@ -8,6 +8,7 @@ let ClayAddress;
 let clayBonds;
 let ClayBondsAddress;
 let daysLeftToMaturationDate;
+// issued bond amount by the user
 let clayAmount;
 
 async function increaseTime(amount) {
@@ -51,9 +52,18 @@ describe("Clay Bonds Contract", function () {
         expect(await clayBonds.symbol()).to.be.eq("zCLAY")
         
     });
+    it('Gives minting & burning access to Clay Bonds contract', async function () {
+        console.log("\nGiving access to Clay Bonds contract for minting & burning Clay  : .....")
+        const minterRoleHash = ethers.utils.keccak256(ethers.utils.toUtf8Bytes("MINTER_ROLE"))
+        const burnerRoleHash = ethers.utils.keccak256(ethers.utils.toUtf8Bytes("BURNER_ROLE"))
+        await clayToken.grantRole(minterRoleHash, ClayBondsAddress)
+        await clayToken.grantRole(burnerRoleHash, ClayBondsAddress)
+        expect(await clayToken.hasRole(minterRoleHash, ClayBondsAddress)).eq(true)
+        expect(await clayToken.hasRole(burnerRoleHash, ClayBondsAddress)).eq(true)
 
-    it('Mints Clay token to  Account 1', async function () {
-        console.log("\n Minting 1 Clay Token to Account 1: .....")
+    });
+    it('Mints Clay to  Account 1', async function () {
+        console.log("\n Minting 1 Clay to Account 1: .....")
         expect(await clayToken.balanceOf(accounts[1].address)).to.equal(0)
         await clayToken.mint(accounts[1].address, ethers.utils.parseUnits('1.0', 'ether'))
         const balance = await clayToken.balanceOf(accounts[1].address)
@@ -95,36 +105,33 @@ describe("Clay Bonds Contract", function () {
         expect(depositCloseDate.sub(depositStartDate)).to.be.eq(31536000)
         expect(dailyYield).to.be.eq(dailyYieldPercent)
     });
-
-    it("Provides CLAY liquidity to bonds contract ", async () => {
-        console.log("\nBond Issuance reverts incase of insufficient CLAY liquidity: .....")
-        let beforeSupply = await clayToken.totalSupply()
-        await expect(clayBonds.connect(accounts[1]).issue(ethers.utils.parseUnits('1.0', 'ether'))).to.be.reverted
-        let amount =  ethers.utils.parseUnits('1.8', 'ether')
-        await clayToken.mint(ClayBondsAddress,amount)
-        // Updated supply must be equal to: beforeSupply + amount
-        expect(beforeSupply.add(amount)).to.be.eq(await clayToken.totalSupply())
-    })
-
     it("Issues zCLAY bonds ", async () => {
         console.log("\nIssuing zClayBonds: .....")
 
         clayAmount = ethers.utils.parseUnits('1.0', 'ether')
         const issueTx = await clayBonds.connect(accounts[1]).issue(clayAmount)
         const issueReceipt = await issueTx.wait()
+        daysLeftToMaturationDate = clayBonds.getDaysLeftToMaturationDate()
+        let rewardPercent = ethers.BigNumber.from(await clayBonds.getRewardPercent(daysLeftToMaturationDate))
+        let reward = ethers.BigNumber.from(await clayBonds.getReward(clayAmount, rewardPercent))
+
+
         let bondBalanceOfUser = await clayBonds.balanceOf(accounts[1].address)
         let contractBalance = await clayToken.balanceOf(ClayBondsAddress)
+
+        console.log("User Clay invesment: " + clayAmount )
+        console.log("User estimated reward: " + reward )
         console.log("Bonds balance of user: " + bondBalanceOfUser )
         console.log("Clay balance of ClayBonds Contract: " + contractBalance )
         console.log("Total Bond Deposits: ", (await clayBonds.totalBondDeposits()).toString())
-        console.log("hasEnoughClayLiquidity: ", (await clayBonds.hasEnoughClayLiquidity()).toString())
 
-        daysLeftToMaturationDate = clayBonds.getDaysLeftToMaturationDate()
-
-        expect(await clayBonds.totalSupply()).to.be.eq(bondBalanceOfUser)
+        expect(reward.add(clayAmount)).to.be.eq(bondBalanceOfUser)
         expect(await clayToken.totalSupply()).to.be.eq(contractBalance)
     })
-    it("Manipulates the time ", async () => {
+    it("Manipulates the time and tests time dependent functions(claim & exit)", async () => {
+        console.log("\nTesting time dependent Claim and Exit function: .....")
+        await expect(clayBonds.exit()).to.be.reverted
+        await expect(clayBonds.connect(accounts[1]).claim()).to.be.reverted
         console.log("\nManipulating the EVM time: .....")
         const maturationDate = await clayBonds.maturationDate()
         const currentBlock = await ethers.provider.getBlockNumber()
@@ -134,19 +141,49 @@ describe("Clay Bonds Contract", function () {
         const differance = maturationDate - timestamp
         increaseTime(differance)
     })
-    it("claims after the maturation", async () => {
+    it("Claims after the maturation", async () => {
         console.log("\nClaiming after the maturation: .....")
-        console.log("Balance before claim: " + await clayToken.balanceOf(accounts[1].address))
+        console.log(" User's Clay balance before claim: " + await clayToken.balanceOf(accounts[1].address))
         const claimResult = await clayBonds.connect(accounts[1]).claim()
         const issueReceipt = await claimResult.wait()
         // console.log(issueReceipt)
         const afterBalance = await clayToken.balanceOf(accounts[1].address)
-        console.log("Balance after claim: " + afterBalance)
+        console.log("User's Clay balance after claim: " + afterBalance)
 
         let rewardPercent = ethers.BigNumber.from(await clayBonds.getRewardPercent(daysLeftToMaturationDate))
         let reward = ethers.BigNumber.from(await clayBonds.getReward(clayAmount, rewardPercent))
 
         let bondAmount = reward.add(clayAmount)
-        expect(bondAmount).eq(afterBalance)
-    })
+        let bondBalanceOfUser = await clayBonds.balanceOf(accounts[1].address)
+
+        expect(bondBalanceOfUser).eq(0)
+        expect(afterBalance).eq(bondAmount)
+  
+        console.log("Reward: "+reward)
+        console.log("Bond amount: "+bondAmount)
+        console.log("After: user's Clay balance: "+afterBalance)
+        console.log("Clay balance of the contract:"+ await clayToken.balanceOf(ClayBondsAddress))
+    }) 
+    it("Burns remained Clay balance of ClayBonds Contract after the Maturation Date", async () => {
+        console.log("\Burning the remained Clays after the maturation: .....")
+        let beforeClaySupply = await clayToken.totalSupply();
+        let beforeContractBalance = await clayToken.balanceOf(ClayBondsAddress)
+
+        const exitResult = await clayBonds.exit()
+        const issueReceipt = await exitResult.wait()
+        // console.log(issueReceipt)
+
+        let afterClaySupply = await clayToken.totalSupply();
+        let afterContractBalance = await clayToken.balanceOf(ClayBondsAddress)
+
+        expect(beforeClaySupply.sub(afterClaySupply)).eq(clayAmount)
+        expect(beforeContractBalance).eq(clayAmount)
+        expect(afterContractBalance).eq(0)
+
+        console.log("Before: Clay supply: "+beforeClaySupply)
+        console.log("After: Clay supply: "+afterClaySupply)
+        console.log("Before: Clay balance of the contract: "+beforeContractBalance)
+        console.log("After: Clay balance of the contract: "+ afterContractBalance)
+
+    }) 
 });
