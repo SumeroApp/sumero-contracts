@@ -128,9 +128,9 @@ describe("Clay Bonds Contract", function () {
         expect(reward.add(clayAmount)).to.be.eq(bondBalanceOfUser)
         expect(await clayToken.totalSupply()).to.be.eq(contractBalance)
     })
-    it("Manipulates the time and tests time dependent functions(claim & exit)", async () => {
-        console.log("\nTesting time dependent Claim and Exit function: .....")
-        await expect(clayBonds.exit()).to.be.reverted
+    it("Manipulates the time and tests time dependent functions(claim & burn)", async () => {
+        console.log("\nTesting time dependent Claim and Burn function: .....")
+        await expect(clayBonds.burn()).to.be.reverted
         await expect(clayBonds.connect(accounts[1]).claim()).to.be.reverted
         console.log("\nManipulating the EVM time: .....")
         const maturationDate = await clayBonds.maturationDate()
@@ -168,9 +168,10 @@ describe("Clay Bonds Contract", function () {
         console.log("\nBurning the remaining Clays after the maturation: .....")
         let beforeClaySupply = await clayToken.totalSupply();
         let beforeContractBalance = await clayToken.balanceOf(ClayBondsAddress)
-
-        const exitResult = await clayBonds.exit()
-        const issueReceipt = await exitResult.wait()
+        // only owner can call
+        await expect(clayBonds.connect(accounts[3]).burn()).to.be.reverted
+        const burnResult = await clayBonds.burn()
+        const issueReceipt = await burnResult.wait()
         // console.log(issueReceipt)
 
         let afterClaySupply = await clayToken.totalSupply();

@@ -3,6 +3,8 @@ pragma solidity ^0.8.0;
 
 import "./interfaces/IClayToken.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+
 
 /**
     You can deposit CLAY (ERC20 token native to Sumero) to get zCLAY Bonds (a new ERC20 representing the bond).
@@ -27,7 +29,7 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
     The user can claim the zCLAY Bonds for equivalent value of CLAY after the maturation date.
     The user has to lock his CLAY in to zCLAY bonds for atleast 3 years. They are open to trade these bonds on a secondary market (i.e. via LP pools on Sumero)
  */
-contract ClayBonds is ERC20("zClay Token", "zCLAY") {
+contract ClayBonds is ERC20("zClay Token", "zCLAY"), Ownable{
     IClayToken public clay;
 
     // the maximum upper limit of bond rewards that this contract will give over it's lifetime
@@ -157,7 +159,7 @@ contract ClayBonds is ERC20("zClay Token", "zCLAY") {
     /**
      * @dev Burns the remaining Clay in the contract
      **/
-    function exit() public {
+    function burn() public onlyOwner{
         require(
             maturationDate <= block.timestamp,
             "Bond Maturity date not reached"
