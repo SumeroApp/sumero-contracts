@@ -104,7 +104,6 @@ contract ClayBonds is ERC20("zClay Token", "zCLAY") {
         reward = ((_amount * _rewardPercent) / 100) / 1 ether;
     }
 
-
     /**
      * Issues a zCLAY Bond depending on the amount of CLAY deposited and the current APY which depends on the time elapsed since bond programme inception
      * @param _clayAmount The amount of CLAY deposited
@@ -154,15 +153,16 @@ contract ClayBonds is ERC20("zClay Token", "zCLAY") {
         _burn(msg.sender, balance);
         clay.mint(msg.sender, balance);
     }
+
     /**
-     * @dev Burns the remained Clay in the contract
+     * @dev Burns the remaining Clay in the contract
      **/
-    function exit() public{
+    function exit() public {
         require(
             maturationDate <= block.timestamp,
             "Bond Maturity date not reached"
         );
         uint256 clayBalance = clay.balanceOf(address(this));
-        clay.burn(address(this),clayBalance);
+        clay.burn(address(this), clayBalance);
     }
 }

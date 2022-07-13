@@ -50,7 +50,7 @@ describe("Clay Bonds Contract", function () {
         expect(await clayToken.symbol()).to.be.eq("CLAY")
         expect(await clayBonds.name()).to.be.eq("zClay Token")
         expect(await clayBonds.symbol()).to.be.eq("zCLAY")
-        
+
     });
     it('Gives minting & burning access to Clay Bonds contract', async function () {
         console.log("\nGiving access to Clay Bonds contract for minting & burning Clay  : .....")
@@ -119,10 +119,10 @@ describe("Clay Bonds Contract", function () {
         let bondBalanceOfUser = await clayBonds.balanceOf(accounts[1].address)
         let contractBalance = await clayToken.balanceOf(ClayBondsAddress)
 
-        console.log("User Clay invesment: " + clayAmount )
-        console.log("User estimated reward: " + reward )
-        console.log("Bonds balance of user: " + bondBalanceOfUser )
-        console.log("Clay balance of ClayBonds Contract: " + contractBalance )
+        console.log("User Clay invesment: " + clayAmount)
+        console.log("User estimated reward: " + reward)
+        console.log("Bonds balance of user: " + bondBalanceOfUser)
+        console.log("Clay balance of ClayBonds Contract: " + contractBalance)
         console.log("Total Bond Deposits: ", (await clayBonds.totalBondDeposits()).toString())
 
         expect(reward.add(clayAmount)).to.be.eq(bondBalanceOfUser)
@@ -158,12 +158,12 @@ describe("Clay Bonds Contract", function () {
 
         expect(bondBalanceOfUser).eq(0)
         expect(afterBalance).eq(bondAmount)
-  
-        console.log("Reward: "+reward)
-        console.log("Bond amount: "+bondAmount)
-        console.log("After: user's Clay balance: "+afterBalance)
-        console.log("Clay balance of the contract:"+ await clayToken.balanceOf(ClayBondsAddress))
-    }) 
+
+        console.log("Reward: " + reward)
+        console.log("Bond amount: " + bondAmount)
+        console.log("After: user's Clay balance: " + afterBalance)
+        console.log("Clay balance of the contract:" + await clayToken.balanceOf(ClayBondsAddress))
+    })
     it("Burns remained Clay balance of ClayBonds Contract after the Maturation Date", async () => {
         console.log("\Burning the remained Clays after the maturation: .....")
         let beforeClaySupply = await clayToken.totalSupply();
@@ -180,10 +180,10 @@ describe("Clay Bonds Contract", function () {
         expect(beforeContractBalance).eq(clayAmount)
         expect(afterContractBalance).eq(0)
 
-        console.log("Before: Clay supply: "+beforeClaySupply)
-        console.log("After: Clay supply: "+afterClaySupply)
-        console.log("Before: Clay balance of the contract: "+beforeContractBalance)
-        console.log("After: Clay balance of the contract: "+ afterContractBalance)
+        console.log("Before: Clay supply: " + beforeClaySupply)
+        console.log("After: Clay supply: " + afterClaySupply)
+        console.log("Before: Clay balance of the contract: " + beforeContractBalance)
+        console.log("After: Clay balance of the contract: " + afterContractBalance)
 
-    }) 
+    })
 });

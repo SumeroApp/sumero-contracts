@@ -19,7 +19,7 @@ module.exports = async ({
 
     const KOVAN_NETWORK_ID = 42;
     // date 2 days in the future
-    const expirationTimestamp = Math.floor(Date.now()/1000) + (30 * 24 * 3600); // three months hence
+    const expirationTimestamp = Math.floor(Date.now() / 1000) + (30 * 24 * 3600); // three months hence
 
     const KOVAN_USDC = '0xb7a4F3E9097C08dA09517b5aB877F7a917224ede';
     const UMA_EMPC_ADDRESS = await getAddress("ExpiringMultiPartyCreator", KOVAN_NETWORK_ID);
@@ -44,7 +44,7 @@ module.exports = async ({
 
     const priceFeedIdentifierHex = ethers.utils.hexlify(ethers.utils.toUtf8Bytes("BTC/USD"));
     const priceFeedIdentifierPaddedHex = priceFeedIdentifierHex.padEnd(66, '0');
-    
+
     // Taking into account the price feed, under what collateralization can a sponsor be liquidated?
     const collateralRequirement = 1.25;
 
@@ -132,7 +132,7 @@ module.exports = async ({
 
     // Pre-Approval steps for creating EMP synths
     // Approve EMP contract to spend collateral
-    
+
     const usdcInstance = new ethers.Contract(KOVAN_USDC, faucetTokenAbi, signer0);
     console.log(colors.blue("\n  Allocating USDC: ....."));
     await usdcInstance.allocateTo(deployer, ethers.utils.parseUnits('100000', syntheticDecimals));

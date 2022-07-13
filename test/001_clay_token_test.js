@@ -60,8 +60,4 @@ describe("Clay Token Contract", function () {
 
         expect(await clayToken.allowance(accounts[2].address, accounts[3].address)).to.equal(ethers.utils.parseUnits('0.0', 'ether'))
     })
-
-  
-
-
 });
