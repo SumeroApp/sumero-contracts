@@ -22,7 +22,7 @@ module.exports = async ({
     const ClayBondsDeployed = await deployments.deploy('ClayBonds', {
         from: deployer,
         gasLimit: 4000000,
-        args: [clayToken.address, ethers.utils.parseEther('10')]
+        args: [clayToken.address, ethers.utils.parseEther('1000000')]
     });
     console.log(colors.green("\nCLAY BONDS ADDRESS:", ClayBondsDeployed.address));
 
@@ -33,6 +33,7 @@ module.exports = async ({
     console.log(colors.blue("\nApproving allowance of User's CLAY to ClayBonds: ....."));
     await clayToken.approve(ClayBondsDeployed.address, ethers.utils.parseEther('2000'));
 
+    console.log(colors.blue("\nLogging ClayBonds Details: ....."));
     console.log(colors.green("depositStartDate: ", (await clayBonds.depositStartDate()).toString()));
     console.log(colors.green("depositCloseDate: ", (await clayBonds.depositCloseDate()).toString()));
     console.log(colors.green("maturationDate: ", (await clayBonds.maturationDate()).toString()));
@@ -42,30 +43,14 @@ module.exports = async ({
     console.log(colors.green("BONDS_ISSUANCE_PERIOD: ", (await clayBonds.BONDS_ISSUANCE_PERIOD()).toString()));
     console.log(colors.green("maximumBondRewards: ", (await clayBonds.maximumBondRewards()).toString()));
     console.log(colors.green("totalBondDeposits: ", (await clayBonds.totalBondDeposits()).toString()));
-    console.log(colors.green("hasEnoughClayLiquidity: ", (await clayBonds.hasEnoughClayLiquidity()).toString()));
     const daysLeftToMaturationDate = (await clayBonds.getDaysLeftToMaturationDate()).toString();
     const rewardPercent = (await clayBonds.getRewardPercent(daysLeftToMaturationDate)).toString();
     const reward = (await clayBonds.getReward(ethers.utils.parseEther('1'), rewardPercent)).toString();
     console.log(colors.green("getDaysLeftToMaturationDate: ", daysLeftToMaturationDate));
     console.log(colors.green("getRewardPercent: ", rewardPercent));
     console.log(colors.green("getReward: ", reward));
-
     console.log(colors.green("bonds balance of user: ", (await clayBonds.balanceOf(deployer)).toString()));
     console.log(colors.green("clay balance of ClayBonds Contract: ", (await clayToken.balanceOf(ClayBondsDeployed.address)).toString()));
-
-    console.log(colors.blue("\nIssuing zClayBonds: ....."));
-    console.log(colors.blue("\nBond Issuance reverts incase of insufficient CLAY liquidity: ....."));
-    const clayLiquidity = await clayToken.balanceOf(ClayBondsDeployed.address)
-    if (clayLiquidity == 0) { await expect(clayBonds.issue(ethers.utils.parseEther('1'))).to.be.reverted; }
-
-    console.log(colors.blue("Provide CLAY liquidity to bonds contract and deployer user: ....."));
-    const liquidityBefore = await clayToken.balanceOf(ClayBondsDeployed.address);
-    await clayToken.mint(ClayBondsDeployed.address, ethers.utils.parseEther('1.8'))
-    expect(await clayToken.balanceOf(ClayBondsDeployed.address)).to.equal(ethers.utils.parseEther('1.8').add(liquidityBefore), 'Clay Bonds CLAY balance doesnt match');
-
-    const deployerBalanceBefore = await clayToken.balanceOf(deployer);
-    await clayToken.mint(deployer, ethers.utils.parseEther('1'))
-    expect(await clayToken.balanceOf(deployer)).to.equal(ethers.utils.parseEther('1').add(deployerBalanceBefore), 'Clay Bonds CLAY balance doesnt match');
 
     console.log(colors.blue("\nIssuing zClayBonds: ....."));
     const issueTx = await clayBonds.issue(ethers.utils.parseEther('1'));
@@ -74,7 +59,6 @@ module.exports = async ({
     console.log(colors.green("bonds balance of user: ", (await clayBonds.balanceOf(deployer)).toString()));
     console.log(colors.green("clay balance of ClayBonds Contract: ", (await clayToken.balanceOf(ClayBondsDeployed.address)).toString()));
     console.log(colors.green("totalBondDeposits: ", (await clayBonds.totalBondDeposits()).toString()));
-    console.log(colors.green("hasEnoughClayLiquidity: ", (await clayBonds.hasEnoughClayLiquidity()).toString()));
 };
 
 module.exports.tags = ['ClayBonds'];
