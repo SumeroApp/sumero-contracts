@@ -16,7 +16,7 @@ task("clay-grant-role", "Grants role to the given address")
             const roleHash = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(args.role));
             const tx = await clayToken.grantRole(roleHash, args.account);
 
-            expect(await clayToken.hasRole(roleHash, StakingRewardsAddress)).eq(true);
+            expect(await clayToken.hasRole(roleHash, args.account)).eq(true);
 
             console.log("\nTransaction Receipt: \n", tx);
             const txUrl = getTxUrl(deployments.network, tx.hash);
