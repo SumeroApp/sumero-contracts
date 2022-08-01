@@ -37,6 +37,7 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
         const currentAssetStatus = await assetManager.assetStatus(empAddress);
 
         if (currentAssetStatus == assetStatus.Closed) {
+
             console.log(colors.blue("Adding EMP " + empAddress + " to Asset Manager"));
             await assetManager.add(empAddress);
             expect(await assetManager.assetStatus(empAddress)).to.equal(2, 'Asset not in status 2 i.e. Open');
