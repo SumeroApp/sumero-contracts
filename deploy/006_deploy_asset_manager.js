@@ -15,7 +15,7 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
         from: deployer,
         gasLimit: 4000000,
         args: [],
-        // skipIfAlreadyDeployed: true
+        skipIfAlreadyDeployed: true
     });
 
     const assetManager = await ethers.getContract("AssetManager", deployer);
