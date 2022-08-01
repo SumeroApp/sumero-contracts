@@ -33,24 +33,16 @@ contract AssetManager is Ownable {
 
     function pauseEmp(uint256 id) external onlyOwner {
         require(
-            idToVerifiedEmps[id].addr != address(0),
-            "Asset Manager: ZERO_ADDRESS"
-        );
-        require(
-            idToVerifiedEmps[id].status != Status.Paused,
-            "Asset Manager: Asset already Paused"
+            idToVerifiedEmps[id].status == Status.Open,
+            "Asset Manager: ASSET_NOT_OPEN"
         );
         idToVerifiedEmps[id].status = Status.Paused;
     }
 
     function unpauseEmp(uint256 id) external onlyOwner {
         require(
-            idToVerifiedEmps[id].addr != address(0),
-            "Asset Manager: ZERO_ADDRESS"
-        );
-        require(
-            idToVerifiedEmps[id].status != Status.Open,
-            "Asset Manager: Asset already Open"
+            idToVerifiedEmps[id].status == Status.Paused,
+            "Asset Manager: ASSET_NOT_PAUSED"
         );
         idToVerifiedEmps[id].status = Status.Open;
     }
@@ -62,7 +54,7 @@ contract AssetManager is Ownable {
         );
         require(
             idToVerifiedEmps[id].status != Status.Closed,
-            "Asset Manager: Asset already Closed"
+            "Asset Manager: ASSET_ALREADY_CLOSED"
         );
         idToVerifiedEmps[id].status = Status.Closed;
     }
@@ -76,24 +68,16 @@ contract AssetManager is Ownable {
 
     function pauseSwapPair(uint256 id) external onlyOwner {
         require(
-            idToVerifiedSwapPairs[id].addr != address(0),
-            "Asset Manager: ZERO_ADDRESS"
-        );
-        require(
-            idToVerifiedSwapPairs[id].status != Status.Paused,
-            "Asset Manager: Asset already Paused"
+            idToVerifiedSwapPairs[id].status == Status.Open,
+            "Asset Manager: ASSET_NOT_OPEN"
         );
         idToVerifiedSwapPairs[id].status = Status.Paused;
     }
 
     function unpauseSwapPair(uint256 id) external onlyOwner {
         require(
-            idToVerifiedSwapPairs[id].addr != address(0),
-            "Asset Manager: ZERO_ADDRESS"
-        );
-        require(
-            idToVerifiedSwapPairs[id].status != Status.Open,
-            "Asset Manager: Asset already Open"
+            idToVerifiedSwapPairs[id].status == Status.Paused,
+            "Asset Manager: ASSET_NOT_PAUSED"
         );
         idToVerifiedSwapPairs[id].status = Status.Open;
     }
@@ -105,7 +89,7 @@ contract AssetManager is Ownable {
         );
         require(
             idToVerifiedSwapPairs[id].status != Status.Closed,
-            "Asset Manager: Asset already Closed"
+            "Asset Manager: ASSET_ALREADY_CLOSED"
         );
         idToVerifiedSwapPairs[id].status = Status.Closed;
     }
@@ -122,24 +106,16 @@ contract AssetManager is Ownable {
 
     function pauseStakingReward(uint256 id) external onlyOwner {
         require(
-            idToVerifiedStakingRewards[id].addr != address(0),
-            "Asset Manager: ZERO_ADDRESS"
-        );
-        require(
-            idToVerifiedStakingRewards[id].status != Status.Paused,
-            "Asset Manager: Asset already Paused"
+            idToVerifiedStakingRewards[id].status == Status.Open,
+            "Asset Manager: ASSET_NOT_OPEN"
         );
         idToVerifiedStakingRewards[id].status = Status.Paused;
     }
 
     function unpauseStakingReward(uint256 id) external onlyOwner {
         require(
-            idToVerifiedStakingRewards[id].addr != address(0),
-            "Asset Manager: ZERO_ADDRESS"
-        );
-        require(
-            idToVerifiedStakingRewards[id].status != Status.Open,
-            "Asset Manager: Asset already Open"
+            idToVerifiedStakingRewards[id].status == Status.Paused,
+            "Asset Manager: ASSET_NOT_PAUSED"
         );
         idToVerifiedStakingRewards[id].status = Status.Open;
     }
@@ -151,7 +127,7 @@ contract AssetManager is Ownable {
         );
         require(
             idToVerifiedStakingRewards[id].status != Status.Closed,
-            "Asset Manager: Asset already Closed"
+            "Asset Manager: ASSET_ALREADY_CLOSED"
         );
         idToVerifiedStakingRewards[id].status = Status.Closed;
     }
