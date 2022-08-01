@@ -4,37 +4,155 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract AssetManager is Ownable {
-    enum AssetStatus {
+    uint256 public totalEmpAssets;
+    mapping(uint256 => Asset) public idToVerifiedEmps;
+
+    uint256 public totalSwapPairAssets;
+    mapping(uint256 => Asset) public idToVerifiedSwapPairs;
+
+    uint256 public totalStakingRewardAssets;
+    mapping(uint256 => Asset) public idToVerifiedStakingRewards;
+
+    enum Status {
         Closed,
         Paused,
         Open
     }
 
-    mapping(address => AssetStatus) public assetStatus;
+    struct Asset {
+        address addr;
+        Status status;
+    }
 
-    uint256 public totalEmps;
-    mapping(uint256 => address) public idToVerifiedEmp;
-
-    uint256 public totalStakingPools;
-    mapping(uint256 => address) public idToVerifiedStakingPool;
-
+    // EMPs
     function addEmp(address _asset) external onlyOwner {
-        assetStatus[_asset] = AssetStatus.Open;
-        totalEmps = totalEmps + 1;
-        idToVerifiedEmp[totalEmps] = _asset;
+        require(_asset != address(0), "Asset Manager: ZERO_ADDRESS");
+        totalEmpAssets = totalEmpAssets + 1;
+        idToVerifiedEmps[totalEmpAssets] = Asset(_asset, Status.Open);
     }
 
-    function addStakingPool(address _asset) external onlyOwner {
-        assetStatus[_asset] = AssetStatus.Open;
-        totalStakingPools = totalStakingPools + 1;
-        idToVerifiedStakingPool[totalStakingPools] = _asset;
+    function pauseEmp(uint256 id) external onlyOwner {
+        require(
+            idToVerifiedEmps[id].addr != address(0),
+            "Asset Manager: ZERO_ADDRESS"
+        );
+        require(
+            idToVerifiedEmps[id].status != Status.Paused,
+            "Asset Manager: Asset already Paused"
+        );
+        idToVerifiedEmps[id].status = Status.Paused;
     }
 
-    function pause(address _asset) external onlyOwner {
-        assetStatus[_asset] = AssetStatus.Paused;
+    function unpauseEmp(uint256 id) external onlyOwner {
+        require(
+            idToVerifiedEmps[id].addr != address(0),
+            "Asset Manager: ZERO_ADDRESS"
+        );
+        require(
+            idToVerifiedEmps[id].status != Status.Open,
+            "Asset Manager: Asset already Open"
+        );
+        idToVerifiedEmps[id].status = Status.Open;
     }
 
-    function close(address _asset) external onlyOwner {
-        assetStatus[_asset] = AssetStatus.Closed;
+    function closeEmp(uint256 id) external onlyOwner {
+        require(
+            idToVerifiedEmps[id].addr != address(0),
+            "Asset Manager: ZERO_ADDRESS"
+        );
+        require(
+            idToVerifiedEmps[id].status != Status.Closed,
+            "Asset Manager: Asset already Closed"
+        );
+        idToVerifiedEmps[id].status = Status.Closed;
+    }
+
+    // Swap Pairs
+    function addSwapPair(address _asset) external onlyOwner {
+        require(_asset != address(0), "Asset Manager: ZERO_ADDRESS");
+        totalSwapPairAssets = totalSwapPairAssets + 1;
+        idToVerifiedSwapPairs[totalSwapPairAssets] = Asset(_asset, Status.Open);
+    }
+
+    function pauseSwapPair(uint256 id) external onlyOwner {
+        require(
+            idToVerifiedSwapPairs[id].addr != address(0),
+            "Asset Manager: ZERO_ADDRESS"
+        );
+        require(
+            idToVerifiedSwapPairs[id].status != Status.Paused,
+            "Asset Manager: Asset already Paused"
+        );
+        idToVerifiedSwapPairs[id].status = Status.Paused;
+    }
+
+    function unpauseSwapPair(uint256 id) external onlyOwner {
+        require(
+            idToVerifiedSwapPairs[id].addr != address(0),
+            "Asset Manager: ZERO_ADDRESS"
+        );
+        require(
+            idToVerifiedSwapPairs[id].status != Status.Open,
+            "Asset Manager: Asset already Open"
+        );
+        idToVerifiedSwapPairs[id].status = Status.Open;
+    }
+
+    function closeSwapPair(uint256 id) external onlyOwner {
+        require(
+            idToVerifiedSwapPairs[id].addr != address(0),
+            "Asset Manager: ZERO_ADDRESS"
+        );
+        require(
+            idToVerifiedSwapPairs[id].status != Status.Closed,
+            "Asset Manager: Asset already Closed"
+        );
+        idToVerifiedSwapPairs[id].status = Status.Closed;
+    }
+
+    // Staking Rewards
+    function addStakingReward(address _asset) external onlyOwner {
+        require(_asset != address(0), "Asset Manager: ZERO_ADDRESS");
+        totalStakingRewardAssets = totalStakingRewardAssets + 1;
+        idToVerifiedStakingRewards[totalStakingRewardAssets] = Asset(
+            _asset,
+            Status.Open
+        );
+    }
+
+    function pauseStakingReward(uint256 id) external onlyOwner {
+        require(
+            idToVerifiedStakingRewards[id].addr != address(0),
+            "Asset Manager: ZERO_ADDRESS"
+        );
+        require(
+            idToVerifiedStakingRewards[id].status != Status.Paused,
+            "Asset Manager: Asset already Paused"
+        );
+        idToVerifiedStakingRewards[id].status = Status.Paused;
+    }
+
+    function unpauseStakingReward(uint256 id) external onlyOwner {
+        require(
+            idToVerifiedStakingRewards[id].addr != address(0),
+            "Asset Manager: ZERO_ADDRESS"
+        );
+        require(
+            idToVerifiedStakingRewards[id].status != Status.Open,
+            "Asset Manager: Asset already Open"
+        );
+        idToVerifiedStakingRewards[id].status = Status.Open;
+    }
+
+    function closeStakingReward(uint256 id) external onlyOwner {
+        require(
+            idToVerifiedStakingRewards[id].addr != address(0),
+            "Asset Manager: ZERO_ADDRESS"
+        );
+        require(
+            idToVerifiedStakingRewards[id].status != Status.Closed,
+            "Asset Manager: Asset already Closed"
+        );
+        idToVerifiedStakingRewards[id].status = Status.Closed;
     }
 }
