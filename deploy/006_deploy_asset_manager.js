@@ -1,8 +1,6 @@
 /**
  * This script deploys the Asset Manager Contract
  * 
- * @dev
- * Add approved synths to the Asset Manager Contract. These synths are deployed and approved by Sumero.
  */
 const { expect } = require("chai");
 const colors = require('colors');
