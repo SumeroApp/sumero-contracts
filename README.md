@@ -105,12 +105,22 @@ NOTE: Deployment scripts are to be used for deployment to Networks like Kovan, R
         UNISWAP_ROUTER: "0xF502CBB71AB6C41E5B93640d4fF2f6945490C7a0",
         WETH: "0xd0A1E359811322d97991E03f863a0C30C2cF029C",
         USDC: "0xb7a4F3E9097C08dA09517b5aB877F7a917224ede",
-        USDC_CLAY_PAIR: "0x995b62fC9681db170e5312229acF7250F91DF719",
-        ASSET_MANAGER: "0x8AC4370bad7d81A61522ebc74F900FF148f9f0CC",
-        UMA_EMP: "0x9a689BfD9f3a963b20d5ba4Ed7ed0b7bE16CfCcB",
+        ASSET_MANAGER: "0x380c127e25e7ba1725162913b9b5bb109ccc7456",
+        UMA_EMP_CREATOR: "0x9a689BfD9f3a963b20d5ba4Ed7ed0b7bE16CfCcB",
         CLAY_BONDS: "0xc26eE6e643ae7554aeeF5bCff3e66798674c9FfF",
-        CLAY_STAKING_REWARDS: "0x7A16395c9566B4678B8f166bEcC2AbCae41f3DbC"
     }
+
+    ASSET_MANAGER_ASSETS
+
+    EMPs
+    0x5405053DEa9e2A0e7F265D085C9a4A34C4E969a1
+    0xf074dd25A248a7D329BaB6DDf37D8d588989078c
+
+    SwapPairs
+    0x995b62fC9681db170e5312229acF7250F91DF719
+
+    StakingRewards
+    0x7A16395c9566B4678B8f166bEcC2AbCae41f3DbC
 
 ## Verify Contracts on Etherscan
 
@@ -192,3 +202,17 @@ Anyone can dispute a transaction on UMA's DVM. The DVM looks at historical price
 Expiring Synthetic Tokens - https://docs.umaproject.org/synthetic-tokens/expiring-synthetic-tokens
 
 node index.js --gasprice 50 --mnemonic "acquire ship bacon pumpkin jazz poverty junk leader bean frown merry artist" --priceFeedIdentifier USDETH --collateralAddress "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2" --expirationTimestamp "1650026236" --syntheticName "TEST Dollar [WETH Apr 2022]" --syntheticSymbol "TST-ETH-APR22" --minSponsorTokens "100"
+
+
+## Asset Manager
+
+Asset Manager Contract contains approved and verified assets by Sumero.
+
+It has 3 types of assets
+- EMPs (Expiring Multi Party)
+- Swap Pairs (Uniswap Pairs)
+- Staking Rewards
+
+The asset can be either be in status Closed, Paused or Open.
+
+The Sumero UI gets the verified assets by using this contract. It queries `idToVerifiedEmps`, `idToVerifiedSwapPairs` and `idToVerifiedStakingRewards` to get the asset details.

@@ -11,7 +11,7 @@ module.exports = async ({
     deployments,
 }) => {
 
-    console.log(colors.bold("\n==> Running 005_deploy_clay_token script"));
+    console.log(colors.bold("\n==> Running 004_deploy_clay_token script"));
 
     const { deployer } = await getNamedAccounts();
     console.log(colors.green("\nDEPLOYER ADDRESS is:", deployer));
