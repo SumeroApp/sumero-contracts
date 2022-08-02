@@ -12,6 +12,10 @@ require("./tasks/erc20-approve");
 require("./tasks/add-liquidity");
 require("./tasks/clay-grant-role");
 require("./tasks/create-emp");
+require("./tasks/add-asset");
+require("./tasks/pause-asset");
+require("./tasks/unpause-asset");
+require("./tasks/close-asset");
 /**
  * @type import('hardhat/config').HardhatUserConfig
  */
