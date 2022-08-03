@@ -11,42 +11,57 @@ task("close-asset", "Closes assets on asset manager")
             const { expect } = require('chai');
             const { deployer } = await hre.getNamedAccounts();
             const { getTxUrl } = require('../utils/helper');
-
             const assetManager = await ethers.getContract("AssetManager", deployer);
-            
+
             let tx;
+            let txUrl;
+
             if (args.type == "emp") {
                 console.log("Closing emp...")
-                expect((await assetManager.idToVerifiedEmps(args.id)).status).eq(2)
-                tx = await assetManager.closeEmp(args.id)
-                tx.wait()
-                expect((await assetManager.idToVerifiedEmps(args.id)).status).eq(0)
-                console.log("Emp successfully closed!") 
-                console.log("\nTransaction Receipt: \n", tx)
+                try {
+                    tx = await assetManager.closeEmp(args.id)
+                    await tx.wait()
+                    expect((await assetManager.idToVerifiedEmps(args.id)).status).eq(0)
+                    console.log("Emp successfully closed!")
+                    console.log("\nTransaction Receipt: \n", tx)
+                    txUrl = getTxUrl(deployments.network, tx.hash);
+                } catch (error) {
+                    console.log(error)
+                }
             }
-            else if(args.type == "swap-pair"){
+            else if (args.type == "swap-pair") {
                 console.log("Closing swap pair...")
-                expect((await assetManager.idToVerifiedSwapPairs(args.id)).status).eq(2)
-                tx = await assetManager.closeSwapPair(args.id)
-                tx.wait()
-                expect((await assetManager.idToVerifiedSwapPairs(args.id)).status).eq(0)
-                console.log("Swap pair successfully closed!") 
-                console.log("\nTransaction Receipt: \n", tx)
+
+                try {
+                    tx = await assetManager.closeSwapPair(args.id)
+                    await tx.wait()
+                    expect((await assetManager.idToVerifiedSwapPairs(args.id)).status).eq(0)
+                    console.log("Swap pair successfully closed!")
+                    console.log("\nTransaction Receipt: \n", tx)
+                    txUrl = getTxUrl(deployments.network, tx.hash);
+                } catch (error) {
+                    console.log(error)
+                }
             }
-            else if(args.type == "staking-reward"){
+            else if (args.type == "staking-reward") {
                 console.log("Closing staking reward...")
-                expect((await assetManager.idToVerifiedStakingRewards(args.id)).status).eq(2)
-                tx = await assetManager.closeStakingReward(args.id)
-                tx.wait()
-                expect((await assetManager.idToVerifiedStakingRewards(args.id)).status).eq(0)
-                console.log("Staking rewards successfully closed!") 
-                console.log("\nTransaction Receipt: \n", tx)
+
+                try {
+                    tx = await assetManager.closeStakingReward(args.id)
+                    await tx.wait()
+                    expect((await assetManager.idToVerifiedStakingRewards(args.id)).status).eq(0)
+                    console.log("Staking rewards successfully closed!")
+                    console.log("\nTransaction Receipt: \n", tx)
+                    txUrl = getTxUrl(deployments.network, tx.hash);
+                } catch (error) {
+                    console.log(error)
+                }
             }
-            else{
+            else {
                 return console.error("Asset type error!");
             }
 
-            const txUrl = getTxUrl(deployments.network, tx.hash);
+        
             if (txUrl != null) {
                 console.log(txUrl);
             }

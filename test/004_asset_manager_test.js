@@ -74,7 +74,6 @@ describe("Asset Manager Contract", function () {
 
     it('closes EMPs', async function () {
         const empId = 1
-        expect((await assetManager.idToVerifiedEmps(empId)).status).eq(2)
         await assetManager.closeEmp(empId)
         expect((await assetManager.idToVerifiedEmps(empId)).status).eq(0)
         await expect(assetManager.closeEmp(empId)).to.be.reverted
@@ -119,7 +118,6 @@ describe("Asset Manager Contract", function () {
 
     it('closes Swap Pair Assets', async function () {
         const swapPairId = 1
-        expect((await assetManager.idToVerifiedSwapPairs(swapPairId)).status).eq(2)
         await assetManager.closeSwapPair(swapPairId)
         expect((await assetManager.idToVerifiedSwapPairs(swapPairId)).status).eq(0)
         await expect(assetManager.closeSwapPair(swapPairId)).to.be.reverted
@@ -170,7 +168,6 @@ describe("Asset Manager Contract", function () {
 
     it('closes Staking Reward Assets', async function () {
         const stakingRewardId = 1
-        expect((await assetManager.idToVerifiedStakingRewards(stakingRewardId)).status).eq(2)
         await assetManager.closeStakingReward(stakingRewardId)
         expect((await assetManager.idToVerifiedStakingRewards(stakingRewardId)).status).eq(0)
         await expect(assetManager.closeStakingReward(stakingRewardId)).to.be.reverted
