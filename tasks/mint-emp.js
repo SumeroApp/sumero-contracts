@@ -1,12 +1,10 @@
 
-// npx hardhat mint-emp --emp-address <0xf29F8f53203D2E173710a53E7453b2E20e1F87B6> --emp-deployer-address <0x8D9656505A20C9562488bfa6EA0d1eF6B12966d7> --initial-token-ratio <30000>
-// npx hardhat mint-emp --emp-address 0xf29F8f53203D2E173710a53E7453b2E20e1F87B6 --emp-deployer-address 0x8D9656505A20C9562488bfa6EA0d1eF6B12966d7 --initial-token-ratio 30000
-
+// npx hardhat mint-emp 
 /**
  *  What all does the task need in order to do a successful initial mint?
  *  - Price of the identifier i.e. ETHUSD http://18.219.111.187/prices.json
  *  - Actual CR to use is max(rawGCR, position CR Ratio)
- *      - rawGCR => 0 (this happens because totalTokensOutstanding is 0)
+ *      - rawGCR => 0 => globalCR =>0 (this happens because totalTokensOutstanding is 0)
  *      - position CR Ratio => collateralRequirement + 0.15 i.e. 1.25 + 0.15 => 1.40 => 140%
  *  - minSponsorToken => 0.02 (20000/10^6(collateralDecimals))
  *  - Provide Either one of these
@@ -21,102 +19,108 @@
  *  - collateralNeeded = (price * CR ratio) * numOfTokens
  * */
 
+const { expect } = require('chai');
+
 /**
  *  What all does the task need in order to do successive mint?
  *  - Price of the identifier i.e. ETHUSD http://18.219.111.187/prices.json
- *  - Actual CR to use is max(rawGCR, position CR Ratio)
+ *  - Actual CR to use is max(globalCR, position CR Ratio)
  *      - rawGCR => totalTokensOutstandingUint.isZero() ? ethers.BigNumber.from(0) : totalPositionCollateralUint.mul(cumulativeFeeMultiplier).div(totalTokensOutstandingUint);
+ *      -globalCR => formatEther(rawGCR)/price     
  *      - position CR Ratio => collateralRequirement + 15%
  * */
 
 task("mint-emp", "Mint the EMP")
-    .addParam("empAddress", "Emp Contract dddress")
-    .addParam("empDeployerAddress", "Emp deployer address")
-    .addParam("initialTokenRatio", "Initial token ratio")
-
     .setAction(
         async (args, deployments) => {
             const { deployer } = await getNamedAccounts();
             const colors = require('colors');
             const { ethers } = require("hardhat")
             const { getTxUrl } = require('../utils/helper');
+            const fetch = require('node-fetch');
 
-            const { ExpiringMultiPartyCreatorEthers__factory, ExpiringMultiPartyEthers__factory, getAbi, getAddress } = require('@uma/contracts-node');
             const signer0 = ethers.provider.getSigner(deployer);
-            const faucetTokenAbi = require('../utils/faucetToken.abi.json');
             const KOVAN_USDC = '0xb7a4F3E9097C08dA09517b5aB877F7a917224ede';
-            const KOVAN_NETWORK_ID = 42;
-            const UMA_EMPC_ADDRESS = await getAddress("ExpiringMultiPartyCreator", KOVAN_NETWORK_ID);
-            // Mint Synths
-            console.log(colors.blue("\n Mint Synths using EMP: ....."));
+            const KOVAN_NETWORK_ID = 42
 
-            const empInstance = ExpiringMultiPartyEthers__factory.connect(args.empAddress, signer0);
-            const syntheticTokenAddress = await empInstance.tokenCurrency();
+            //----- Arguments-------------------------
+            const empAddress = "0x54fa5f6f19d2fee7071ac6aad970bf1497cdfcfe";
+            const collateralAmount = 1000;
+            const additionalCollateralRatio = ethers.utils.parseUnits("0.15", "ether")
+    
+
+            //---- Get EMP Contract--------------------
+            const { ExpiringMultiPartyCreatorEthers__factory, ExpiringMultiPartyEthers__factory, getAbi, getAddress } = require('@uma/contracts-node');
+            const UMA_EMPC_ADDRESS = await getAddress("ExpiringMultiPartyCreator", KOVAN_NETWORK_ID);
+            const empInstance = ExpiringMultiPartyEthers__factory.connect(empAddress, signer0);
             const emp_creator_instance = ExpiringMultiPartyCreatorEthers__factory.connect(UMA_EMPC_ADDRESS, signer0);
             const syntheticDecimals = await emp_creator_instance._getSyntheticDecimals(KOVAN_USDC);
-            const minSponsorTokens = ethers.utils.formatUnits((await empInstance.minSponsorTokens()).toString(), syntheticDecimals);
-            const collateralAmount = minSponsorTokens * args.initialTokenRatio;
 
-            // Get EMP details
-            console.log(colors.blue("\nEMP Deployed at: ", args.empAddress));
-            console.log(colors.blue("  deployed by: ", args.empDeployerAddress));
-            console.log(colors.blue("  rawTotalPositionCollateral: ", (await empInstance.rawTotalPositionCollateral()).toString()));
-            console.log(colors.blue("  cumulativeFeeMultiplier: ", (await empInstance.cumulativeFeeMultiplier()).toString()));
-            console.log(colors.blue("  totalTokensOutstanding: ", (await empInstance.totalTokensOutstanding()).toString()));
-            console.log(colors.blue("  totalPositionCollateral: ", (await empInstance.totalPositionCollateral()).toString()));
-            console.log(colors.blue("  minSponsorTokens: ", (await empInstance.minSponsorTokens()).toString()));
-            console.log(colors.blue("  collateralCurrency: ", await empInstance.collateralCurrency()));
-            console.log(colors.blue("  tokenCurrency: ", syntheticTokenAddress));
-            console.log(colors.blue("  collateralRequirement: ", (await empInstance.collateralRequirement()).toString()));
-            console.log(colors.blue("  expirationTimestamp: ", (await empInstance.expirationTimestamp()).toString()));
+            //----- Fetch Price-------------------------
+            const fetchUrl = "http://18.219.111.187/prices.json"
+            const priceIdentifier = (ethers.utils.parseBytes32String(await empInstance.priceIdentifier())).toLowerCase()
+            
+            const responseData = await fetch(fetchUrl)
+                .then((response) => {
+                    return response.json();
+                })
+            const price = responseData[priceIdentifier]
+            console.log(priceIdentifier+": "+ price)
+            
 
-            // Pre-Approval steps for creating EMP synths
-            // Approve EMP contract to spend collateral
-            const usdcInstance = new ethers.Contract(KOVAN_USDC, faucetTokenAbi, signer0);
-            console.log(colors.blue("\n  Allocating USDC: ....."));
-            await usdcInstance.allocateTo(deployer, ethers.utils.parseUnits('100000', syntheticDecimals));
-            console.log(colors.blue("\n  Approving allowance of USDC to EMP: ....."));
-            await usdcInstance.approve(args.empAddress, ethers.utils.parseUnits('100000', syntheticDecimals));
+            //---- Calculationss--------------------
+            const collateralRequirement = await empInstance.collateralRequirement()            
+            console.log("collateralRequirement: " + ethers.utils.formatEther(collateralRequirement))
+            console.log("additionalCollateralRatio: " + ethers.utils.formatEther(additionalCollateralRatio))
+            const minSponsorToken = ethers.utils.formatUnits(await empInstance.minSponsorTokens(), syntheticDecimals)
+            console.log("minSponsorToken: " + minSponsorToken)
+            const positionCrRatio = ethers.BigNumber.from(collateralRequirement).add(additionalCollateralRatio)
+            console.log("positionCrRatio: " + ethers.utils.formatEther(positionCrRatio))
+            const totalTokensOutstandingUint = ethers.BigNumber.from(await empInstance.totalTokensOutstanding())
+            console.log("totalTokensOutstanding: " + totalTokensOutstandingUint)
+            const cumulativeFeeMultiplier = ethers.BigNumber.from(await empInstance.cumulativeFeeMultiplier())
+            console.log("cumulativeFeeMultiplier: " + ethers.utils.formatEther(cumulativeFeeMultiplier))
+            const totalPositionCollateralUint = ethers.BigNumber.from(await empInstance.rawTotalPositionCollateral())
+            console.log("totalPositionCollateral: " + totalPositionCollateralUint)
+            const rawGCR = totalTokensOutstandingUint.isZero() ? ethers.BigNumber.from(0) : totalPositionCollateralUint.mul(cumulativeFeeMultiplier).div(totalTokensOutstandingUint);
+            const globalCR = (ethers.utils.formatUnits(rawGCR, 18)) / price
+            console.log("globalCR: " + globalCR)
+            console.log("rawGCR: " + ethers.utils.formatEther(rawGCR))
+            const actualCR = Math.max(Number(globalCR), Number(ethers.utils.formatEther(positionCrRatio)))
+            console.log("ActualCR: " + actualCR)
 
-            const syntheticTokenInstance = new ethers.Contract(syntheticTokenAddress, getAbi('SyntheticToken'), signer0);
-            console.log(colors.green("\n Synth Balance: ", (await syntheticTokenInstance.balanceOf(deployer)).toString()));
-
-            console.log(colors.blue("\n About to Mint Initial Synth Tokens:"));
-            console.log(colors.blue('\n  Minimum mintable synthetic tokens: ' + minSponsorTokens.toString()));
-            console.log(colors.blue('  With an initial token ratio of ' + args.initialTokenRatio.toString() + "..."));
-            console.log(colors.blue('  ' + collateralAmount.toString() + ' tokens of collateral is needed.'));
-            console.log(colors.blue('\n  Minting...'));
+            const numOfTokens = collateralAmount / (price * globalCR)
+            console.log("numOfTokens: " + numOfTokens);
+            // takes the first 6 digits after the decimal but also rounds the number
+            const fixedNumOfTokens = (numOfTokens.toFixed(6)) 
+            console.log("fixedNumOfTokens:"+fixedNumOfTokens)
 
             const collateralAmountObject = { rawValue: ethers.utils.parseUnits(collateralAmount.toString(), syntheticDecimals) };
-            const numTokensObject = { rawValue: ethers.utils.parseUnits(minSponsorTokens.toString(), syntheticDecimals) };
+            const numTokensObject = { rawValue: ethers.utils.parseUnits(fixedNumOfTokens.toString(), syntheticDecimals) };
+            expect(Number(fixedNumOfTokens)).to.be.gt(Number(minSponsorToken), "Not enough collateral amount!")
+            
+
+            // Approve EMP contract to spend collateral
+            // const usdcInstance = new ethers.Contract(KOVAN_USDC, faucetTokenAbi, signer0);
+            // await usdcInstance.allocateTo(deployer, ethers.utils.parseUnits(collateralAmount.toString(), syntheticDecimals));
+            // await usdcInstance.approve(empAddress, ethers.utils.parseUnits(collateralAmount.toString(), syntheticDecimals)); 
 
             let mintEmpTx;
+            let txUrl;
             try {
                 mintEmpTx = await empInstance.create(collateralAmountObject, numTokensObject);
                 await mintEmpTx.wait()
+                txUrl = getTxUrl(deployments.network, mintEmpTx.hash);
             } catch (error) {
                 console.log(error)
             }
 
             console.log("\nTransaction Receipt: \n", mintEmpTx)
-
-
-            console.log(colors.blue("\nEMP Details after minting synth: "));
-            console.log(colors.blue("  rawTotalPositionCollateral: ", (await empInstance.rawTotalPositionCollateral()).toString()));
-            console.log(colors.blue("  cumulativeFeeMultiplier: ", (await empInstance.cumulativeFeeMultiplier()).toString()));
-            console.log(colors.blue("  totalTokensOutstanding: ", (await empInstance.totalTokensOutstanding()).toString()));
-            console.log(colors.blue("  totalPositionCollateral: ", (await empInstance.totalPositionCollateral()).toString()));
-            console.log(colors.blue("  minSponsorTokens: ", (await empInstance.minSponsorTokens()).toString()));
-            console.log(colors.blue("  collateralCurrency: ", await empInstance.collateralCurrency()));
-            console.log(colors.blue("  tokenCurrency: ", syntheticTokenAddress));
-            console.log(colors.blue("  collateralRequirement: ", (await empInstance.collateralRequirement()).toString()));
-            console.log(colors.blue("  expirationTimestamp: ", (await empInstance.expirationTimestamp()).toString()));
-            console.log(colors.green("\n Synth Balance: ", ethers.utils.formatUnits((await syntheticTokenInstance.balanceOf(deployer)).toString(), syntheticDecimals)));
-
-            const txUrl = getTxUrl(deployments.network, mintEmpTx.hash);
             if (txUrl != null) {
                 console.log(txUrl);
             }
+            
+
         }
     );
 

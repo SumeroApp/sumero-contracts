@@ -17,12 +17,14 @@ specifiers:
   ganache: ^7.0.2
   hardhat: ^2.9.1
   hardhat-deploy: ^0.10.5
+  node-fetch: 2.6.1
   prettier: ^2.6.2
   prettier-plugin-solidity: ^1.0.0-beta.19
 
 dependencies:
   babel-polyfill: 6.26.0
   babel-register: 6.26.0
+  node-fetch: 2.6.1
 
 devDependencies:
   '@nomiclabs/hardhat-ethers': /hardhat-deploy-ethers/0.3.0-beta.13_ethers@5.5.4+hardhat@2.9.1
@@ -5390,7 +5392,6 @@ packages:
   /node-fetch/2.6.1:
     resolution: {integrity: sha512-V4aYg89jEoVRxRb2fJdAg8FHvI7cEyYdVAh94HH0UIK8oJxUfkjlDQN9RbMx+bEjP7+ggMiFRprSti032Oipxw==}
     engines: {node: 4.x || >=6.0.0}
-    dev: true
 
   /node-fetch/2.6.7:
     resolution: {integrity: sha512-ZjMPFEfVx5j+y2yF35Kzx5sF7kDzxuDj6ziH4FFbOp87zKDZNx8yExJIb05OGF4Nlt9IHFIMBkRl41VdvcNdbQ==}
