@@ -40,67 +40,84 @@ task("mint-emp", "Mint the EMP")
             const { getTxUrl } = require('../utils/helper');
             const fetch = require('node-fetch');
 
+            //---- Get Ethers Signer-------------------
             const signer0 = ethers.provider.getSigner(deployer);
-            const KOVAN_USDC = '0xb7a4F3E9097C08dA09517b5aB877F7a917224ede';
-            const KOVAN_NETWORK_ID = 42
 
             //---- Get EMP Contract--------------------
-            const { ExpiringMultiPartyCreatorEthers__factory, ExpiringMultiPartyEthers__factory, getAbi, getAddress } = require('@uma/contracts-node');
-            const UMA_EMPC_ADDRESS = await getAddress("ExpiringMultiPartyCreator", KOVAN_NETWORK_ID);
+            const { ExpiringMultiPartyEthers__factory } = require('@uma/contracts-node');
             const empInstance = ExpiringMultiPartyEthers__factory.connect(args.empAddress, signer0);
-            const emp_creator_instance = ExpiringMultiPartyCreatorEthers__factory.connect(UMA_EMPC_ADDRESS, signer0);
-            const syntheticDecimals = await emp_creator_instance._getSyntheticDecimals(KOVAN_USDC);
 
             //----- Fetch Price-------------------------
+            console.log("Fetching Price from Feed: ");
             const fetchUrl = "http://18.219.111.187/prices.json"
-            const priceIdentifier = (ethers.utils.parseBytes32String(await empInstance.priceIdentifier())).toLowerCase()
+            let price = "";
+            try {
+                const priceId = await empInstance.priceIdentifier();
+                const priceIdentifier = (ethers.utils.parseBytes32String(priceId)).toLowerCase();
 
-            const responseData = await fetch(fetchUrl)
-                .then((response) => {
-                    return response.json()
-                })
-            const price = responseData[priceIdentifier]
-            console.log(priceIdentifier + ": " + price)
+                const responseData = await fetch(fetchUrl)
+                    .then((response) => {
+                        return response.json();
+                    });
+
+                price = responseData[priceIdentifier];
+                if (!price || price === "") throw "Fetch Price Feed Empty";
+                console.log(priceIdentifier + ": " + price)
+            } catch (error) {
+                console.log(error);
+                console.log("Fetch Price Feed Error. Mint EMP Task Failed.");
+                return;
+            }
 
 
             //---- Calculations--------------------
-            const collateralRequirement = await empInstance.collateralRequirement()
-            console.log("collateralRequirement: " + ethers.utils.formatEther(collateralRequirement))
-            const additionalCollateralRatio = ethers.utils.parseUnits(args.additionalCollateralRatio, "ether")
-            console.log("additionalCollateralRatio: " + ethers.utils.formatEther(additionalCollateralRatio))
-            const minSponsorToken = ethers.utils.formatUnits(await empInstance.minSponsorTokens(), syntheticDecimals)
-            console.log("minSponsorToken: " + minSponsorToken)
-            const positionCrRatio = ethers.BigNumber.from(collateralRequirement).add(additionalCollateralRatio)
-            console.log("positionCrRatio: " + ethers.utils.formatEther(positionCrRatio))
-            const totalTokensOutstandingUint = ethers.BigNumber.from(await empInstance.totalTokensOutstanding())
-            console.log("totalTokensOutstanding: " + totalTokensOutstandingUint)
-            const cumulativeFeeMultiplier = ethers.BigNumber.from(await empInstance.cumulativeFeeMultiplier())
-            console.log("cumulativeFeeMultiplier: " + ethers.utils.formatEther(cumulativeFeeMultiplier))
-            const totalPositionCollateralUint = ethers.BigNumber.from(await empInstance.rawTotalPositionCollateral())
-            console.log("totalPositionCollateral: " + totalPositionCollateralUint)
-            const rawGCR = totalTokensOutstandingUint.isZero() ? ethers.BigNumber.from(0) : totalPositionCollateralUint.mul(cumulativeFeeMultiplier).div(totalTokensOutstandingUint)
-            const globalCR = (ethers.utils.formatUnits(rawGCR, 18)) / price
-            console.log("globalCR: " + globalCR)
-            console.log("rawGCR: " + ethers.utils.formatEther(rawGCR))
-            const actualCR = Math.max(Number(globalCR), Number(ethers.utils.formatEther(positionCrRatio)))
-            console.log("ActualCR: " + actualCR)
 
-            const numOfTokens = args.collateralAmount / (price * globalCR)
-            console.log("numOfTokens: " + numOfTokens)
-            // takes the first 6 digits after the decimal, but also rounds the number!
-            const fixedNumOfTokens = (numOfTokens.toFixed(6))
-            console.log("fixedNumOfTokens:" + fixedNumOfTokens)
+            const collateralCurrency = await empInstance.collateralCurrency();
+            const syntheticDecimals = await empInstance._getSyntheticDecimals(collateralCurrency);
+            console.log("\nCollateral Currency Details: ");
+            console.log("Collateral Currency -> " + collateralCurrency);
+            console.log("Collateral Decimals -> " + syntheticDecimals);
 
-            const collateralAmountObject = { rawValue: ethers.utils.parseUnits((args.collateralAmount).toString(), syntheticDecimals) }
-            const numTokensObject = { rawValue: ethers.utils.parseUnits(fixedNumOfTokens.toString(), syntheticDecimals) }
-            expect(Number(fixedNumOfTokens)).to.be.gt(Number(minSponsorToken), "Not enough collateral amount!")
+            const minSponsorToken = ethers.utils.formatUnits(await empInstance.minSponsorTokens(), syntheticDecimals);
+            const totalPositionCollateral = ethers.BigNumber.from(await empInstance.rawTotalPositionCollateral());
+            const totalTokensOutstanding = ethers.BigNumber.from(await empInstance.totalTokensOutstanding());
+            const cumulativeFeeMultiplier = ethers.BigNumber.from(await empInstance.cumulativeFeeMultiplier());
 
-            
+            const collateralRequirement = await empInstance.collateralRequirement();
+            const additionalCollateralRatio = ethers.utils.parseUnits(args.additionalCollateralRatio, "ether");
+            const positionCrRatio = ethers.BigNumber.from(collateralRequirement).add(additionalCollateralRatio);
+
+            const rawGCR = totalTokensOutstanding.isZero() ? ethers.BigNumber.from(0) : totalPositionCollateral.mul(cumulativeFeeMultiplier).div(totalTokensOutstanding);
+            const globalCR = (ethers.utils.formatUnits(rawGCR, 18)) / price;
+            const actualCR = Math.max(Number(globalCR), Number(ethers.utils.formatEther(positionCrRatio)));
+
+            console.log("\nToken Minting Requirements: ");
+            console.log("Minimum Synthetic to be minted -> " + minSponsorToken);
+            console.log("Total Position Collateral -> " + ethers.utils.formatUnits(totalPositionCollateral, syntheticDecimals));
+            console.log("Total Outstanding Tokens -> " + ethers.utils.formatUnits(totalTokensOutstanding, syntheticDecimals));
+            console.log("Cumulative Fee Multiplier -> " + ethers.utils.formatEther(cumulativeFeeMultiplier));
+
+            console.log("\nCollateralization Ratio: ");
+            console.log("collateral Ratio -> " + ethers.utils.formatEther(collateralRequirement));
+            console.log("additionalCollateralRatio (argument to Mint EMP task) -> " + ethers.utils.formatEther(additionalCollateralRatio));
+            console.log("Position Collateral Requirement Ratio (pCR) (CR + additional CR) -> " + ethers.utils.formatEther(positionCrRatio));
+            console.log("Raw GCR (total position collateral/total outstanding tokens): " + ethers.utils.formatEther(rawGCR));
+            console.log("Global Collateralization Ratio (GCR=rawGCR/price): " + globalCR);
+            console.log("ActualCR (max(GCR, pCR)): " + actualCR);
+
+            const numOfTokens = args.collateralAmount / (price * actualCR);
+            const fixedNumOfTokens = (numOfTokens.toFixed(6));
+            console.log("\nNumber of Synthetic Tokens that will be minted: " + fixedNumOfTokens);
+            expect(Number(fixedNumOfTokens)).to.be.gt(Number(minSponsorToken), "Cannot MINT!, since number of synthetic tokens to be minted is less than minimum synthetic to be minted. Add more collateral and try again!");
+
+            const collateralAmountObject = { rawValue: ethers.utils.parseUnits((args.collateralAmount).toString(), syntheticDecimals) };
+            const numTokensObject = { rawValue: ethers.utils.parseUnits(fixedNumOfTokens.toString(), syntheticDecimals) };
+
             //---- Approve EMP contract to spend collateral--------------------
             // const usdcInstance = new ethers.Contract(KOVAN_USDC, faucetTokenAbi, signer0)
             // await usdcInstance.allocateTo(deployer, ethers.utils.parseUnits(collateralAmount.toString(), syntheticDecimals))
             // await usdcInstance.approve(empAddress, ethers.utils.parseUnits(collateralAmount.toString(), syntheticDecimals)) 
-            
+
             let mintEmpTx
             let txUrl
             try {
