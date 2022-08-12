@@ -40,6 +40,10 @@ task("mint-emp", "Mint the EMP")
             const { getTxUrl } = require('../utils/helper');
             const fetch = require('node-fetch');
 
+            const priceIdentifierConversions = { // maps Uma price identifiers to the price server's identifiers. Only needed if they don't already match.
+                'btc/usd': 'btcusd'
+            }
+
             //---- Get Ethers Signer-------------------
             const signer0 = ethers.provider.getSigner(deployer);
 
@@ -48,21 +52,23 @@ task("mint-emp", "Mint the EMP")
             const empInstance = ExpiringMultiPartyEthers__factory.connect(args.empAddress, signer0);
 
             //----- Fetch Price-------------------------
-            console.log("Fetching Price from Feed: ");
             const fetchUrl = "http://18.219.111.187/prices.json"
             let price = "";
             try {
                 const priceId = await empInstance.priceIdentifier();
-                const priceIdentifier = (ethers.utils.parseBytes32String(priceId)).toLowerCase();
+                const loweredUmaIdentitifer = (ethers.utils.parseBytes32String(priceId)).toLowerCase();
+                const loweredIdentifier = priceIdentifierConversions[loweredUmaIdentitifer] || loweredUmaIdentitifer;
+
+                console.log("Fetching Price from Feed: ");
 
                 const responseData = await fetch(fetchUrl)
                     .then((response) => {
                         return response.json();
                     });
 
-                price = responseData[priceIdentifier];
+                price = responseData[loweredIdentifier];
                 if (!price || price === "") throw "Fetch Price Feed Empty";
-                console.log(priceIdentifier + ": " + price)
+                console.log(loweredIdentifier + ": " + price)
             } catch (error) {
                 console.log(error);
                 console.log("Fetch Price Feed Error. Mint EMP Task Failed.");
