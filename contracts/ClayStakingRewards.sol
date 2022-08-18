@@ -94,7 +94,8 @@ contract ClayStakingRewards is Ownable, ReentrancyGuard, Pausable {
     {
         _totalSupply += _amount;
         _balances[msg.sender] += _amount;
-        stakingToken.transferFrom(msg.sender, address(this), _amount);
+        bool transferResult = stakingToken.transferFrom(msg.sender, address(this), _amount);
+        require(transferResult == true,"Transfer operation failed!");
         emit Staked(msg.sender, _amount);
     }
 
@@ -105,11 +106,12 @@ contract ClayStakingRewards is Ownable, ReentrancyGuard, Pausable {
     {
         _totalSupply -= _amount;
         _balances[msg.sender] -= _amount;
-        stakingToken.transfer(msg.sender, _amount);
+        bool transferResult = stakingToken.transfer(msg.sender, _amount);
+        require(transferResult == true,"Transfer operation failed!");
         emit Withdrawn(msg.sender, _amount);
     }
 
-    function exit() external {
+    function exit() external{
         withdraw(_balances[msg.sender]);
         getReward();
     }

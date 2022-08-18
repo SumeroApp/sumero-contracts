@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 import "./interfaces/IClayToken.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 
 /**
@@ -29,7 +30,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
     The user can claim the zCLAY Bonds for equivalent value of CLAY after the maturation date.
     The user has to lock his CLAY in to zCLAY bonds for atleast 3 years. They are open to trade these bonds on a secondary market (i.e. via LP pools on Sumero)
  */
-contract ClayBonds is ERC20("zClay Token", "zCLAY"), Ownable{
+contract ClayBonds is ERC20("zClay Token", "zCLAY"), Ownable, ReentrancyGuard{
     IClayToken public clay;
 
     // the maximum upper limit of bond rewards that this contract will give over it's lifetime
@@ -91,7 +92,7 @@ contract ClayBonds is ERC20("zClay Token", "zCLAY"), Ownable{
         public
         view
         returns (uint256 rewardPercent)
-    {
+    {  
         // Total Percentage Reward => dailyYieldPercent * daysLeftToMaturationDate
         // adding 1 here to consider interest for the current ongoing day
         rewardPercent = dailyYieldPercent * (daysLeftToMaturationDate + 1);
@@ -110,7 +111,7 @@ contract ClayBonds is ERC20("zClay Token", "zCLAY"), Ownable{
      * Issues a zCLAY Bond depending on the amount of CLAY deposited and the current APY which depends on the time elapsed since bond programme inception
      * @param _clayAmount The amount of CLAY deposited
      */
-    function issue(uint256 _clayAmount) public returns (uint256 bondAmount) {
+    function issue(uint256 _clayAmount) public nonReentrant returns (uint256 bondAmount) {
         require(_clayAmount > 100, "Clay Amount must be greater than 100 wei");
         require(
             block.timestamp >= depositStartDate &&
@@ -124,9 +125,10 @@ contract ClayBonds is ERC20("zClay Token", "zCLAY"), Ownable{
 
         bondAmount = _clayAmount + reward;
 
-        clay.transferFrom(msg.sender, address(this), _clayAmount);
-        _mint(msg.sender, bondAmount);
+        bool transferResult = clay.transferFrom(msg.sender, address(this), _clayAmount);
+        require(transferResult == true,"Transfer operation failed!");
 
+        _mint(msg.sender, bondAmount);
         totalBondDeposits = totalBondDeposits + bondAmount;
 
         require(
@@ -145,7 +147,7 @@ contract ClayBonds is ERC20("zClay Token", "zCLAY"), Ownable{
     /**
      * @dev Burns zClay and returns the underlying Clay tokens
      **/
-    function claim() public {
+    function claim() public nonReentrant{
         require(
             maturationDate <= block.timestamp,
             "Bond Maturity date not reached"

@@ -11,11 +11,11 @@ contract SumeroLpToken is ERC20, Ownable{
     constructor() ERC20("Sumero LP Token", "SLPT") {
     }
 
-    function mint(address _to, uint256 _amount) public onlyOwner {
+    function mint(address _to, uint256 _amount) external onlyOwner {
         _mint(_to, _amount);
     }
 
-    function burn(address account, uint256 amount) public onlyOwner {
+    function burn(address account, uint256 amount) external onlyOwner {
         _burn(account, amount);
     }
 }
