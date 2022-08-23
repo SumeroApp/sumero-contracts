@@ -5,7 +5,6 @@ import "./interfaces/IClayToken.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-
 /**
     You can deposit CLAY (ERC20 token native to Sumero) to get zCLAY Bonds (a new ERC20 representing the bond).
 
@@ -29,7 +28,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
     The user can claim the zCLAY Bonds for equivalent value of CLAY after the maturation date.
     The user has to lock his CLAY in to zCLAY bonds for atleast 3 years. They are open to trade these bonds on a secondary market (i.e. via LP pools on Sumero)
  */
-contract ClayBonds is ERC20("zClay Token", "zCLAY"), Ownable{
+contract ClayBonds is ERC20("zClay Token", "zCLAY"), Ownable {
     IClayToken public clay;
 
     // the maximum upper limit of bond rewards that this contract will give over it's lifetime
@@ -46,13 +45,6 @@ contract ClayBonds is ERC20("zClay Token", "zCLAY"), Ownable{
     uint256 public constant APY_PERCENT = 40;
     uint256 public constant BONUS_APY_PERCENT = 20;
     uint256 public constant BONDS_ISSUANCE_PERIOD = 1 days * 365;
-
-    event Issue(
-        uint256 amount,
-        uint256 daysLeftToMaturationDate,
-        uint256 rewardPercent,
-        uint256 reward
-    );
 
     constructor(IClayToken _clay, uint256 _maximumBondRewards) {
         clay = _clay;
@@ -110,7 +102,7 @@ contract ClayBonds is ERC20("zClay Token", "zCLAY"), Ownable{
      * Issues a zCLAY Bond depending on the amount of CLAY deposited and the current APY which depends on the time elapsed since bond programme inception
      * @param _clayAmount The amount of CLAY deposited
      */
-    function issue(uint256 _clayAmount) public returns (uint256 bondAmount) {
+    function issue(uint256 _clayAmount) external returns (uint256 bondAmount) {
         require(_clayAmount > 100, "Clay Amount must be greater than 100 wei");
         require(
             block.timestamp >= depositStartDate &&
@@ -124,7 +116,12 @@ contract ClayBonds is ERC20("zClay Token", "zCLAY"), Ownable{
 
         bondAmount = _clayAmount + reward;
 
-        clay.transferFrom(msg.sender, address(this), _clayAmount);
+        bool success = clay.transferFrom(
+            msg.sender,
+            address(this),
+            _clayAmount
+        );
+        require(success, "Transfer failed");
         _mint(msg.sender, bondAmount);
 
         totalBondDeposits = totalBondDeposits + bondAmount;
@@ -134,7 +131,8 @@ contract ClayBonds is ERC20("zClay Token", "zCLAY"), Ownable{
             "Maximum Bond Reward Pool Reached"
         );
 
-        emit Issue(
+        emit Issued(
+            msg.sender,
             _clayAmount,
             daysLeftToMaturationDate,
             rewardPercent,
@@ -145,7 +143,7 @@ contract ClayBonds is ERC20("zClay Token", "zCLAY"), Ownable{
     /**
      * @dev Burns zClay and returns the underlying Clay tokens
      **/
-    function claim() public {
+    function claim() external {
         require(
             maturationDate <= block.timestamp,
             "Bond Maturity date not reached"
@@ -154,17 +152,30 @@ contract ClayBonds is ERC20("zClay Token", "zCLAY"), Ownable{
         require(balance > 0, "Balance must be greater than zero");
         _burn(msg.sender, balance);
         clay.mint(msg.sender, balance);
+        emit Claimed(msg.sender, balance);
     }
 
     /**
      * @dev Burns the remaining Clay in the contract
      **/
-    function burn() public onlyOwner{
+    function burn() external onlyOwner {
         require(
             maturationDate <= block.timestamp,
             "Bond Maturity date not reached"
         );
         uint256 clayBalance = clay.balanceOf(address(this));
         clay.burn(address(this), clayBalance);
+        emit Burned(clayBalance);
     }
+
+    /* ========== EVENTS ========== */
+    event Issued(
+        address indexed user,
+        uint256 amount,
+        uint256 daysLeftToMaturationDate,
+        uint256 rewardPercent,
+        uint256 reward
+    );
+    event Claimed(address indexed user, uint256 balance);
+    event Burned(uint256 amount);
 }
