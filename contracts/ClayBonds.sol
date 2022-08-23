@@ -46,6 +46,9 @@ contract ClayBonds is ERC20("zClay Token", "zCLAY"), Ownable {
     uint256 public constant BONUS_APY_PERCENT = 20;
     uint256 public constant BONDS_ISSUANCE_PERIOD = 1 days * 365;
 
+    // minimum staking amount must be 100 wei
+    uint256 public constant MIN_ISSUANCE_AMOUNT = 100;
+
     constructor(IClayToken _clay, uint256 _maximumBondRewards) {
         clay = _clay;
         maximumBondRewards = _maximumBondRewards;
@@ -103,11 +106,14 @@ contract ClayBonds is ERC20("zClay Token", "zCLAY"), Ownable {
      * @param _clayAmount The amount of CLAY deposited
      */
     function issue(uint256 _clayAmount) external returns (uint256 bondAmount) {
-        require(_clayAmount > 100, "Clay Amount must be greater than 100 wei");
+        require(
+            _clayAmount > MIN_ISSUANCE_AMOUNT,
+            "ClayBonds: INSUFFICIENT_AMOUNT"
+        );
         require(
             block.timestamp >= depositStartDate &&
                 block.timestamp < depositCloseDate,
-            "Deposit closed"
+            "ClayBonds: DEPOSIT_CLOSED"
         );
 
         uint256 daysLeftToMaturationDate = getDaysLeftToMaturationDate();
@@ -121,14 +127,14 @@ contract ClayBonds is ERC20("zClay Token", "zCLAY"), Ownable {
             address(this),
             _clayAmount
         );
-        require(success, "Transfer failed");
+        require(success, "ClayBonds: TRANSFER_FAILED");
         _mint(msg.sender, bondAmount);
 
         totalBondDeposits = totalBondDeposits + bondAmount;
 
         require(
             totalBondDeposits < maximumBondRewards,
-            "Maximum Bond Reward Pool Reached"
+            "ClayBonds: MAX_BOND_REWARD_POOL_REACHED"
         );
 
         emit Issued(
@@ -146,10 +152,10 @@ contract ClayBonds is ERC20("zClay Token", "zCLAY"), Ownable {
     function claim() external {
         require(
             maturationDate <= block.timestamp,
-            "Bond Maturity date not reached"
+            "ClayBonds: BOND_NOT_MATURED"
         );
         uint256 balance = balanceOf(msg.sender);
-        require(balance > 0, "Balance must be greater than zero");
+        require(balance > 0, "ClayBonds: INSUFFICIENT_AMOUNT");
         _burn(msg.sender, balance);
         clay.mint(msg.sender, balance);
         emit Claimed(msg.sender, balance);
@@ -161,7 +167,7 @@ contract ClayBonds is ERC20("zClay Token", "zCLAY"), Ownable {
     function burn() external onlyOwner {
         require(
             maturationDate <= block.timestamp,
-            "Bond Maturity date not reached"
+            "ClayBonds: BOND_NOT_MATURED"
         );
         uint256 clayBalance = clay.balanceOf(address(this));
         clay.burn(address(this), clayBalance);

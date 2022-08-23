@@ -13,13 +13,20 @@ contract ClayToken is ERC20, AccessControl {
         _setupRole(MINTER_ROLE, msg.sender);
         _setupRole(BURNER_ROLE, msg.sender);
     }
+
     function mint(address _to, uint256 _amount) external {
-        require(hasRole(MINTER_ROLE, msg.sender), "Caller is not a minter");
+        require(
+            hasRole(MINTER_ROLE, msg.sender),
+            "ClayToken: CALLER_NOT_MINTER"
+        );
         _mint(_to, _amount);
     }
 
     function burn(address account, uint256 amount) external {
-        require(hasRole(BURNER_ROLE, msg.sender), "Caller is not a burner");
+        require(
+            hasRole(BURNER_ROLE, msg.sender),
+            "ClayToken: CALLER_NOT_BURNER"
+        );
         _burn(account, amount);
     }
 }

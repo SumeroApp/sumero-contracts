@@ -36,8 +36,8 @@ describe("Asset Manager Contract", function () {
 
         const empAddresses = ["0x0ccaf8cb1c92aef64dd36ce1f3882d195180ad5c", "0x0ccaf8cb1c92aef64dd36ce1f3882d195180ad5d", "0x0ccaf8cb1c92aef64dd36ce1f3882d195180ad5f"]
         for (let index = 0; index < empAddresses.length; index++) {
-           const address = ethers.utils.getAddress(empAddresses[index])
-           await expect(assetManager.addEmp(address)).to.emit(assetManager, "Added").withArgs(0,address,index+1)
+            const address = ethers.utils.getAddress(empAddresses[index])
+            await expect(assetManager.addEmp(address)).to.emit(assetManager, "Added").withArgs(0, address, index + 1)
 
         }
         for (let index = 1; index <= empAddresses.length; index++) {
@@ -61,7 +61,7 @@ describe("Asset Manager Contract", function () {
         const empId = 1
         expect((await assetManager.idToVerifiedEmps(empId)).status).eq(2)
         const address = (await assetManager.idToVerifiedEmps(empId)).addr
-        await expect(assetManager.pauseEmp(empId)).to.emit(assetManager,"Paused").withArgs(0,address,empId)
+        await expect(assetManager.pauseEmp(empId)).to.emit(assetManager, "Paused").withArgs(0, address, empId)
         expect((await assetManager.idToVerifiedEmps(empId)).status).eq(1)
         await expect(assetManager.pauseEmp(empId)).to.be.reverted
     });
@@ -70,7 +70,7 @@ describe("Asset Manager Contract", function () {
         const empId = 1
         expect((await assetManager.idToVerifiedEmps(empId)).status).eq(1)
         const address = (await assetManager.idToVerifiedEmps(empId)).addr
-        await expect(assetManager.unpauseEmp(empId)).to.emit(assetManager,"Unpaused").withArgs(0,address,empId)
+        await expect(assetManager.unpauseEmp(empId)).to.emit(assetManager, "Unpaused").withArgs(0, address, empId)
         expect((await assetManager.idToVerifiedEmps(empId)).status).eq(2)
         await expect(assetManager.unpauseEmp(empId)).to.be.reverted
     });
@@ -78,17 +78,17 @@ describe("Asset Manager Contract", function () {
     it('closes EMPs', async function () {
         const empId = 1
         const address = (await assetManager.idToVerifiedEmps(empId)).addr
-        await expect(assetManager.closeEmp(empId)).to.emit(assetManager,"Closed").withArgs(0,address,empId)
+        await expect(assetManager.closeEmp(empId)).to.emit(assetManager, "Closed").withArgs(0, address, empId)
         expect((await assetManager.idToVerifiedEmps(empId)).status).eq(0)
         await expect(assetManager.closeEmp(empId)).to.be.reverted
     });
-    
+
     it('adds Swap Pair Assets', async function () {
         const totalSwapPairAssetsBefore = await assetManager.totalSwapPairAssets()
         const swapPairAddresses = ["0x0abcf8cb1c92aef64dd36ce1f3882d195180ad5c", "0x0dabf8cb1c92aef64dd36ce1f3882d195180ad5d", "0x0bedf8cb1c92aef64dd36ce1f3882d195180ad5f"]
         for (let index = 0; index < swapPairAddresses.length; index++) {
             const address = ethers.utils.getAddress(swapPairAddresses[index])
-            await expect(assetManager.addSwapPair(address)).to.emit(assetManager, "Added").withArgs(1,address,index+1)
+            await expect(assetManager.addSwapPair(address)).to.emit(assetManager, "Added").withArgs(1, address, index + 1)
 
         }
         for (let index = 1; index <= swapPairAddresses.length; index++) {
@@ -109,7 +109,7 @@ describe("Asset Manager Contract", function () {
         const swapPairId = 1
         expect((await assetManager.idToVerifiedSwapPairs(swapPairId)).status).eq(2)
         const address = (await assetManager.idToVerifiedSwapPairs(swapPairId)).addr
-        await expect(assetManager.pauseSwapPair(swapPairId)).to.emit(assetManager,"Paused").withArgs(1,address,swapPairId)
+        await expect(assetManager.pauseSwapPair(swapPairId)).to.emit(assetManager, "Paused").withArgs(1, address, swapPairId)
         expect((await assetManager.idToVerifiedSwapPairs(swapPairId)).status).eq(1)
         await expect(assetManager.pauseSwapPair(swapPairId)).to.be.reverted
     });
@@ -118,15 +118,15 @@ describe("Asset Manager Contract", function () {
         const swapPairId = 1
         expect((await assetManager.idToVerifiedSwapPairs(swapPairId)).status).eq(1)
         const address = (await assetManager.idToVerifiedSwapPairs(swapPairId)).addr
-        await expect(assetManager.unpauseSwapPair(swapPairId)).to.emit(assetManager,"Unpaused").withArgs(1,address,swapPairId)
+        await expect(assetManager.unpauseSwapPair(swapPairId)).to.emit(assetManager, "Unpaused").withArgs(1, address, swapPairId)
         expect((await assetManager.idToVerifiedSwapPairs(swapPairId)).status).eq(2)
         await expect(assetManager.unpauseSwapPair(swapPairId)).to.be.reverted
     });
- 
+
     it('closes Swap Pair Assets', async function () {
         const swapPairId = 1
         const address = (await assetManager.idToVerifiedSwapPairs(swapPairId)).addr
-        await expect(assetManager.closeSwapPair(swapPairId)).to.emit(assetManager,"Closed").withArgs(1,address,swapPairId)
+        await expect(assetManager.closeSwapPair(swapPairId)).to.emit(assetManager, "Closed").withArgs(1, address, swapPairId)
         expect((await assetManager.idToVerifiedSwapPairs(swapPairId)).status).eq(0)
         await expect(assetManager.closeSwapPair(swapPairId)).to.be.reverted
     });
@@ -137,7 +137,7 @@ describe("Asset Manager Contract", function () {
 
         for (let index = 0; index < stakingRewardAssetAddresses.length; index++) {
             const address = ethers.utils.getAddress(stakingRewardAssetAddresses[index])
-            await expect(assetManager.addStakingReward(address)).to.emit(assetManager, "Added").withArgs(2,address,index+1)
+            await expect(assetManager.addStakingReward(address)).to.emit(assetManager, "Added").withArgs(2, address, index + 1)
 
         }
         for (let index = 1; index <= stakingRewardAssetAddresses.length; index++) {
@@ -163,7 +163,7 @@ describe("Asset Manager Contract", function () {
         const stakingRewardId = 1
         expect((await assetManager.idToVerifiedStakingRewards(stakingRewardId)).status).eq(2)
         const address = (await assetManager.idToVerifiedStakingRewards(stakingRewardId)).addr
-        await expect(assetManager.pauseStakingReward(stakingRewardId)).to.emit(assetManager,"Paused").withArgs(2,address,stakingRewardId)
+        await expect(assetManager.pauseStakingReward(stakingRewardId)).to.emit(assetManager, "Paused").withArgs(2, address, stakingRewardId)
         expect((await assetManager.idToVerifiedStakingRewards(stakingRewardId)).status).eq(1)
         await expect(assetManager.pauseStakingReward(stakingRewardId)).to.be.reverted
     });
@@ -172,7 +172,7 @@ describe("Asset Manager Contract", function () {
         const stakingRewardId = 1
         expect((await assetManager.idToVerifiedStakingRewards(stakingRewardId)).status).eq(1)
         const address = (await assetManager.idToVerifiedStakingRewards(stakingRewardId)).addr
-        await expect(assetManager.unpauseStakingReward(stakingRewardId)).to.emit(assetManager,"Unpaused").withArgs(2,address,stakingRewardId)
+        await expect(assetManager.unpauseStakingReward(stakingRewardId)).to.emit(assetManager, "Unpaused").withArgs(2, address, stakingRewardId)
         expect((await assetManager.idToVerifiedStakingRewards(stakingRewardId)).status).eq(2)
         await expect(assetManager.unpauseStakingReward(stakingRewardId)).to.be.reverted
     });
@@ -180,8 +180,8 @@ describe("Asset Manager Contract", function () {
     it('closes Staking Reward Assets', async function () {
         const stakingRewardId = 1
         const address = (await assetManager.idToVerifiedStakingRewards(stakingRewardId)).addr
-        await expect(assetManager.closeStakingReward(stakingRewardId)).to.emit(assetManager,"Closed").withArgs(2,address,stakingRewardId)
+        await expect(assetManager.closeStakingReward(stakingRewardId)).to.emit(assetManager, "Closed").withArgs(2, address, stakingRewardId)
         expect((await assetManager.idToVerifiedStakingRewards(stakingRewardId)).status).eq(0)
         await expect(assetManager.closeStakingReward(stakingRewardId)).to.be.reverted
-    }); 
+    });
 });

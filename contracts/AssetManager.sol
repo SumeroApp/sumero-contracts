@@ -18,6 +18,7 @@ contract AssetManager is Ownable {
         SwapPair,
         StakingReward
     }
+
     enum Status {
         Closed,
         Paused,
@@ -31,7 +32,7 @@ contract AssetManager is Ownable {
 
     // EMPs
     function addEmp(address _asset) external onlyOwner {
-        require(_asset != address(0), "Asset Manager: ZERO_ADDRESS");
+        require(_asset != address(0), "AssetManager: ZERO_ADDRESS");
         totalEmpAssets = totalEmpAssets + 1;
         idToVerifiedEmps[totalEmpAssets] = Asset(_asset, Status.Open);
         emit Added(Type.Emp, _asset, totalEmpAssets);
@@ -40,7 +41,7 @@ contract AssetManager is Ownable {
     function pauseEmp(uint256 id) external onlyOwner {
         require(
             idToVerifiedEmps[id].status == Status.Open,
-            "Asset Manager: ASSET_NOT_OPEN"
+            "AssetManager: ASSET_NOT_OPEN"
         );
         idToVerifiedEmps[id].status = Status.Paused;
         emit Paused(Type.Emp, idToVerifiedEmps[id].addr, id);
@@ -49,7 +50,7 @@ contract AssetManager is Ownable {
     function unpauseEmp(uint256 id) external onlyOwner {
         require(
             idToVerifiedEmps[id].status == Status.Paused,
-            "Asset Manager: ASSET_NOT_PAUSED"
+            "AssetManager: ASSET_NOT_PAUSED"
         );
         idToVerifiedEmps[id].status = Status.Open;
         emit Unpaused(Type.Emp, idToVerifiedEmps[id].addr, id);
@@ -58,11 +59,11 @@ contract AssetManager is Ownable {
     function closeEmp(uint256 id) external onlyOwner {
         require(
             idToVerifiedEmps[id].addr != address(0),
-            "Asset Manager: ZERO_ADDRESS"
+            "AssetManager: ZERO_ADDRESS"
         );
         require(
             idToVerifiedEmps[id].status != Status.Closed,
-            "Asset Manager: ASSET_ALREADY_CLOSED"
+            "AssetManager: ASSET_ALREADY_CLOSED"
         );
         idToVerifiedEmps[id].status = Status.Closed;
         emit Closed(Type.Emp, idToVerifiedEmps[id].addr, id);
@@ -70,7 +71,7 @@ contract AssetManager is Ownable {
 
     // Swap Pairs
     function addSwapPair(address _asset) external onlyOwner {
-        require(_asset != address(0), "Asset Manager: ZERO_ADDRESS");
+        require(_asset != address(0), "AssetManager: ZERO_ADDRESS");
         totalSwapPairAssets = totalSwapPairAssets + 1;
         idToVerifiedSwapPairs[totalSwapPairAssets] = Asset(_asset, Status.Open);
         emit Added(Type.SwapPair, _asset, totalSwapPairAssets);
@@ -79,7 +80,7 @@ contract AssetManager is Ownable {
     function pauseSwapPair(uint256 id) external onlyOwner {
         require(
             idToVerifiedSwapPairs[id].status == Status.Open,
-            "Asset Manager: ASSET_NOT_OPEN"
+            "AssetManager: ASSET_NOT_OPEN"
         );
         idToVerifiedSwapPairs[id].status = Status.Paused;
         emit Paused(Type.SwapPair, idToVerifiedSwapPairs[id].addr, id);
@@ -88,7 +89,7 @@ contract AssetManager is Ownable {
     function unpauseSwapPair(uint256 id) external onlyOwner {
         require(
             idToVerifiedSwapPairs[id].status == Status.Paused,
-            "Asset Manager: ASSET_NOT_PAUSED"
+            "AssetManager: ASSET_NOT_PAUSED"
         );
         idToVerifiedSwapPairs[id].status = Status.Open;
         emit Unpaused(Type.SwapPair, idToVerifiedSwapPairs[id].addr, id);
@@ -97,11 +98,11 @@ contract AssetManager is Ownable {
     function closeSwapPair(uint256 id) external onlyOwner {
         require(
             idToVerifiedSwapPairs[id].addr != address(0),
-            "Asset Manager: ZERO_ADDRESS"
+            "AssetManager: ZERO_ADDRESS"
         );
         require(
             idToVerifiedSwapPairs[id].status != Status.Closed,
-            "Asset Manager: ASSET_ALREADY_CLOSED"
+            "AssetManager: ASSET_ALREADY_CLOSED"
         );
         idToVerifiedSwapPairs[id].status = Status.Closed;
         emit Closed(Type.SwapPair, idToVerifiedSwapPairs[id].addr, id);
@@ -109,7 +110,7 @@ contract AssetManager is Ownable {
 
     // Staking Rewards
     function addStakingReward(address _asset) external onlyOwner {
-        require(_asset != address(0), "Asset Manager: ZERO_ADDRESS");
+        require(_asset != address(0), "AssetManager: ZERO_ADDRESS");
         totalStakingRewardAssets = totalStakingRewardAssets + 1;
         idToVerifiedStakingRewards[totalStakingRewardAssets] = Asset(
             _asset,
@@ -121,32 +122,44 @@ contract AssetManager is Ownable {
     function pauseStakingReward(uint256 id) external onlyOwner {
         require(
             idToVerifiedStakingRewards[id].status == Status.Open,
-            "Asset Manager: ASSET_NOT_OPEN"
+            "AssetManager: ASSET_NOT_OPEN"
         );
         idToVerifiedStakingRewards[id].status = Status.Paused;
-        emit Paused(Type.StakingReward, idToVerifiedStakingRewards[id].addr, id);
+        emit Paused(
+            Type.StakingReward,
+            idToVerifiedStakingRewards[id].addr,
+            id
+        );
     }
 
     function unpauseStakingReward(uint256 id) external onlyOwner {
         require(
             idToVerifiedStakingRewards[id].status == Status.Paused,
-            "Asset Manager: ASSET_NOT_PAUSED"
+            "AssetManager: ASSET_NOT_PAUSED"
         );
         idToVerifiedStakingRewards[id].status = Status.Open;
-        emit Unpaused(Type.StakingReward, idToVerifiedStakingRewards[id].addr, id);
+        emit Unpaused(
+            Type.StakingReward,
+            idToVerifiedStakingRewards[id].addr,
+            id
+        );
     }
 
     function closeStakingReward(uint256 id) external onlyOwner {
         require(
             idToVerifiedStakingRewards[id].addr != address(0),
-            "Asset Manager: ZERO_ADDRESS"
+            "AssetManager: ZERO_ADDRESS"
         );
         require(
             idToVerifiedStakingRewards[id].status != Status.Closed,
-            "Asset Manager: ASSET_ALREADY_CLOSED"
+            "AssetManager: ASSET_ALREADY_CLOSED"
         );
         idToVerifiedStakingRewards[id].status = Status.Closed;
-        emit Closed(Type.StakingReward, idToVerifiedStakingRewards[id].addr, id);
+        emit Closed(
+            Type.StakingReward,
+            idToVerifiedStakingRewards[id].addr,
+            id
+        );
     }
 
     /* ========== EVENTS ========== */
@@ -154,21 +167,21 @@ contract AssetManager is Ownable {
     event Added(
         Type indexed assetType,
         address indexed assetAddress,
-        uint256   assetId
+        uint256 assetId
     );
     event Paused(
         Type indexed assetType,
         address indexed assetAddress,
-        uint256  assetId
+        uint256 assetId
     );
     event Unpaused(
         Type indexed assetType,
         address indexed assetAddress,
-        uint256  assetId
+        uint256 assetId
     );
     event Closed(
         Type indexed assetType,
         address indexed assetAddress,
-        uint256  assetId
+        uint256 assetId
     );
 }
