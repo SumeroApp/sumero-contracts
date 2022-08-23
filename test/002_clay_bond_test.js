@@ -109,8 +109,7 @@ describe("Clay Bonds Contract", function () {
         console.log("\nIssuing zClayBonds: .....")
 
         clayAmount = ethers.utils.parseUnits('1.0', 'ether')
-        const issueTx = await clayBonds.connect(accounts[1]).issue(clayAmount)
-        const issueReceipt = await issueTx.wait()
+        await expect(clayBonds.connect(accounts[1]).issue(clayAmount)).to.emit(clayBonds,"Issued")
         daysLeftToMaturationDate = clayBonds.getDaysLeftToMaturationDate()
         let rewardPercent = ethers.BigNumber.from(await clayBonds.getRewardPercent(daysLeftToMaturationDate))
         let reward = ethers.BigNumber.from(await clayBonds.getReward(clayAmount, rewardPercent))
@@ -144,9 +143,9 @@ describe("Clay Bonds Contract", function () {
     it("Claims after the maturation", async () => {
         console.log("\nClaiming after the maturation: .....")
         console.log(" User's Clay balance before claim: " + await clayToken.balanceOf(accounts[1].address))
-        const claimResult = await clayBonds.connect(accounts[1]).claim()
-        const issueReceipt = await claimResult.wait()
-        // console.log(issueReceipt)
+        const userBondsBalance = await clayBonds.balanceOf(accounts[1].address)
+        await expect(clayBonds.connect(accounts[1]).claim()).to.emit(clayBonds,"Claimed").withArgs(accounts[1].address,userBondsBalance);
+
         const afterBalance = await clayToken.balanceOf(accounts[1].address)
         console.log("User's Clay balance after claim: " + afterBalance)
 
@@ -170,9 +169,9 @@ describe("Clay Bonds Contract", function () {
         let beforeContractBalance = await clayToken.balanceOf(ClayBondsAddress)
         // only owner can call
         await expect(clayBonds.connect(accounts[3]).burn()).to.be.reverted
-        const burnResult = await clayBonds.burn()
-        const issueReceipt = await burnResult.wait()
-        // console.log(issueReceipt)
+
+        const BondsContractClayBalance = await clayToken.balanceOf(ClayBondsAddress)
+        await expect(clayBonds.burn()).to.emit(clayBonds,"Burned").withArgs(BondsContractClayBalance);
 
         let afterClaySupply = await clayToken.totalSupply();
         let afterContractBalance = await clayToken.balanceOf(ClayBondsAddress)

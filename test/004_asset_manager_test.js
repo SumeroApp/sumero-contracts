@@ -36,7 +36,8 @@ describe("Asset Manager Contract", function () {
 
         const empAddresses = ["0x0ccaf8cb1c92aef64dd36ce1f3882d195180ad5c", "0x0ccaf8cb1c92aef64dd36ce1f3882d195180ad5d", "0x0ccaf8cb1c92aef64dd36ce1f3882d195180ad5f"]
         for (let index = 0; index < empAddresses.length; index++) {
-            await assetManager.addEmp(empAddresses[index])
+           const address = ethers.utils.getAddress(empAddresses[index])
+           await expect(assetManager.addEmp(address)).to.emit(assetManager, "Added").withArgs(0,address,index+1)
 
         }
         for (let index = 1; index <= empAddresses.length; index++) {
@@ -59,7 +60,8 @@ describe("Asset Manager Contract", function () {
     it('pauses EMPs', async function () {
         const empId = 1
         expect((await assetManager.idToVerifiedEmps(empId)).status).eq(2)
-        await assetManager.pauseEmp(empId)
+        const address = (await assetManager.idToVerifiedEmps(empId)).addr
+        await expect(assetManager.pauseEmp(empId)).to.emit(assetManager,"Paused").withArgs(0,address,empId)
         expect((await assetManager.idToVerifiedEmps(empId)).status).eq(1)
         await expect(assetManager.pauseEmp(empId)).to.be.reverted
     });
@@ -67,23 +69,26 @@ describe("Asset Manager Contract", function () {
     it('unPauses EMPs', async function () {
         const empId = 1
         expect((await assetManager.idToVerifiedEmps(empId)).status).eq(1)
-        await assetManager.unpauseEmp(empId)
+        const address = (await assetManager.idToVerifiedEmps(empId)).addr
+        await expect(assetManager.unpauseEmp(empId)).to.emit(assetManager,"Unpaused").withArgs(0,address,empId)
         expect((await assetManager.idToVerifiedEmps(empId)).status).eq(2)
         await expect(assetManager.unpauseEmp(empId)).to.be.reverted
     });
 
     it('closes EMPs', async function () {
         const empId = 1
-        await assetManager.closeEmp(empId)
+        const address = (await assetManager.idToVerifiedEmps(empId)).addr
+        await expect(assetManager.closeEmp(empId)).to.emit(assetManager,"Closed").withArgs(0,address,empId)
         expect((await assetManager.idToVerifiedEmps(empId)).status).eq(0)
         await expect(assetManager.closeEmp(empId)).to.be.reverted
     });
-
+    
     it('adds Swap Pair Assets', async function () {
         const totalSwapPairAssetsBefore = await assetManager.totalSwapPairAssets()
         const swapPairAddresses = ["0x0abcf8cb1c92aef64dd36ce1f3882d195180ad5c", "0x0dabf8cb1c92aef64dd36ce1f3882d195180ad5d", "0x0bedf8cb1c92aef64dd36ce1f3882d195180ad5f"]
         for (let index = 0; index < swapPairAddresses.length; index++) {
-            await assetManager.addSwapPair(swapPairAddresses[index])
+            const address = ethers.utils.getAddress(swapPairAddresses[index])
+            await expect(assetManager.addSwapPair(address)).to.emit(assetManager, "Added").withArgs(1,address,index+1)
 
         }
         for (let index = 1; index <= swapPairAddresses.length; index++) {
@@ -103,7 +108,8 @@ describe("Asset Manager Contract", function () {
     it('pauses Swap Pair Assets', async function () {
         const swapPairId = 1
         expect((await assetManager.idToVerifiedSwapPairs(swapPairId)).status).eq(2)
-        await assetManager.pauseSwapPair(swapPairId)
+        const address = (await assetManager.idToVerifiedSwapPairs(swapPairId)).addr
+        await expect(assetManager.pauseSwapPair(swapPairId)).to.emit(assetManager,"Paused").withArgs(1,address,swapPairId)
         expect((await assetManager.idToVerifiedSwapPairs(swapPairId)).status).eq(1)
         await expect(assetManager.pauseSwapPair(swapPairId)).to.be.reverted
     });
@@ -111,14 +117,16 @@ describe("Asset Manager Contract", function () {
     it('unPauses Swap Pair Assets', async function () {
         const swapPairId = 1
         expect((await assetManager.idToVerifiedSwapPairs(swapPairId)).status).eq(1)
-        await assetManager.unpauseSwapPair(swapPairId)
+        const address = (await assetManager.idToVerifiedSwapPairs(swapPairId)).addr
+        await expect(assetManager.unpauseSwapPair(swapPairId)).to.emit(assetManager,"Unpaused").withArgs(1,address,swapPairId)
         expect((await assetManager.idToVerifiedSwapPairs(swapPairId)).status).eq(2)
         await expect(assetManager.unpauseSwapPair(swapPairId)).to.be.reverted
     });
-
+ 
     it('closes Swap Pair Assets', async function () {
         const swapPairId = 1
-        await assetManager.closeSwapPair(swapPairId)
+        const address = (await assetManager.idToVerifiedSwapPairs(swapPairId)).addr
+        await expect(assetManager.closeSwapPair(swapPairId)).to.emit(assetManager,"Closed").withArgs(1,address,swapPairId)
         expect((await assetManager.idToVerifiedSwapPairs(swapPairId)).status).eq(0)
         await expect(assetManager.closeSwapPair(swapPairId)).to.be.reverted
     });
@@ -128,7 +136,8 @@ describe("Asset Manager Contract", function () {
         const stakingRewardAssetAddresses = ["0x0aaaf8cb1c92aef64dd36ce1f3882d195180ad5c", "0x0bbbf8cb1c92aef64dd36ce1f3882d195180ad5d", "0x0adef8cb1c92aef64dd36ce1f3882d195180ad5f", "0x0bedf8cb1c92aef64dd36ce1f3882d195180ad5f"]
 
         for (let index = 0; index < stakingRewardAssetAddresses.length; index++) {
-            await assetManager.addStakingReward(stakingRewardAssetAddresses[index])
+            const address = ethers.utils.getAddress(stakingRewardAssetAddresses[index])
+            await expect(assetManager.addStakingReward(address)).to.emit(assetManager, "Added").withArgs(2,address,index+1)
 
         }
         for (let index = 1; index <= stakingRewardAssetAddresses.length; index++) {
@@ -147,13 +156,14 @@ describe("Asset Manager Contract", function () {
         expect((await assetManager.idToVerifiedStakingRewards(1)).status).eq(2)
         expect((await assetManager.idToVerifiedStakingRewards(2)).status).eq(2)
         expect((await assetManager.idToVerifiedStakingRewards(3)).status).eq(2)
-        expect((await assetManager.idToVerifiedStakingRewards(4)).status).eq(2) 
+        expect((await assetManager.idToVerifiedStakingRewards(4)).status).eq(2)
     });
 
     it('pauses Staking Reward Assets', async function () {
         const stakingRewardId = 1
         expect((await assetManager.idToVerifiedStakingRewards(stakingRewardId)).status).eq(2)
-        await assetManager.pauseStakingReward(stakingRewardId)
+        const address = (await assetManager.idToVerifiedStakingRewards(stakingRewardId)).addr
+        await expect(assetManager.pauseStakingReward(stakingRewardId)).to.emit(assetManager,"Paused").withArgs(2,address,stakingRewardId)
         expect((await assetManager.idToVerifiedStakingRewards(stakingRewardId)).status).eq(1)
         await expect(assetManager.pauseStakingReward(stakingRewardId)).to.be.reverted
     });
@@ -161,15 +171,17 @@ describe("Asset Manager Contract", function () {
     it('unPauses Staking Reward Assets', async function () {
         const stakingRewardId = 1
         expect((await assetManager.idToVerifiedStakingRewards(stakingRewardId)).status).eq(1)
-        await assetManager.unpauseStakingReward(stakingRewardId)
+        const address = (await assetManager.idToVerifiedStakingRewards(stakingRewardId)).addr
+        await expect(assetManager.unpauseStakingReward(stakingRewardId)).to.emit(assetManager,"Unpaused").withArgs(2,address,stakingRewardId)
         expect((await assetManager.idToVerifiedStakingRewards(stakingRewardId)).status).eq(2)
         await expect(assetManager.unpauseStakingReward(stakingRewardId)).to.be.reverted
     });
 
     it('closes Staking Reward Assets', async function () {
         const stakingRewardId = 1
-        await assetManager.closeStakingReward(stakingRewardId)
+        const address = (await assetManager.idToVerifiedStakingRewards(stakingRewardId)).addr
+        await expect(assetManager.closeStakingReward(stakingRewardId)).to.emit(assetManager,"Closed").withArgs(2,address,stakingRewardId)
         expect((await assetManager.idToVerifiedStakingRewards(stakingRewardId)).status).eq(0)
         await expect(assetManager.closeStakingReward(stakingRewardId)).to.be.reverted
-    });
+    }); 
 });
