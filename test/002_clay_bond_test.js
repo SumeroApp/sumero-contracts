@@ -109,11 +109,11 @@ describe("Clay Bonds Contract", function () {
         console.log("\nIssuing zClayBonds: .....")
 
         clayAmount = ethers.utils.parseUnits('1.0', 'ether')
-        await expect(clayBonds.connect(accounts[1]).issue(clayAmount)).to.emit(clayBonds, "Issued")
-        daysLeftToMaturationDate = clayBonds.getDaysLeftToMaturationDate()
+        daysLeftToMaturationDate = await clayBonds.getDaysLeftToMaturationDate()
         let rewardPercent = ethers.BigNumber.from(await clayBonds.getRewardPercent(daysLeftToMaturationDate))
         let reward = ethers.BigNumber.from(await clayBonds.getReward(clayAmount, rewardPercent))
-
+        await expect(clayBonds.connect(accounts[1]).issue(clayAmount))
+            .to.emit(clayBonds, "Issued").withArgs(accounts[1].address, clayAmount, daysLeftToMaturationDate, rewardPercent, reward)
 
         let bondBalanceOfUser = await clayBonds.balanceOf(accounts[1].address)
         let contractBalance = await clayToken.balanceOf(ClayBondsAddress)
