@@ -44,7 +44,13 @@ contract ClayBonds is ERC20("zClay Token", "zCLAY"), Ownable {
 
     uint256 public constant APY_PERCENT = 40;
     uint256 public constant BONUS_APY_PERCENT = 20;
-    uint256 public constant BONDS_ISSUANCE_PERIOD = 1 days * 365;
+    // UNCOMMENT BELOW BEFORE PROD
+    // uint256 public constant BONDS_ISSUANCE_PERIOD = 1 days * 365;
+    // uint256 public constant MATURATION_PERIOD = (1 days * 365) * 3;
+
+    // TODO: test claybonds for short duration
+    uint256 public constant BONDS_ISSUANCE_PERIOD = 1 days * 7;
+    uint256 public constant MATURATION_PERIOD = BONDS_ISSUANCE_PERIOD;
 
     // minimum staking amount must be 100 wei
     uint256 public constant MIN_ISSUANCE_AMOUNT = 100;
@@ -59,7 +65,7 @@ contract ClayBonds is ERC20("zClay Token", "zCLAY"), Ownable {
         // deposit close date is 1 year in future
         depositCloseDate = depositStartDate + BONDS_ISSUANCE_PERIOD;
         // maturation date of bond is 3 years in future
-        maturationDate = depositStartDate + (BONDS_ISSUANCE_PERIOD * 3);
+        maturationDate = depositStartDate + MATURATION_PERIOD;
 
         // calculate daily yield
         // APY details can be taken as constructor argument
