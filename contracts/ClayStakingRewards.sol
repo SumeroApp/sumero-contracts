@@ -16,7 +16,6 @@ import "./interfaces/IClayToken.sol";
 
     Owner of this contract can perform following actions:
     - pause / unpause this contract in case of closure of Staking Rewards scheme or other unforseen circumstances
-        - note that pausing only prohibits staking. Withdrawing/exiting is still permitted.
     - change reward rate
  */
 contract ClayStakingRewards is Ownable, ReentrancyGuard, Pausable {
@@ -58,9 +57,9 @@ contract ClayStakingRewards is Ownable, ReentrancyGuard, Pausable {
     }
 
     function rewardPerToken() public view returns (uint256) {
-        // if there are no tokens, rewardPerToken is a meaningless question
-        require(_totalSupply > 0, "ClayStakingRewards: ZERO_SUPPLY");
-
+        if (_totalSupply == 0) {
+            return rewardPerTokenStored;
+        }
         return
             rewardPerTokenStored +
             ((rewardRate * (block.timestamp - lastUpdateTime) * 1e18) /
