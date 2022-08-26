@@ -43,7 +43,7 @@ module.exports = {
       blockGasLimit: 67000000,
       url: node_url('goerli'),
       accounts: accounts('goerli'),
-      chainId: 42,
+      chainId: 5,
     },
   }),
   solidity: {

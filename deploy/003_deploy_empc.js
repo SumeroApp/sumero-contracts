@@ -7,7 +7,6 @@
 const colors = require('colors');
 const { getAddress } = require('@uma/contracts-node');
 const { expect } = require('chai');
-const faucetTokenAbi = require('../utils/faucetToken.abi.json');
 const { ethers } = require("hardhat");
 
 // this function is injected with HRE
@@ -25,6 +24,8 @@ module.exports = async ({
     let empcDeployed;
     let tokenFactoryDeployed;
     let timerContractDeployed;
+
+    console.log("deployer address: " + deployer);
 
     // DEPENDENT CONTRACTS BEFORE DEPLOYING EMPC
 
@@ -51,8 +52,25 @@ module.exports = async ({
     const TIMER_ADDRESS = timerContractDeployed.address;
     console.log("TIMER_ADDRESS " + TIMER_ADDRESS);
 
+    ethers.getContractFactory
+    // library AncillaryData
+    // library FixedPoint 
+    // library Exclusive
+    // library Shared {
+    // library ExpiringMultiPartyLib
+    // library PerpetualLib
+    // library AdminIdentifierLib 
+    // library OracleInterfaces
+    // library OptimisticOracleConstraints
+    // library ResultComputation
+
+    // make library calls internal (from public) or add address while deploying via --libraries
+    // use getContractFactory to deploy libraries, then link libraries while deploying
     empcDeployed = await deploy('ExpiringMultiPartyCreator', {
         from: deployer,
+        // libraries: {
+        //     TokenTrait: lib.address
+        // },
         args: [FINDER_ADDRESS, TOKEN_FACTORY_ADDRESS, TIMER_ADDRESS],
         skipIfAlreadyDeployed: true
     });

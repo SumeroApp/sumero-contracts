@@ -46,7 +46,10 @@ contract ExpiringMultiPartyCreator is ContractCreator, Testable, Lockable {
     // Address of TokenFactory used to create a new synthetic token.
     address public tokenFactoryAddress;
 
-    event CreatedExpiringMultiParty(address indexed expiringMultiPartyAddress, address indexed deployerAddress);
+    event CreatedExpiringMultiParty(
+        address indexed expiringMultiPartyAddress,
+        address indexed deployerAddress
+    );
 
     /**
      * @notice Constructs the ExpiringMultiPartyCreator contract.
@@ -67,17 +70,35 @@ contract ExpiringMultiPartyCreator is ContractCreator, Testable, Lockable {
      * @param params is a `ConstructorParams` object from ExpiringMultiParty.
      * @return address of the deployed ExpiringMultiParty contract.
      */
-    function createExpiringMultiParty(Params memory params) public nonReentrant() returns (address) {
+    function createExpiringMultiParty(Params memory params)
+        public
+        nonReentrant
+        returns (address)
+    {
         // Create a new synthetic token using the params.
-        require(bytes(params.syntheticName).length != 0, "Missing synthetic name");
-        require(bytes(params.syntheticSymbol).length != 0, "Missing synthetic symbol");
+        require(
+            bytes(params.syntheticName).length != 0,
+            "Missing synthetic name"
+        );
+        require(
+            bytes(params.syntheticSymbol).length != 0,
+            "Missing synthetic symbol"
+        );
         TokenFactory tf = TokenFactory(tokenFactoryAddress);
 
         // If the collateral token does not have a `decimals()` method, then a default precision of 18 will be
         // applied to the newly created synthetic token.
-        uint8 syntheticDecimals = _getSyntheticDecimals(params.collateralAddress);
-        ExpandedIERC20 tokenCurrency = tf.createToken(params.syntheticName, params.syntheticSymbol, syntheticDecimals);
-        address derivative = ExpiringMultiPartyLib.deploy(_convertParams(params, tokenCurrency));
+        uint8 syntheticDecimals = _getSyntheticDecimals(
+            params.collateralAddress
+        );
+        ExpandedIERC20 tokenCurrency = tf.createToken(
+            params.syntheticName,
+            params.syntheticSymbol,
+            syntheticDecimals
+        );
+        address derivative = ExpiringMultiPartyLib.deploy(
+            _convertParams(params, tokenCurrency)
+        );
 
         // Give permissions to new derivative contract and then hand over ownership.
         tokenCurrency.addMinter(derivative);
@@ -96,7 +117,10 @@ contract ExpiringMultiPartyCreator is ContractCreator, Testable, Lockable {
      ****************************************/
 
     // Converts createExpiringMultiParty params to ExpiringMultiParty constructor params.
-    function _convertParams(Params memory params, ExpandedIERC20 newTokenCurrency)
+    function _convertParams(
+        Params memory params,
+        ExpandedIERC20 newTokenCurrency
+    )
         private
         view
         returns (ExpiringMultiParty.ConstructorParams memory constructorParams)
@@ -106,9 +130,18 @@ contract ExpiringMultiPartyCreator is ContractCreator, Testable, Lockable {
         constructorParams.timerAddress = timerAddress;
 
         // Enforce configuration constraints.
-        require(params.withdrawalLiveness != 0, "Withdrawal liveness cannot be 0");
-        require(params.liquidationLiveness != 0, "Liquidation liveness cannot be 0");
-        require(params.expirationTimestamp > block.timestamp, "Invalid expiration time");
+        require(
+            params.withdrawalLiveness != 0,
+            "Withdrawal liveness cannot be 0"
+        );
+        require(
+            params.liquidationLiveness != 0,
+            "Liquidation liveness cannot be 0"
+        );
+        require(
+            params.expirationTimestamp > block.timestamp,
+            "Invalid expiration time"
+        );
         _requireWhitelistedCollateral(params.collateralAddress);
 
         // We don't want EMP deployers to be able to intentionally or unintentionally set
@@ -116,8 +149,14 @@ contract ExpiringMultiPartyCreator is ContractCreator, Testable, Lockable {
         // to be opinionated about what livenesses are "correct", so we will somewhat
         // arbitrarily set the liveness upper bound to 100 years (5200 weeks). In practice, liveness
         // periods even greater than a few days would make the EMP unusable for most users.
-        require(params.withdrawalLiveness < 5200 weeks, "Withdrawal liveness too large");
-        require(params.liquidationLiveness < 5200 weeks, "Liquidation liveness too large");
+        require(
+            params.withdrawalLiveness < 5200 weeks,
+            "Withdrawal liveness too large"
+        );
+        require(
+            params.liquidationLiveness < 5200 weeks,
+            "Liquidation liveness too large"
+        );
 
         // Input from function call.
         constructorParams.tokenAddress = address(newTokenCurrency);
@@ -126,19 +165,28 @@ contract ExpiringMultiPartyCreator is ContractCreator, Testable, Lockable {
         constructorParams.priceFeedIdentifier = params.priceFeedIdentifier;
         constructorParams.collateralRequirement = params.collateralRequirement;
         constructorParams.disputeBondPercentage = params.disputeBondPercentage;
-        constructorParams.sponsorDisputeRewardPercentage = params.sponsorDisputeRewardPercentage;
-        constructorParams.disputerDisputeRewardPercentage = params.disputerDisputeRewardPercentage;
+        constructorParams.sponsorDisputeRewardPercentage = params
+            .sponsorDisputeRewardPercentage;
+        constructorParams.disputerDisputeRewardPercentage = params
+            .disputerDisputeRewardPercentage;
         constructorParams.minSponsorTokens = params.minSponsorTokens;
         constructorParams.withdrawalLiveness = params.withdrawalLiveness;
         constructorParams.liquidationLiveness = params.liquidationLiveness;
-        constructorParams.financialProductLibraryAddress = params.financialProductLibraryAddress;
+        constructorParams.financialProductLibraryAddress = params
+            .financialProductLibraryAddress;
     }
 
     // IERC20Standard.decimals() will revert if the collateral contract has not implemented the decimals() method,
     // which is possible since the method is only an OPTIONAL method in the ERC20 standard:
     // https://eips.ethereum.org/EIPS/eip-20#methods.
-    function _getSyntheticDecimals(address _collateralAddress) public view returns (uint8 decimals) {
-        try IERC20Standard(_collateralAddress).decimals() returns (uint8 _decimals) {
+    function _getSyntheticDecimals(address _collateralAddress)
+        public
+        view
+        returns (uint8 decimals)
+    {
+        try IERC20Standard(_collateralAddress).decimals() returns (
+            uint8 _decimals
+        ) {
             return _decimals;
         } catch {
             return 18;
