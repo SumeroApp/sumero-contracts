@@ -79,7 +79,21 @@ Read more about creationCode / initcode / bytecode in solidity / eth.
 
         npx hardhat deploy --network kovan --tags ClayBonds
 
-7. Variable HARDHAT_FORK in .env manages the forking details. If it's an empty string, hardhat network does not add any forking details to HRE. Otherwise it adds the forking network details at hre.config.networks.hardhat.forking . e.g. HARDHAT_FORK="kovan". running npx hardhat node would fork the "kovan" network and run locally, along with adding the forking details.
+7. Fork details ->
+    Variable HARDHAT_FORK in .env manages the forking details. If it's an empty string, hardhat network does not add any forking details to HRE. Otherwise it adds the forking network details at hre.config.networks.hardhat.forking . e.g. HARDHAT_FORK="kovan". running npx hardhat node would fork the "kovan" network and run locally, along with adding the forking details.
+
+    HARDHAT_FORK, ETH_NODE_URI_*networkname* and MNEMONIC_*networkname* need to be added for each forked network
+
+## Sample Env File
+
+    HARDHAT_FORK="goerli"
+    ETH_NODE_URI_GOERLI="https://goerli.infura.io/v3/xxxx"
+    MNEMONIC_GOERLI="random random random random random"
+
+    APPROVED_EMPs='["0xc1eb9d0dfef93f0c81fd7eceb4f3cf0039e24f7e", "0xd63c91fd4fa5b3d843b5a104d505403e07908ba4"]'
+    APPROVED_SWAP_PAIRs='[]'
+    APPROVED_STAKING_REWARDs='[]'
+    ETHERSCAN_API_KEY='9K49VNXGEATGF9MYU57MGAEEV952MEAYCD'
 
 NOTE: Deployment scripts are to be used for deployment to Networks like Kovan, Ropsten, Mainnet etc. Make sure HARDHAT_FORK is pointing to correct network before deployment. Tests folder to be used for local testing before deployment.
 

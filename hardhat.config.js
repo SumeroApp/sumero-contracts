@@ -31,10 +31,18 @@ module.exports = {
     },
     kovan: {
       live: true,
-      tags: ["staging"],
+      tags: ["test"],
       blockGasLimit: 67000000,
       url: node_url('kovan'),
       accounts: accounts('kovan'),
+      chainId: 42,
+    },
+    goerli: {
+      live: true,
+      tags: ["test-goerli"],
+      blockGasLimit: 67000000,
+      url: node_url('goerli'),
+      accounts: accounts('goerli'),
       chainId: 42,
     },
   }),
@@ -51,6 +59,24 @@ module.exports = {
       },
       {
         version: "0.8.0",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 1000,
+          }
+        },
+      },
+      {
+        version: "0.8.1",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 1000,
+          }
+        },
+      },
+      {
+        version: "0.8.9",
         settings: {
           optimizer: {
             enabled: true,
