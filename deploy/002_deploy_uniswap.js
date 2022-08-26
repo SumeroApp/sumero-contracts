@@ -65,23 +65,6 @@ module.exports = async ({
         console.log(colors.red(error));
     }
 
-    // Create USDC-CLAY Pair
-    try {
-        const pairAddress = await factory.getPair(clayToken.address, USDCDeployed.address);
-        console.log(colors.blue("\npairAddress from factory", pairAddress));
-
-        // USDC <=> CLAY PAIR
-        if (pairAddress == 0x0000000000000000000000000000000000000000) {
-            const usdcClayPairTX = await factory.createPair(USDCDeployed.address, clayToken.address);
-            const USDC_CLAY_PAIR = await router.getPair(USDCDeployed.address, clayToken.address);
-
-            console.log(colors.green("\nUSDC_CLAY_PAIR created", USDC_CLAY_PAIR));
-            expect(await factory.getPair(clayToken.address, USDCDeployed.address)).to.equal(USDC_CLAY_PAIR, "USDC_CLAY_PAIR not matching with what's there in factory");
-        }
-    } catch (error) {
-        console.log(colors.red("Issue when adding USDC-CLAY Pair to Uniswap Pool"));
-        console.log(colors.red(error));
-    }
 };
 
 module.exports.tags = ['Uniswap'];

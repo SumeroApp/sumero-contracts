@@ -17,6 +17,7 @@ require("./tasks/pause-asset");
 require("./tasks/unpause-asset");
 require("./tasks/close-asset");
 require("./tasks/mint-emp");
+require("./tasks/create-lp");
 /**
  * @type import('hardhat/config').HardhatUserConfig
  */
