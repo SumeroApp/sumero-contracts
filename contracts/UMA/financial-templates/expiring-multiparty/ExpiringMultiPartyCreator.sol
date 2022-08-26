@@ -12,6 +12,47 @@ import "../common/SyntheticToken.sol";
 import "./ExpiringMultiPartyLib.sol";
 
 /**
+ExpandedIERC20
+IERC20Standard
+ContractCreator
+Testable
+Lockable
+TokenFactory
+ExpandedERC20
+SyntheticToken
+
+Registry
+RegistryInterface
+
+Finder
+FinderInterface
+
+MultiRole
+Constants
+
+AddressWhitelist
+AddressWhitelistInterface
+
+Timer
+
+ExpiringMultiPartyLib
+ExpiringMultiParty
+Liquidatable
+PricelessPositionManager
+
+FixedPoint
+
+OracleInterface
+OptimisticOracleInterface
+IdentifierWhitelistInterface
+
+FeePayer
+StoreInterface
+AdministrateeInterface
+FinancialProductLibrary
+ */
+
+/**
  * @title Expiring Multi Party Contract creator.
  * @notice Factory contract to create and register new instances of expiring multiparty contracts.
  * Responsible for constraining the parameters used to construct a new EMP. This creator contains a number of constraints
