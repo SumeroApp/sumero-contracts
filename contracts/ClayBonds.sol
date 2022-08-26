@@ -32,15 +32,15 @@ contract ClayBonds is ERC20("zClay Token", "zCLAY"), Ownable {
     IClayToken public clay;
 
     // the maximum upper limit of bond rewards that this contract will give over it's lifetime
-    uint256 public maximumBondRewards;
+    uint256 public immutable maximumBondRewards;
     // total zCLAY bonds locked into the contract
     uint256 public totalBondDeposits;
 
-    uint256 public depositStartDate;
-    uint256 public depositCloseDate;
-    uint256 public maturationDate;
+    uint256 public immutable depositStartDate;
+    uint256 public immutable depositCloseDate;
+    uint256 public immutable maturationDate;
 
-    uint256 public dailyYieldPercent;
+    uint256 public immutable dailyYieldPercent;
 
     uint256 public constant APY_PERCENT = 40;
     uint256 public constant BONUS_APY_PERCENT = 20;
@@ -63,9 +63,9 @@ contract ClayBonds is ERC20("zClay Token", "zCLAY"), Ownable {
         // TODO: take into consideration leap year?
 
         // deposit close date is 1 year in future
-        depositCloseDate = depositStartDate + BONDS_ISSUANCE_PERIOD;
+        depositCloseDate = block.timestamp + BONDS_ISSUANCE_PERIOD;
         // maturation date of bond is 3 years in future
-        maturationDate = depositStartDate + MATURATION_PERIOD;
+        maturationDate = block.timestamp + MATURATION_PERIOD;
 
         // calculate daily yield
         // APY details can be taken as constructor argument

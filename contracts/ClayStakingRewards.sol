@@ -19,9 +19,9 @@ import "./interfaces/IClayToken.sol";
     - change reward rate
  */
 contract ClayStakingRewards is Ownable, ReentrancyGuard, Pausable {
-    IClayToken public clayToken;
+    IClayToken public immutable clayToken;
     // Staking token would be Sumero LP tokens
-    IERC20 public stakingToken;
+    IERC20 public immutable stakingToken;
 
     // Reward Rate per day
     // 10 gwei CLAY per second
