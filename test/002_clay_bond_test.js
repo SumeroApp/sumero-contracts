@@ -99,10 +99,10 @@ describe("Clay Bonds Contract", function () {
         let multiplier = ethers.BigNumber.from("1000000000000000000")
         let dailyYield = multiplier.mul(apy_percent.add(bonus_apy_percent)).div(365)
 
-        // 3 years in seconds: 94608000
-        expect(maturationDate.sub(depositStartDate)).to.be.eq(94608000)
+        // 1 week in seconds: 604800
+        expect(maturationDate.sub(depositStartDate)).to.be.eq(604800)
         // 1 year in seconds: 31536000
-        expect(depositCloseDate.sub(depositStartDate)).to.be.eq(31536000)
+        expect(depositCloseDate.sub(depositStartDate)).to.be.eq(604800)
         expect(dailyYield).to.be.eq(dailyYieldPercent)
     });
     it("Issues zCLAY bonds ", async () => {

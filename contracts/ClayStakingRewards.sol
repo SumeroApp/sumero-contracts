@@ -92,7 +92,7 @@ contract ClayStakingRewards is Ownable, ReentrancyGuard, Pausable {
         whenNotPaused
         updateReward(msg.sender)
     {
-        require(_amount > 0, "ClayStakingRewards: INSUFFICIENT_AMOUNT");
+        require(_amount > 0, "ClayStakingRewards: AMOUNT_IS_ZERO");
         _totalSupply += _amount;
         _balances[msg.sender] += _amount;
         bool success = stakingToken.transferFrom(
@@ -109,10 +109,12 @@ contract ClayStakingRewards is Ownable, ReentrancyGuard, Pausable {
         nonReentrant
         updateReward(msg.sender)
     {
+        require(_amount > 0, "ClayStakingRewards: AMOUNT_IS_ZERO");
         require(
-            _amount > 0 && _amount <= _balances[msg.sender],
-            "ClayStakingRewards: INSUFFICIENT_AMOUNT"
+            _amount <= _balances[msg.sender],
+            "ClayStakingRewards: INSUFFICIENT_BALANCE"
         );
+
         _totalSupply -= _amount;
         _balances[msg.sender] -= _amount;
         bool success = stakingToken.transfer(msg.sender, _amount);

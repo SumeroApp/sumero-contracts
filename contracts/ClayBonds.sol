@@ -117,8 +117,11 @@ contract ClayBonds is ERC20("zClay Token", "zCLAY"), Ownable {
             "ClayBonds: INSUFFICIENT_AMOUNT"
         );
         require(
-            block.timestamp >= depositStartDate &&
-                block.timestamp < depositCloseDate,
+            block.timestamp >= depositStartDate,
+            "ClayBonds: DEPOSIT_NOT_YET_STARTED"
+        );
+        require(
+            block.timestamp < depositCloseDate,
             "ClayBonds: DEPOSIT_CLOSED"
         );
 
@@ -161,7 +164,7 @@ contract ClayBonds is ERC20("zClay Token", "zCLAY"), Ownable {
             "ClayBonds: BOND_NOT_MATURED"
         );
         uint256 balance = balanceOf(msg.sender);
-        require(balance > 0, "ClayBonds: INSUFFICIENT_AMOUNT");
+        require(balance > 0, "ClayBonds: BALANCE_IS_ZERO");
         _burn(msg.sender, balance);
         clay.mint(msg.sender, balance);
         emit Claimed(msg.sender, balance);
