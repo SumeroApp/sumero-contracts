@@ -13,13 +13,14 @@ task("create-lp", "Creates liquidity pools in Uniswap")
             // Create Pair
             try {
                 const pairAddress = await factory.getPair(args.token1, args.token2);
-                console.log("\npairAddress from factory", pairAddress);
+                console.log("\nPair address from factory:"+ pairAddress);
+                let PAIR;
 
                 // token2 <=> token1 PAIR
                 if (pairAddress == 0x0000000000000000000000000000000000000000) {
                     const tx = await factory.createPair(args.token2, args.token1);
                     tx.wait()
-                    const PAIR = await router.getPair(args.token2, args.token1);
+                    PAIR = await router.getPair(args.token2, args.token1);
 
                     console.log(args.token1 + " - " + args.token2 + " created on: ", PAIR);
                     expect(await factory.getPair(args.token1, args.token2)).to.equal(PAIR, args.token2 + " - " + args.token1 + " not matching with what's there in factory");
@@ -28,6 +29,10 @@ task("create-lp", "Creates liquidity pools in Uniswap")
                     if (txUrl != null) {
                         console.log(txUrl);
                     }
+                }
+                else{
+                    console.log(args.token1 + " - " + args.token2 + " pair already exists on: ");
+                    console.log("https://kovan.etherscan.io/address/"+pairAddress);
                 }
             } catch (error) {
                 console.log("Issue when adding" + args.token2 + " - " + args.token1 + " Pair to Uniswap Pool");
