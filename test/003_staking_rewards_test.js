@@ -62,7 +62,7 @@ describe("Staking Rewards Contract", function () {
 
     it('Can update reward rate', async function () {
         await expect(stakingRewards.connect(accounts[2]).updateRewardRate(20)).to.be.reverted
-        await stakingRewards.updateRewardRate(20)
+        await expect(stakingRewards.updateRewardRate(20)).to.emit(stakingRewards, "RewardRateUpdated").withArgs(20)
         expect(await stakingRewards.rewardRate()).to.eq(20)
     });
 
@@ -79,7 +79,7 @@ describe("Staking Rewards Contract", function () {
         expect(await sumeroLpToken.balanceOf(accounts[1].address)).to.equal(amount)
         await sumeroLpToken.connect(accounts[1]).approve(StakingRewardsAddress, amount)
         expect(await sumeroLpToken.allowance(accounts[1].address, StakingRewardsAddress)).to.eq(amount)
-        await stakingRewards.connect(accounts[1]).stake(amount)
+        await expect(stakingRewards.connect(accounts[1]).stake(amount)).to.emit(stakingRewards, "Staked")
         expect(await stakingRewards.balanceOf(accounts[1].address)).to.eq(amount)
         expect(await stakingRewards.totalSupply()).to.eq(amount)
 
@@ -102,14 +102,14 @@ describe("Staking Rewards Contract", function () {
         const amount = ethers.utils.parseUnits('10.0', 'ether')
         expect(await sumeroLpToken.balanceOf(accounts[1].address)).to.eq(0)
         expect(await stakingRewards.balanceOf(accounts[1].address)).to.eq(amount)
-        await stakingRewards.connect(accounts[1]).withdraw(amount)
+        await expect(stakingRewards.connect(accounts[1]).withdraw(amount)).to.emit(stakingRewards, "Withdrawn").withArgs(accounts[1].address, amount)
         expect(await stakingRewards.balanceOf(accounts[1].address)).to.eq(0)
         expect(await sumeroLpToken.balanceOf(accounts[1].address)).to.eq(amount)
     });
 
     it('Gets staking rewards', async function () {
         const reward = await stakingRewards.rewards(accounts[1].address)
-        await stakingRewards.connect(accounts[1]).getReward()
+        await expect(stakingRewards.connect(accounts[1]).getReward()).to.emit(stakingRewards, "RewardPaid").withArgs(accounts[1].address, reward)
         expect(await clayToken.balanceOf(accounts[1].address)).to.eq(reward)
         expect(await stakingRewards.rewards(accounts[1].address)).to.eq(0)
     });

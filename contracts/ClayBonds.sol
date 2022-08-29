@@ -5,7 +5,6 @@ import "./interfaces/IClayToken.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-
 /**
     You can deposit CLAY (ERC20 token native to Sumero) to get zCLAY Bonds (a new ERC20 representing the bond).
 
@@ -29,30 +28,32 @@ import "@openzeppelin/contracts/access/Ownable.sol";
     The user can claim the zCLAY Bonds for equivalent value of CLAY after the maturation date.
     The user has to lock his CLAY in to zCLAY bonds for atleast 3 years. They are open to trade these bonds on a secondary market (i.e. via LP pools on Sumero)
  */
-contract ClayBonds is ERC20("zClay Token", "zCLAY"), Ownable{
+contract ClayBonds is ERC20("zClay Token", "zCLAY"), Ownable {
     IClayToken public clay;
 
     // the maximum upper limit of bond rewards that this contract will give over it's lifetime
-    uint256 public maximumBondRewards;
+    uint256 public immutable maximumBondRewards;
     // total zCLAY bonds locked into the contract
     uint256 public totalBondDeposits;
 
-    uint256 public depositStartDate;
-    uint256 public depositCloseDate;
-    uint256 public maturationDate;
+    uint256 public immutable depositStartDate;
+    uint256 public immutable depositCloseDate;
+    uint256 public immutable maturationDate;
 
-    uint256 public dailyYieldPercent;
+    uint256 public immutable dailyYieldPercent;
 
     uint256 public constant APY_PERCENT = 40;
     uint256 public constant BONUS_APY_PERCENT = 20;
-    uint256 public constant BONDS_ISSUANCE_PERIOD = 1 days * 365;
+    // UNCOMMENT BELOW BEFORE PROD
+    // uint256 public constant BONDS_ISSUANCE_PERIOD = 1 days * 365;
+    // uint256 public constant MATURATION_PERIOD = (1 days * 365) * 3;
 
-    event Issue(
-        uint256 amount,
-        uint256 daysLeftToMaturationDate,
-        uint256 rewardPercent,
-        uint256 reward
-    );
+    // TODO: test claybonds for short duration
+    uint256 public constant BONDS_ISSUANCE_PERIOD = 1 days * 7;
+    uint256 public constant MATURATION_PERIOD = BONDS_ISSUANCE_PERIOD;
+
+    // minimum staking amount must be 100 wei
+    uint256 public constant MIN_ISSUANCE_AMOUNT = 100;
 
     constructor(IClayToken _clay, uint256 _maximumBondRewards) {
         clay = _clay;
@@ -62,9 +63,9 @@ contract ClayBonds is ERC20("zClay Token", "zCLAY"), Ownable{
         // TODO: take into consideration leap year?
 
         // deposit close date is 1 year in future
-        depositCloseDate = depositStartDate + BONDS_ISSUANCE_PERIOD;
+        depositCloseDate = block.timestamp + BONDS_ISSUANCE_PERIOD;
         // maturation date of bond is 3 years in future
-        maturationDate = depositStartDate + (BONDS_ISSUANCE_PERIOD * 3);
+        maturationDate = block.timestamp + MATURATION_PERIOD;
 
         // calculate daily yield
         // APY details can be taken as constructor argument
@@ -110,12 +111,18 @@ contract ClayBonds is ERC20("zClay Token", "zCLAY"), Ownable{
      * Issues a zCLAY Bond depending on the amount of CLAY deposited and the current APY which depends on the time elapsed since bond programme inception
      * @param _clayAmount The amount of CLAY deposited
      */
-    function issue(uint256 _clayAmount) public returns (uint256 bondAmount) {
-        require(_clayAmount > 100, "Clay Amount must be greater than 100 wei");
+    function issue(uint256 _clayAmount) external returns (uint256 bondAmount) {
         require(
-            block.timestamp >= depositStartDate &&
-                block.timestamp < depositCloseDate,
-            "Deposit closed"
+            _clayAmount > MIN_ISSUANCE_AMOUNT,
+            "ClayBonds: INSUFFICIENT_AMOUNT"
+        );
+        require(
+            block.timestamp >= depositStartDate,
+            "ClayBonds: DEPOSIT_NOT_YET_STARTED"
+        );
+        require(
+            block.timestamp < depositCloseDate,
+            "ClayBonds: DEPOSIT_CLOSED"
         );
 
         uint256 daysLeftToMaturationDate = getDaysLeftToMaturationDate();
@@ -124,17 +131,23 @@ contract ClayBonds is ERC20("zClay Token", "zCLAY"), Ownable{
 
         bondAmount = _clayAmount + reward;
 
-        clay.transferFrom(msg.sender, address(this), _clayAmount);
+        bool success = clay.transferFrom(
+            msg.sender,
+            address(this),
+            _clayAmount
+        );
+        require(success, "ClayBonds: TRANSFER_FAILED");
         _mint(msg.sender, bondAmount);
 
         totalBondDeposits = totalBondDeposits + bondAmount;
 
         require(
             totalBondDeposits < maximumBondRewards,
-            "Maximum Bond Reward Pool Reached"
+            "ClayBonds: MAX_BOND_REWARD_POOL_REACHED"
         );
 
-        emit Issue(
+        emit Issued(
+            msg.sender,
             _clayAmount,
             daysLeftToMaturationDate,
             rewardPercent,
@@ -145,26 +158,39 @@ contract ClayBonds is ERC20("zClay Token", "zCLAY"), Ownable{
     /**
      * @dev Burns zClay and returns the underlying Clay tokens
      **/
-    function claim() public {
+    function claim() external {
         require(
             maturationDate <= block.timestamp,
-            "Bond Maturity date not reached"
+            "ClayBonds: BOND_NOT_MATURED"
         );
         uint256 balance = balanceOf(msg.sender);
-        require(balance > 0, "Balance must be greater than zero");
+        require(balance > 0, "ClayBonds: BALANCE_IS_ZERO");
         _burn(msg.sender, balance);
         clay.mint(msg.sender, balance);
+        emit Claimed(msg.sender, balance);
     }
 
     /**
      * @dev Burns the remaining Clay in the contract
      **/
-    function burn() public onlyOwner{
+    function burn() external onlyOwner {
         require(
             maturationDate <= block.timestamp,
-            "Bond Maturity date not reached"
+            "ClayBonds: BOND_NOT_MATURED"
         );
         uint256 clayBalance = clay.balanceOf(address(this));
         clay.burn(address(this), clayBalance);
+        emit Burned(clayBalance);
     }
+
+    /* ========== EVENTS ========== */
+    event Issued(
+        address indexed user,
+        uint256 amount,
+        uint256 daysLeftToMaturationDate,
+        uint256 rewardPercent,
+        uint256 reward
+    );
+    event Claimed(address indexed user, uint256 balance);
+    event Burned(uint256 amount);
 }
