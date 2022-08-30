@@ -17,6 +17,14 @@ require("./tasks/pause-asset");
 require("./tasks/unpause-asset");
 require("./tasks/close-asset");
 require("./tasks/mint-emp");
+
+const solcVersion = "0.8.0";
+
+const LARGE_CONTRACT_COMPILER_SETTINGS = {
+  version: solcVersion,
+  settings: { optimizer: { enabled: true, runs: 200 } },
+};
+
 /**
  * @type import('hardhat/config').HardhatUserConfig
  */
@@ -30,15 +38,15 @@ module.exports = {
       blockGasLimit: 67000000,
     },
     kovan: {
-      live: true,
-      tags: ["test"],
+      live: false,
+      tags: ["test-kovan"],
       blockGasLimit: 67000000,
       url: node_url('kovan'),
       accounts: accounts('kovan'),
       chainId: 42,
     },
     goerli: {
-      live: true,
+      live: false,
       tags: ["test-goerli"],
       blockGasLimit: 67000000,
       url: node_url('goerli'),
@@ -53,7 +61,7 @@ module.exports = {
         settings: {
           optimizer: {
             enabled: true,
-            runs: 1000,
+            runs: 200,
           }
         },
       },
@@ -62,7 +70,7 @@ module.exports = {
         settings: {
           optimizer: {
             enabled: true,
-            runs: 1000,
+            runs: 200,
           }
         },
       },
@@ -71,7 +79,7 @@ module.exports = {
         settings: {
           optimizer: {
             enabled: true,
-            runs: 1000,
+            runs: 200,
           }
         },
       },
@@ -80,11 +88,17 @@ module.exports = {
         settings: {
           optimizer: {
             enabled: true,
-            runs: 1000,
+            runs: 200,
           }
         },
       }
-    ]
+    ],
+    // overrides: {
+    //   "contracts/UMA/financial-templates/expiring-multiparty/ExpiringMultiPartyLib.sol": {
+    //     version: "0.8.0",
+    //     settings: { optimizer: { enabled: true, runs: 200 } },
+    //   },
+    // }
   },
   namedAccounts: {
     deployer: {
