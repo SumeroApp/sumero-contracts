@@ -8,18 +8,15 @@ const func = async function (hre) {
     const TokenFactory = await deployments.get("TokenFactory");
     const Timer = await deployments.get("Timer");
 
-    console.log("starting to deploy EMPlib");
     const EMPLib = await deploy("ExpiringMultiPartyLib", { from: deployer, log: true, skipIfAlreadyDeployed: true });
-    console.log("ending EMPlib");
-    console.log(EMPLib);
 
-    // await deploy("ExpiringMultiPartyCreator", {
-    //     from: deployer,
-    //     args: [Finder.address, TokenFactory.address, Timer.address],
-    //     libraries: { ExpiringMultiPartyLib: EMPLib.address },
-    //     log: true,
-    //     skipIfAlreadyDeployed: true,
-    // });
+    await deploy("ExpiringMultiPartyCreator", {
+        from: deployer,
+        args: [Finder.address, TokenFactory.address, Timer.address],
+        libraries: { ExpiringMultiPartyLib: EMPLib.address },
+        log: true,
+        skipIfAlreadyDeployed: true,
+    });
 };
 module.exports = func;
 func.tags = ["ExpiringMultiPartyCreator", "emp"];
