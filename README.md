@@ -48,6 +48,16 @@ Read more about creationCode / initcode / bytecode in solidity / eth.
 
 3. Uniswap Error UniswapV2: INSUFFICIENT_OUTPUT_AMOUNT. The liquidity maintained by pools is incorrect. // TODO
 
+## Deployment
+
+UMA's EMPC (ExpiringMultiPartyCreator)
+
+1. Deploy using script deploy_empc which is dependent on Finder.sol, TokenFactory.sol and Timer.sol (Timer is zero_address for live network)
+
+2. Deployment of EMPCLib was failing due to Out of gas errors and max code size exceeded.
+
+3. Reducing the optimizer runs (to 200) made the deployment go through, but users would have to pay more for using the contracts.
+
 ## Hardhat
 
 1.  hardhat.config.js is the main configuration file
