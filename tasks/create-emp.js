@@ -49,7 +49,7 @@ task("create-emp", "Deploys the EMP (Expiring Multi Party) Contract using UMA's 
             console.log(colors.blue("\n Token Factory Address: ", tokenFactoryAddress));
 
             // Price Feed
-            const priceFeedIdentifierHex = ethers.utils.hexlify(ethers.utils.toUtf8Bytes(args.priceFeed));
+            const priceFeedIdentifierHex = ethers.utils.hexlify(ethers.utils.toUtf8Bytes(arzgs.priceFeed));
             const priceFeedIdentifierPaddedHex = priceFeedIdentifierHex.padEnd(66, '0');
 
             const currentTimestamp = Date.now() / 1000;

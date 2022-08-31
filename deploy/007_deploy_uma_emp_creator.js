@@ -19,5 +19,5 @@ const func = async function (hre) {
     });
 };
 module.exports = func;
-func.tags = ["ExpiringMultiPartyCreator", "emp"];
+func.tags = ["ExpiringMultiPartyCreator"];
 func.dependencies = ["Finder", "TokenFactory", "Timer"];

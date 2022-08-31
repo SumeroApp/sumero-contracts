@@ -28,14 +28,23 @@ function matchesForkedNetwork(name) {
 function getTxUrl(network, txHash) {
     if (!isLocalNetwork() && isForkedNetwork()) {
         let txLink = "https://" + network.name + ".etherscan.io/tx/" + txHash
-        return "Etherscan URL: "+txLink;
+        return "Etherscan URL: " + txLink;
     }
     return null;
+}
+
+async function iterateAssets(numOfAssets, mappingName, contract) {
+    for (let i = 0; i < numOfAssets; ++i) {
+        const asset = await contract[mappingName](i + 1);
+        console.log(colors.blue("\n address: " + asset.addr));
+        console.log(colors.blue(" status: " + asset.status));
+    }
 }
 
 module.exports = {
     isLocalNetwork,
     isForkedNetwork,
     matchesForkedNetwork,
-    getTxUrl
+    getTxUrl,
+    iterateAssets
 }

@@ -18,6 +18,7 @@ module.exports = func;
 func.tags = ["UniswapV2Router02"];
 func.dependencies = ["UniswapV2Factory"];
 
+// helper functions
 const getWethAddressOrThrow = (network) => {
     if (network.name === 'kovan') {
         return "0xd0A1E359811322d97991E03f863a0C30C2cF029C";

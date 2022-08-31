@@ -154,6 +154,10 @@ NOTE: Deployment scripts are to be used for deployment to Networks like Kovan, R
 
     npx hardhat verify  --network kovan 0x7A16395c9566B4678B8f166bEcC2AbCae41f3DbC "0xE0544883f42Dc1812528234ea8B2b7687d8FA38A" "0x995b62fC9681db170e5312229acF7250F91DF719"
 
+## Flatten Contracts
+
+    npx hardhat flatten ./contracts/ClayToken.sol > TestClayToken.sol      
+
 Deployment addresses and parameters:
 
 (*deployer is the address that deploys the contract*)

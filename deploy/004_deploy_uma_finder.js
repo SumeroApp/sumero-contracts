@@ -7,4 +7,4 @@ const func = async function (hre) {
     await deploy("Finder", { from: deployer, log: true, skipIfAlreadyDeployed: true });
 };
 module.exports = func;
-func.tags = ["Finder", "dvm"];
+func.tags = ["Finder"];
