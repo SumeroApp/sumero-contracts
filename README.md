@@ -156,6 +156,8 @@ NOTE: Deployment scripts are to be used for deployment to Networks like Kovan, R
 
     npx hardhat verify  --network kovan 0x7A16395c9566B4678B8f166bEcC2AbCae41f3DbC "0xE0544883f42Dc1812528234ea8B2b7687d8FA38A" "0x995b62fC9681db170e5312229acF7250F91DF719"
 
+    npx hardhat --network goerli  etherscan-verify 
+
 ## Flatten Contracts
 
     npx hardhat flatten ./contracts/ClayToken.sol > TestClayToken.sol  
@@ -165,6 +167,11 @@ NOTE: Deployment scripts are to be used for deployment to Networks like Kovan, R
 kovan -> https://github.com/UMAprotocol/protocol/blob/master/packages/core/networks/42.json
 
 goerli -> https://github.com/UMAprotocol/protocol/blob/master/packages/core/networks/5.json
+
+AddressWhitelist -> check whitelisted tokens / collateral by UMA
+
+add registry contract to Finder
+Use UMA's Finder which points to UMA's registry code
 
 ## Clay Token
 

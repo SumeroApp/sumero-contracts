@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
 import "./SyntheticToken.sol";
@@ -22,8 +22,12 @@ contract TokenFactory is Lockable {
         string calldata tokenName,
         string calldata tokenSymbol,
         uint8 tokenDecimals
-    ) external nonReentrant() returns (ExpandedIERC20 newToken) {
-        SyntheticToken mintableToken = new SyntheticToken(tokenName, tokenSymbol, tokenDecimals);
+    ) external nonReentrant returns (ExpandedIERC20 newToken) {
+        SyntheticToken mintableToken = new SyntheticToken(
+            tokenName,
+            tokenSymbol,
+            tokenDecimals
+        );
         mintableToken.resetOwner(msg.sender);
         newToken = ExpandedIERC20(address(mintableToken));
     }

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
@@ -11,21 +11,26 @@ import "../interfaces/FinderInterface.sol";
 contract Finder is FinderInterface, Ownable {
     mapping(bytes32 => address) public interfacesImplemented;
 
-    event InterfaceImplementationChanged(bytes32 indexed interfaceName, address indexed newImplementationAddress);
+    event InterfaceImplementationChanged(
+        bytes32 indexed interfaceName,
+        address indexed newImplementationAddress
+    );
 
     /**
      * @notice Updates the address of the contract that implements `interfaceName`.
      * @param interfaceName bytes32 of the interface name that is either changed or registered.
      * @param implementationAddress address of the implementation contract.
      */
-    function changeImplementationAddress(bytes32 interfaceName, address implementationAddress)
-        external
-        override
-        onlyOwner
-    {
+    function changeImplementationAddress(
+        bytes32 interfaceName,
+        address implementationAddress
+    ) external override onlyOwner {
         interfacesImplemented[interfaceName] = implementationAddress;
 
-        emit InterfaceImplementationChanged(interfaceName, implementationAddress);
+        emit InterfaceImplementationChanged(
+            interfaceName,
+            implementationAddress
+        );
     }
 
     /**
@@ -33,9 +38,17 @@ contract Finder is FinderInterface, Ownable {
      * @param interfaceName queried interface.
      * @return implementationAddress address of the defined interface.
      */
-    function getImplementationAddress(bytes32 interfaceName) external view override returns (address) {
+    function getImplementationAddress(bytes32 interfaceName)
+        external
+        view
+        override
+        returns (address)
+    {
         address implementationAddress = interfacesImplemented[interfaceName];
-        require(implementationAddress != address(0x0), "Implementation not found");
+        require(
+            implementationAddress != address(0x0),
+            "Implementation not found"
+        );
         return implementationAddress;
     }
 }

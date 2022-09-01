@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -20,7 +20,10 @@ interface StoreInterface {
      * @param erc20Address address of the ERC20 token used to pay the fee.
      * @param amount number of tokens to transfer. An approval for at least this amount must exist.
      */
-    function payOracleFeesErc20(address erc20Address, FixedPoint.Unsigned calldata amount) external;
+    function payOracleFeesErc20(
+        address erc20Address,
+        FixedPoint.Unsigned calldata amount
+    ) external;
 
     /**
      * @notice Computes the regular oracle fees that a contract should pay for a period.
@@ -35,12 +38,21 @@ interface StoreInterface {
         uint256 startTime,
         uint256 endTime,
         FixedPoint.Unsigned calldata pfc
-    ) external view returns (FixedPoint.Unsigned memory regularFee, FixedPoint.Unsigned memory latePenalty);
+    )
+        external
+        view
+        returns (
+            FixedPoint.Unsigned memory regularFee,
+            FixedPoint.Unsigned memory latePenalty
+        );
 
     /**
      * @notice Computes the final oracle fees that a contract should pay at settlement.
      * @param currency token used to pay the final fee.
      * @return finalFee amount due.
      */
-    function computeFinalFee(address currency) external view returns (FixedPoint.Unsigned memory);
+    function computeFinalFee(address currency)
+        external
+        view
+        returns (FixedPoint.Unsigned memory);
 }

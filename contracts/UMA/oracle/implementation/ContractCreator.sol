@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
 import "../interfaces/FinderInterface.sol";
@@ -16,16 +16,30 @@ abstract contract ContractCreator {
         finderAddress = _finderAddress;
     }
 
-    function _requireWhitelistedCollateral(address collateralAddress) internal view {
+    function _requireWhitelistedCollateral(address collateralAddress)
+        internal
+        view
+    {
         FinderInterface finder = FinderInterface(finderAddress);
-        AddressWhitelist collateralWhitelist =
-            AddressWhitelist(finder.getImplementationAddress(OracleInterfaces.CollateralWhitelist));
-        require(collateralWhitelist.isOnWhitelist(collateralAddress), "Collateral not whitelisted");
+        AddressWhitelist collateralWhitelist = AddressWhitelist(
+            finder.getImplementationAddress(
+                OracleInterfaces.CollateralWhitelist
+            )
+        );
+        require(
+            collateralWhitelist.isOnWhitelist(collateralAddress),
+            "Collateral not whitelisted"
+        );
     }
 
-    function _registerContract(address[] memory parties, address contractToRegister) internal {
+    function _registerContract(
+        address[] memory parties,
+        address contractToRegister
+    ) internal {
         FinderInterface finder = FinderInterface(finderAddress);
-        Registry registry = Registry(finder.getImplementationAddress(OracleInterfaces.Registry));
+        Registry registry = Registry(
+            finder.getImplementationAddress(OracleInterfaces.Registry)
+        );
         registry.registerContract(parties, contractToRegister);
     }
 }

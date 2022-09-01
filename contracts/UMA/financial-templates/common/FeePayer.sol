@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -58,7 +58,7 @@ abstract contract FeePayer is AdministrateeInterface, Testable, Lockable {
      ****************************************/
 
     // modifier that calls payRegularFees().
-    modifier fees virtual {
+    modifier fees() virtual {
         // Note: the regular fee is applied on every fee-accruing transaction, where the total change is simply the
         // regular fee applied linearly since the last update. This implies that the compounding rate depends on the
         // frequency of update transactions that have this modifier, and it never reaches the ideal of continuous
@@ -99,7 +99,11 @@ abstract contract FeePayer is AdministrateeInterface, Testable, Lockable {
      * @return totalPaid Amount of collateral that the contract paid (sum of the amount paid to the Store and caller).
      * This returns 0 and exit early if there is no pfc, fees were already paid during the current block, or the fee rate is 0.
      */
-    function payRegularFees() public nonReentrant() returns (FixedPoint.Unsigned memory) {
+    function payRegularFees()
+        public
+        nonReentrant
+        returns (FixedPoint.Unsigned memory)
+    {
         uint256 time = getCurrentTime();
         FixedPoint.Unsigned memory collateralPool = _pfc();
 
@@ -122,7 +126,10 @@ abstract contract FeePayer is AdministrateeInterface, Testable, Lockable {
 
         if (regularFee.isGreaterThan(0)) {
             StoreInterface store = _getStore();
-            collateralCurrency.safeIncreaseAllowance(address(store), regularFee.rawValue);
+            collateralCurrency.safeIncreaseAllowance(
+                address(store),
+                regularFee.rawValue
+            );
             store.payOracleFeesErc20(address(collateralCurrency), regularFee);
         }
 
@@ -157,7 +164,11 @@ abstract contract FeePayer is AdministrateeInterface, Testable, Lockable {
             return (regularFee, latePenalty, totalPaid);
         }
 
-        (regularFee, latePenalty) = store.computeRegularFee(lastPaymentTime, time, collateralPool);
+        (regularFee, latePenalty) = store.computeRegularFee(
+            lastPaymentTime,
+            time,
+            collateralPool
+        );
 
         totalPaid = regularFee.add(latePenalty);
         if (totalPaid.isEqual(0)) {
@@ -168,7 +179,10 @@ abstract contract FeePayer is AdministrateeInterface, Testable, Lockable {
         // regular fee, which has the effect of paying the store first, followed by the caller if there is any fee remaining.
         if (totalPaid.isGreaterThan(collateralPool)) {
             FixedPoint.Unsigned memory deficit = totalPaid.sub(collateralPool);
-            FixedPoint.Unsigned memory latePenaltyReduction = FixedPoint.min(latePenalty, deficit);
+            FixedPoint.Unsigned memory latePenaltyReduction = FixedPoint.min(
+                latePenalty,
+                deficit
+            );
             latePenalty = latePenalty.sub(latePenaltyReduction);
             deficit = deficit.sub(latePenaltyReduction);
             regularFee = regularFee.sub(FixedPoint.min(regularFee, deficit));
@@ -182,7 +196,13 @@ abstract contract FeePayer is AdministrateeInterface, Testable, Lockable {
      * expected to implement this so that pay-fee methods can correctly compute the owed fees as a % of PfC.
      * @return pfc value for equal to the current profit from corruption denominated in collateral currency.
      */
-    function pfc() external view override nonReentrantView() returns (FixedPoint.Unsigned memory) {
+    function pfc()
+        external
+        view
+        override
+        nonReentrantView
+        returns (FixedPoint.Unsigned memory)
+    {
         return _pfc();
     }
 
@@ -192,7 +212,7 @@ abstract contract FeePayer is AdministrateeInterface, Testable, Lockable {
      * pays all sponsors a pro-rata portion of the excess collateral.
      * @dev This will revert if PfC is 0 and this contract's collateral balance > 0.
      */
-    function gulp() external nonReentrant() {
+    function gulp() external nonReentrant {
         _gulp();
     }
 
@@ -203,14 +223,20 @@ abstract contract FeePayer is AdministrateeInterface, Testable, Lockable {
     // Pays UMA Oracle final fees of `amount` in `collateralCurrency` to the Store contract. Final fee is a flat fee
     // charged for each price request. If payer is the contract, adjusts internal bookkeeping variables. If payer is not
     // the contract, pulls in `amount` of collateral currency.
-    function _payFinalFees(address payer, FixedPoint.Unsigned memory amount) internal {
+    function _payFinalFees(address payer, FixedPoint.Unsigned memory amount)
+        internal
+    {
         if (amount.isEqual(0)) {
             return;
         }
 
         if (payer != address(this)) {
             // If the payer is not the contract pull the collateral from the payer.
-            collateralCurrency.safeTransferFrom(payer, address(this), amount.rawValue);
+            collateralCurrency.safeTransferFrom(
+                payer,
+                address(this),
+                amount.rawValue
+            );
         } else {
             // If the payer is the contract, adjust the cumulativeFeeMultiplier to compensate.
             FixedPoint.Unsigned memory collateralPool = _pfc();
@@ -225,25 +251,39 @@ abstract contract FeePayer is AdministrateeInterface, Testable, Lockable {
         emit FinalFeesPaid(amount.rawValue);
 
         StoreInterface store = _getStore();
-        collateralCurrency.safeIncreaseAllowance(address(store), amount.rawValue);
+        collateralCurrency.safeIncreaseAllowance(
+            address(store),
+            amount.rawValue
+        );
         store.payOracleFeesErc20(address(collateralCurrency), amount);
     }
 
     function _gulp() internal {
         FixedPoint.Unsigned memory currentPfc = _pfc();
-        FixedPoint.Unsigned memory currentBalance = FixedPoint.Unsigned(collateralCurrency.balanceOf(address(this)));
+        FixedPoint.Unsigned memory currentBalance = FixedPoint.Unsigned(
+            collateralCurrency.balanceOf(address(this))
+        );
         if (currentPfc.isLessThan(currentBalance)) {
-            cumulativeFeeMultiplier = cumulativeFeeMultiplier.mul(currentBalance.div(currentPfc));
+            cumulativeFeeMultiplier = cumulativeFeeMultiplier.mul(
+                currentBalance.div(currentPfc)
+            );
         }
     }
 
     function _pfc() internal view virtual returns (FixedPoint.Unsigned memory);
 
     function _getStore() internal view returns (StoreInterface) {
-        return StoreInterface(finder.getImplementationAddress(OracleInterfaces.Store));
+        return
+            StoreInterface(
+                finder.getImplementationAddress(OracleInterfaces.Store)
+            );
     }
 
-    function _computeFinalFees() internal view returns (FixedPoint.Unsigned memory finalFees) {
+    function _computeFinalFees()
+        internal
+        view
+        returns (FixedPoint.Unsigned memory finalFees)
+    {
         StoreInterface store = _getStore();
         return store.computeFinalFee(address(collateralCurrency));
     }
@@ -260,20 +300,30 @@ abstract contract FeePayer is AdministrateeInterface, Testable, Lockable {
     }
 
     // Returns the user's collateral minus any pending fees that have yet to be subtracted.
-    function _getPendingRegularFeeAdjustedCollateral(FixedPoint.Unsigned memory rawCollateral)
-        internal
-        view
-        returns (FixedPoint.Unsigned memory)
-    {
-        (, , FixedPoint.Unsigned memory currentTotalOutstandingRegularFees) =
-            getOutstandingRegularFees(getCurrentTime());
-        if (currentTotalOutstandingRegularFees.isEqual(FixedPoint.fromUnscaledUint(0))) return rawCollateral;
+    function _getPendingRegularFeeAdjustedCollateral(
+        FixedPoint.Unsigned memory rawCollateral
+    ) internal view returns (FixedPoint.Unsigned memory) {
+        (
+            ,
+            ,
+            FixedPoint.Unsigned memory currentTotalOutstandingRegularFees
+        ) = getOutstandingRegularFees(getCurrentTime());
+        if (
+            currentTotalOutstandingRegularFees.isEqual(
+                FixedPoint.fromUnscaledUint(0)
+            )
+        ) return rawCollateral;
 
         // Calculate the total outstanding regular fee as a fraction of the total contract PFC.
-        FixedPoint.Unsigned memory effectiveOutstandingFee = currentTotalOutstandingRegularFees.divCeil(_pfc());
+        FixedPoint.Unsigned
+            memory effectiveOutstandingFee = currentTotalOutstandingRegularFees
+                .divCeil(_pfc());
 
         // Scale as rawCollateral* (1 - effectiveOutstandingFee) to apply the pro-rata amount to the regular fee.
-        return rawCollateral.mul(FixedPoint.fromUnscaledUint(1).sub(effectiveOutstandingFee));
+        return
+            rawCollateral.mul(
+                FixedPoint.fromUnscaledUint(1).sub(effectiveOutstandingFee)
+            );
     }
 
     // Converts a user-readable collateral value into a raw value that accounts for already-assessed fees. If any fees
@@ -291,14 +341,20 @@ abstract contract FeePayer is AdministrateeInterface, Testable, Lockable {
     // rawCollateral is decreased by less than expected. Because this method is usually called in conjunction with an
     // actual removal of collateral from this contract, return the fee-adjusted amount that the rawCollateral is
     // decreased by so that the caller can minimize error between collateral removed and rawCollateral debited.
-    function _removeCollateral(FixedPoint.Unsigned storage rawCollateral, FixedPoint.Unsigned memory collateralToRemove)
-        internal
-        returns (FixedPoint.Unsigned memory removedCollateral)
-    {
-        FixedPoint.Unsigned memory initialBalance = _getFeeAdjustedCollateral(rawCollateral);
-        FixedPoint.Unsigned memory adjustedCollateral = _convertToRawCollateral(collateralToRemove);
+    function _removeCollateral(
+        FixedPoint.Unsigned storage rawCollateral,
+        FixedPoint.Unsigned memory collateralToRemove
+    ) internal returns (FixedPoint.Unsigned memory removedCollateral) {
+        FixedPoint.Unsigned memory initialBalance = _getFeeAdjustedCollateral(
+            rawCollateral
+        );
+        FixedPoint.Unsigned memory adjustedCollateral = _convertToRawCollateral(
+            collateralToRemove
+        );
         rawCollateral.rawValue = rawCollateral.sub(adjustedCollateral).rawValue;
-        removedCollateral = initialBalance.sub(_getFeeAdjustedCollateral(rawCollateral));
+        removedCollateral = initialBalance.sub(
+            _getFeeAdjustedCollateral(rawCollateral)
+        );
     }
 
     // Increase rawCollateral by a fee-adjusted collateralToAdd amount. Fee adjustment scales up collateralToAdd
@@ -308,21 +364,30 @@ abstract contract FeePayer is AdministrateeInterface, Testable, Lockable {
     // increased by so that the caller can minimize error between collateral added and rawCollateral credited.
     // NOTE: This return value exists only for the sake of symmetry with _removeCollateral. We don't actually use it
     // because we are OK if more collateral is stored in the contract than is represented by rawTotalPositionCollateral.
-    function _addCollateral(FixedPoint.Unsigned storage rawCollateral, FixedPoint.Unsigned memory collateralToAdd)
-        internal
-        returns (FixedPoint.Unsigned memory addedCollateral)
-    {
-        FixedPoint.Unsigned memory initialBalance = _getFeeAdjustedCollateral(rawCollateral);
-        FixedPoint.Unsigned memory adjustedCollateral = _convertToRawCollateral(collateralToAdd);
+    function _addCollateral(
+        FixedPoint.Unsigned storage rawCollateral,
+        FixedPoint.Unsigned memory collateralToAdd
+    ) internal returns (FixedPoint.Unsigned memory addedCollateral) {
+        FixedPoint.Unsigned memory initialBalance = _getFeeAdjustedCollateral(
+            rawCollateral
+        );
+        FixedPoint.Unsigned memory adjustedCollateral = _convertToRawCollateral(
+            collateralToAdd
+        );
         rawCollateral.rawValue = rawCollateral.add(adjustedCollateral).rawValue;
-        addedCollateral = _getFeeAdjustedCollateral(rawCollateral).sub(initialBalance);
+        addedCollateral = _getFeeAdjustedCollateral(rawCollateral).sub(
+            initialBalance
+        );
     }
 
     // Scale the cumulativeFeeMultiplier by the ratio of fees paid to the current available collateral.
-    function _adjustCumulativeFeeMultiplier(FixedPoint.Unsigned memory amount, FixedPoint.Unsigned memory currentPfc)
-        internal
-    {
+    function _adjustCumulativeFeeMultiplier(
+        FixedPoint.Unsigned memory amount,
+        FixedPoint.Unsigned memory currentPfc
+    ) internal {
         FixedPoint.Unsigned memory effectiveFee = amount.divCeil(currentPfc);
-        cumulativeFeeMultiplier = cumulativeFeeMultiplier.mul(FixedPoint.fromUnscaledUint(1).sub(effectiveFee));
+        cumulativeFeeMultiplier = cumulativeFeeMultiplier.mul(
+            FixedPoint.fromUnscaledUint(1).sub(effectiveFee)
+        );
     }
 }

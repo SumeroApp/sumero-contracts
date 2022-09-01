@@ -36,9 +36,13 @@ task("create-emp", "Deploys the EMP (Expiring Multi Party) Contract using UMA's 
 
             console.log(colors.bold("\n==> Running create-emp task..."));
 
+            // const emp_creator_instance = await hre.ethers.getContract("ExpiringMultiPartyCreator", deployer);
+
             const ExpiringMultiPartyCreator = await deployments.get("ExpiringMultiPartyCreator");
+            // console.log(colors.green("\nEMPC_ADDRESS: ", emp_creator_instance.address));
             console.log(colors.green("\nEMPC_ADDRESS: ", ExpiringMultiPartyCreator.address));
             if (!ExpiringMultiPartyCreator || !ExpiringMultiPartyCreator.address) throw new Error("Unable to get deployed EMPC address");
+
 
             const signer0 = ethers.provider.getSigner(deployer);
             const emp_creator_instance = ExpiringMultiPartyCreatorEthers__factory.connect(ExpiringMultiPartyCreator.address, signer0);
@@ -92,7 +96,8 @@ task("create-emp", "Deploys the EMP (Expiring Multi Party) Contract using UMA's 
             }
 
             console.log(colors.blue("\n Creating EMP via EMPC: ....."));
-            const createEmpTx = await emp_creator_instance.createExpiringMultiParty(createEmpParams);
+            const createEmpTx = await emp_creator_instance.createExpiringMultiParty(createEmpParams, { gasLimit: 6700000 });
+            await createEmpTx.wait();
 
             console.log("\nTransaction Receipt: \n", createEmpTx)
             const txUrl = getTxUrl(deployments.network, createEmpTx.hash);

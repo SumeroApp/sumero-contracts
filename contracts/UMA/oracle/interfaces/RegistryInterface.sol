@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
 /**
@@ -11,7 +11,10 @@ interface RegistryInterface {
      * @param parties an array of addresses who become parties in the contract.
      * @param contractAddress defines the address of the deployed contract.
      */
-    function registerContract(address[] calldata parties, address contractAddress) external;
+    function registerContract(
+        address[] calldata parties,
+        address contractAddress
+    ) external;
 
     /**
      * @notice Returns whether the contract has been registered with the registry.
@@ -19,20 +22,29 @@ interface RegistryInterface {
      * @param contractAddress address of the contract.
      * @return bool indicates whether the contract is registered.
      */
-    function isContractRegistered(address contractAddress) external view returns (bool);
+    function isContractRegistered(address contractAddress)
+        external
+        view
+        returns (bool);
 
     /**
      * @notice Returns a list of all contracts that are associated with a particular party.
      * @param party address of the party.
      * @return an array of the contracts the party is registered to.
      */
-    function getRegisteredContracts(address party) external view returns (address[] memory);
+    function getRegisteredContracts(address party)
+        external
+        view
+        returns (address[] memory);
 
     /**
      * @notice Returns all registered contracts.
      * @return all registered contract addresses within the system.
      */
-    function getAllRegisteredContracts() external view returns (address[] memory);
+    function getAllRegisteredContracts()
+        external
+        view
+        returns (address[] memory);
 
     /**
      * @notice Adds a party to the calling contract.
@@ -54,5 +66,8 @@ interface RegistryInterface {
      * @param contractAddress address to check against the party.
      * @return bool indicating if the address is a party of the contract.
      */
-    function isPartyMemberOfContract(address party, address contractAddress) external view returns (bool);
+    function isPartyMemberOfContract(address party, address contractAddress)
+        external
+        view
+        returns (bool);
 }

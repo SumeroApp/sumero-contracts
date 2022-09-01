@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
 import "./Timer.sol";
@@ -23,7 +23,7 @@ abstract contract Testable {
     /**
      * @notice Reverts if not running in test mode.
      */
-    modifier onlyIfTest {
+    modifier onlyIfTest() {
         require(timerAddress != address(0x0));
         _;
     }

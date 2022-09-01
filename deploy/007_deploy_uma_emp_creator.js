@@ -20,7 +20,7 @@ const func = async function (hre) {
         args: [Finder.address, TokenFactory.address, Timer.address],
         libraries: { ExpiringMultiPartyLib: EMPLib.address },
         log: true,
-        skipIfAlreadyDeployed: true,
+        skipIfAlreadyDeployed: false,
     });
 };
 module.exports = func;

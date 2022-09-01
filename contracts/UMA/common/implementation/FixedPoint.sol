@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
@@ -26,7 +26,11 @@ library FixedPoint {
      * @param a uint to convert into a FixedPoint.
      * @return the converted FixedPoint.
      */
-    function fromUnscaledUint(uint256 a) internal pure returns (Unsigned memory) {
+    function fromUnscaledUint(uint256 a)
+        internal
+        pure
+        returns (Unsigned memory)
+    {
         return Unsigned(a.mul(FP_SCALING_FACTOR));
     }
 
@@ -36,7 +40,11 @@ library FixedPoint {
      * @param b a uint256.
      * @return True if equal, or False.
      */
-    function isEqual(Unsigned memory a, uint256 b) internal pure returns (bool) {
+    function isEqual(Unsigned memory a, uint256 b)
+        internal
+        pure
+        returns (bool)
+    {
         return a.rawValue == fromUnscaledUint(b).rawValue;
     }
 
@@ -46,7 +54,11 @@ library FixedPoint {
      * @param b a FixedPoint.
      * @return True if equal, or False.
      */
-    function isEqual(Unsigned memory a, Unsigned memory b) internal pure returns (bool) {
+    function isEqual(Unsigned memory a, Unsigned memory b)
+        internal
+        pure
+        returns (bool)
+    {
         return a.rawValue == b.rawValue;
     }
 
@@ -56,7 +68,11 @@ library FixedPoint {
      * @param b a FixedPoint.
      * @return True if `a > b`, or False.
      */
-    function isGreaterThan(Unsigned memory a, Unsigned memory b) internal pure returns (bool) {
+    function isGreaterThan(Unsigned memory a, Unsigned memory b)
+        internal
+        pure
+        returns (bool)
+    {
         return a.rawValue > b.rawValue;
     }
 
@@ -66,7 +82,11 @@ library FixedPoint {
      * @param b a uint256.
      * @return True if `a > b`, or False.
      */
-    function isGreaterThan(Unsigned memory a, uint256 b) internal pure returns (bool) {
+    function isGreaterThan(Unsigned memory a, uint256 b)
+        internal
+        pure
+        returns (bool)
+    {
         return a.rawValue > fromUnscaledUint(b).rawValue;
     }
 
@@ -76,7 +96,11 @@ library FixedPoint {
      * @param b a FixedPoint.
      * @return True if `a > b`, or False.
      */
-    function isGreaterThan(uint256 a, Unsigned memory b) internal pure returns (bool) {
+    function isGreaterThan(uint256 a, Unsigned memory b)
+        internal
+        pure
+        returns (bool)
+    {
         return fromUnscaledUint(a).rawValue > b.rawValue;
     }
 
@@ -86,7 +110,11 @@ library FixedPoint {
      * @param b a FixedPoint.
      * @return True if `a >= b`, or False.
      */
-    function isGreaterThanOrEqual(Unsigned memory a, Unsigned memory b) internal pure returns (bool) {
+    function isGreaterThanOrEqual(Unsigned memory a, Unsigned memory b)
+        internal
+        pure
+        returns (bool)
+    {
         return a.rawValue >= b.rawValue;
     }
 
@@ -96,7 +124,11 @@ library FixedPoint {
      * @param b a uint256.
      * @return True if `a >= b`, or False.
      */
-    function isGreaterThanOrEqual(Unsigned memory a, uint256 b) internal pure returns (bool) {
+    function isGreaterThanOrEqual(Unsigned memory a, uint256 b)
+        internal
+        pure
+        returns (bool)
+    {
         return a.rawValue >= fromUnscaledUint(b).rawValue;
     }
 
@@ -106,7 +138,11 @@ library FixedPoint {
      * @param b a FixedPoint.
      * @return True if `a >= b`, or False.
      */
-    function isGreaterThanOrEqual(uint256 a, Unsigned memory b) internal pure returns (bool) {
+    function isGreaterThanOrEqual(uint256 a, Unsigned memory b)
+        internal
+        pure
+        returns (bool)
+    {
         return fromUnscaledUint(a).rawValue >= b.rawValue;
     }
 
@@ -116,7 +152,11 @@ library FixedPoint {
      * @param b a FixedPoint.
      * @return True if `a < b`, or False.
      */
-    function isLessThan(Unsigned memory a, Unsigned memory b) internal pure returns (bool) {
+    function isLessThan(Unsigned memory a, Unsigned memory b)
+        internal
+        pure
+        returns (bool)
+    {
         return a.rawValue < b.rawValue;
     }
 
@@ -126,7 +166,11 @@ library FixedPoint {
      * @param b a uint256.
      * @return True if `a < b`, or False.
      */
-    function isLessThan(Unsigned memory a, uint256 b) internal pure returns (bool) {
+    function isLessThan(Unsigned memory a, uint256 b)
+        internal
+        pure
+        returns (bool)
+    {
         return a.rawValue < fromUnscaledUint(b).rawValue;
     }
 
@@ -136,7 +180,11 @@ library FixedPoint {
      * @param b a FixedPoint.
      * @return True if `a < b`, or False.
      */
-    function isLessThan(uint256 a, Unsigned memory b) internal pure returns (bool) {
+    function isLessThan(uint256 a, Unsigned memory b)
+        internal
+        pure
+        returns (bool)
+    {
         return fromUnscaledUint(a).rawValue < b.rawValue;
     }
 
@@ -146,7 +194,11 @@ library FixedPoint {
      * @param b a FixedPoint.
      * @return True if `a <= b`, or False.
      */
-    function isLessThanOrEqual(Unsigned memory a, Unsigned memory b) internal pure returns (bool) {
+    function isLessThanOrEqual(Unsigned memory a, Unsigned memory b)
+        internal
+        pure
+        returns (bool)
+    {
         return a.rawValue <= b.rawValue;
     }
 
@@ -156,7 +208,11 @@ library FixedPoint {
      * @param b a uint256.
      * @return True if `a <= b`, or False.
      */
-    function isLessThanOrEqual(Unsigned memory a, uint256 b) internal pure returns (bool) {
+    function isLessThanOrEqual(Unsigned memory a, uint256 b)
+        internal
+        pure
+        returns (bool)
+    {
         return a.rawValue <= fromUnscaledUint(b).rawValue;
     }
 
@@ -166,7 +222,11 @@ library FixedPoint {
      * @param b a FixedPoint.
      * @return True if `a <= b`, or False.
      */
-    function isLessThanOrEqual(uint256 a, Unsigned memory b) internal pure returns (bool) {
+    function isLessThanOrEqual(uint256 a, Unsigned memory b)
+        internal
+        pure
+        returns (bool)
+    {
         return fromUnscaledUint(a).rawValue <= b.rawValue;
     }
 
@@ -176,7 +236,11 @@ library FixedPoint {
      * @param b a FixedPoint.
      * @return the minimum of `a` and `b`.
      */
-    function min(Unsigned memory a, Unsigned memory b) internal pure returns (Unsigned memory) {
+    function min(Unsigned memory a, Unsigned memory b)
+        internal
+        pure
+        returns (Unsigned memory)
+    {
         return a.rawValue < b.rawValue ? a : b;
     }
 
@@ -186,7 +250,11 @@ library FixedPoint {
      * @param b a FixedPoint.
      * @return the maximum of `a` and `b`.
      */
-    function max(Unsigned memory a, Unsigned memory b) internal pure returns (Unsigned memory) {
+    function max(Unsigned memory a, Unsigned memory b)
+        internal
+        pure
+        returns (Unsigned memory)
+    {
         return a.rawValue > b.rawValue ? a : b;
     }
 
@@ -196,7 +264,11 @@ library FixedPoint {
      * @param b a FixedPoint.
      * @return the sum of `a` and `b`.
      */
-    function add(Unsigned memory a, Unsigned memory b) internal pure returns (Unsigned memory) {
+    function add(Unsigned memory a, Unsigned memory b)
+        internal
+        pure
+        returns (Unsigned memory)
+    {
         return Unsigned(a.rawValue.add(b.rawValue));
     }
 
@@ -206,7 +278,11 @@ library FixedPoint {
      * @param b a uint256.
      * @return the sum of `a` and `b`.
      */
-    function add(Unsigned memory a, uint256 b) internal pure returns (Unsigned memory) {
+    function add(Unsigned memory a, uint256 b)
+        internal
+        pure
+        returns (Unsigned memory)
+    {
         return add(a, fromUnscaledUint(b));
     }
 
@@ -216,7 +292,11 @@ library FixedPoint {
      * @param b a FixedPoint.
      * @return the difference of `a` and `b`.
      */
-    function sub(Unsigned memory a, Unsigned memory b) internal pure returns (Unsigned memory) {
+    function sub(Unsigned memory a, Unsigned memory b)
+        internal
+        pure
+        returns (Unsigned memory)
+    {
         return Unsigned(a.rawValue.sub(b.rawValue));
     }
 
@@ -226,7 +306,11 @@ library FixedPoint {
      * @param b a uint256.
      * @return the difference of `a` and `b`.
      */
-    function sub(Unsigned memory a, uint256 b) internal pure returns (Unsigned memory) {
+    function sub(Unsigned memory a, uint256 b)
+        internal
+        pure
+        returns (Unsigned memory)
+    {
         return sub(a, fromUnscaledUint(b));
     }
 
@@ -236,7 +320,11 @@ library FixedPoint {
      * @param b a FixedPoint.
      * @return the difference of `a` and `b`.
      */
-    function sub(uint256 a, Unsigned memory b) internal pure returns (Unsigned memory) {
+    function sub(uint256 a, Unsigned memory b)
+        internal
+        pure
+        returns (Unsigned memory)
+    {
         return sub(fromUnscaledUint(a), b);
     }
 
@@ -247,7 +335,11 @@ library FixedPoint {
      * @param b a FixedPoint.
      * @return the product of `a` and `b`.
      */
-    function mul(Unsigned memory a, Unsigned memory b) internal pure returns (Unsigned memory) {
+    function mul(Unsigned memory a, Unsigned memory b)
+        internal
+        pure
+        returns (Unsigned memory)
+    {
         // There are two caveats with this computation:
         // 1. Max output for the represented number is ~10^41, otherwise an intermediate value overflows. 10^41 is
         // stored internally as a uint256 ~10^59.
@@ -264,7 +356,11 @@ library FixedPoint {
      * @param b a uint256.
      * @return the product of `a` and `b`.
      */
-    function mul(Unsigned memory a, uint256 b) internal pure returns (Unsigned memory) {
+    function mul(Unsigned memory a, uint256 b)
+        internal
+        pure
+        returns (Unsigned memory)
+    {
         return Unsigned(a.rawValue.mul(b));
     }
 
@@ -274,7 +370,11 @@ library FixedPoint {
      * @param b a FixedPoint.
      * @return the product of `a` and `b`.
      */
-    function mulCeil(Unsigned memory a, Unsigned memory b) internal pure returns (Unsigned memory) {
+    function mulCeil(Unsigned memory a, Unsigned memory b)
+        internal
+        pure
+        returns (Unsigned memory)
+    {
         uint256 mulRaw = a.rawValue.mul(b.rawValue);
         uint256 mulFloor = mulRaw / FP_SCALING_FACTOR;
         uint256 mod = mulRaw.mod(FP_SCALING_FACTOR);
@@ -291,7 +391,11 @@ library FixedPoint {
      * @param b a FixedPoint.
      * @return the product of `a` and `b`.
      */
-    function mulCeil(Unsigned memory a, uint256 b) internal pure returns (Unsigned memory) {
+    function mulCeil(Unsigned memory a, uint256 b)
+        internal
+        pure
+        returns (Unsigned memory)
+    {
         // Since b is an uint, there is no risk of truncation and we can just mul it normally
         return Unsigned(a.rawValue.mul(b));
     }
@@ -303,7 +407,11 @@ library FixedPoint {
      * @param b a FixedPoint denominator.
      * @return the quotient of `a` divided by `b`.
      */
-    function div(Unsigned memory a, Unsigned memory b) internal pure returns (Unsigned memory) {
+    function div(Unsigned memory a, Unsigned memory b)
+        internal
+        pure
+        returns (Unsigned memory)
+    {
         // There are two caveats with this computation:
         // 1. Max value for the number dividend `a` represents is ~10^41, otherwise an intermediate value overflows.
         // 10^41 is stored internally as a uint256 10^59.
@@ -319,7 +427,11 @@ library FixedPoint {
      * @param b a uint256 denominator.
      * @return the quotient of `a` divided by `b`.
      */
-    function div(Unsigned memory a, uint256 b) internal pure returns (Unsigned memory) {
+    function div(Unsigned memory a, uint256 b)
+        internal
+        pure
+        returns (Unsigned memory)
+    {
         return Unsigned(a.rawValue.div(b));
     }
 
@@ -330,7 +442,11 @@ library FixedPoint {
      * @param b a FixedPoint denominator.
      * @return the quotient of `a` divided by `b`.
      */
-    function div(uint256 a, Unsigned memory b) internal pure returns (Unsigned memory) {
+    function div(uint256 a, Unsigned memory b)
+        internal
+        pure
+        returns (Unsigned memory)
+    {
         return div(fromUnscaledUint(a), b);
     }
 
@@ -340,7 +456,11 @@ library FixedPoint {
      * @param b a FixedPoint denominator.
      * @return the quotient of `a` divided by `b`.
      */
-    function divCeil(Unsigned memory a, Unsigned memory b) internal pure returns (Unsigned memory) {
+    function divCeil(Unsigned memory a, Unsigned memory b)
+        internal
+        pure
+        returns (Unsigned memory)
+    {
         uint256 aScaled = a.rawValue.mul(FP_SCALING_FACTOR);
         uint256 divFloor = aScaled.div(b.rawValue);
         uint256 mod = aScaled.mod(b.rawValue);
@@ -357,7 +477,11 @@ library FixedPoint {
      * @param b a uint256 denominator.
      * @return the quotient of `a` divided by `b`.
      */
-    function divCeil(Unsigned memory a, uint256 b) internal pure returns (Unsigned memory) {
+    function divCeil(Unsigned memory a, uint256 b)
+        internal
+        pure
+        returns (Unsigned memory)
+    {
         // Because it is possible that a quotient gets truncated, we can't just call "Unsigned(a.rawValue.div(b))"
         // similarly to mulCeil with a uint256 as the second parameter. Therefore we need to convert b into an Unsigned.
         // This creates the possibility of overflow if b is very large.
@@ -371,7 +495,11 @@ library FixedPoint {
      * @param b a uint256 denominator.
      * @return output is `a` to the power of `b`.
      */
-    function pow(Unsigned memory a, uint256 b) internal pure returns (Unsigned memory output) {
+    function pow(Unsigned memory a, uint256 b)
+        internal
+        pure
+        returns (Unsigned memory output)
+    {
         output = fromUnscaledUint(1);
         for (uint256 i = 0; i < b; i = i.add(1)) {
             output = mul(output, a);
@@ -388,12 +516,20 @@ library FixedPoint {
         int256 rawValue;
     }
 
-    function fromSigned(Signed memory a) internal pure returns (Unsigned memory) {
+    function fromSigned(Signed memory a)
+        internal
+        pure
+        returns (Unsigned memory)
+    {
         require(a.rawValue >= 0, "Negative value provided");
         return Unsigned(uint256(a.rawValue));
     }
 
-    function fromUnsigned(Unsigned memory a) internal pure returns (Signed memory) {
+    function fromUnsigned(Unsigned memory a)
+        internal
+        pure
+        returns (Signed memory)
+    {
         require(a.rawValue <= uint256(type(int256).max), "Unsigned too large");
         return Signed(int256(a.rawValue));
     }
@@ -423,7 +559,11 @@ library FixedPoint {
      * @param b a FixedPoint.Signed.
      * @return True if equal, or False.
      */
-    function isEqual(Signed memory a, Signed memory b) internal pure returns (bool) {
+    function isEqual(Signed memory a, Signed memory b)
+        internal
+        pure
+        returns (bool)
+    {
         return a.rawValue == b.rawValue;
     }
 
@@ -433,7 +573,11 @@ library FixedPoint {
      * @param b a FixedPoint.Signed.
      * @return True if `a > b`, or False.
      */
-    function isGreaterThan(Signed memory a, Signed memory b) internal pure returns (bool) {
+    function isGreaterThan(Signed memory a, Signed memory b)
+        internal
+        pure
+        returns (bool)
+    {
         return a.rawValue > b.rawValue;
     }
 
@@ -443,7 +587,11 @@ library FixedPoint {
      * @param b an int256.
      * @return True if `a > b`, or False.
      */
-    function isGreaterThan(Signed memory a, int256 b) internal pure returns (bool) {
+    function isGreaterThan(Signed memory a, int256 b)
+        internal
+        pure
+        returns (bool)
+    {
         return a.rawValue > fromUnscaledInt(b).rawValue;
     }
 
@@ -453,7 +601,11 @@ library FixedPoint {
      * @param b a FixedPoint.Signed.
      * @return True if `a > b`, or False.
      */
-    function isGreaterThan(int256 a, Signed memory b) internal pure returns (bool) {
+    function isGreaterThan(int256 a, Signed memory b)
+        internal
+        pure
+        returns (bool)
+    {
         return fromUnscaledInt(a).rawValue > b.rawValue;
     }
 
@@ -463,7 +615,11 @@ library FixedPoint {
      * @param b a FixedPoint.Signed.
      * @return True if `a >= b`, or False.
      */
-    function isGreaterThanOrEqual(Signed memory a, Signed memory b) internal pure returns (bool) {
+    function isGreaterThanOrEqual(Signed memory a, Signed memory b)
+        internal
+        pure
+        returns (bool)
+    {
         return a.rawValue >= b.rawValue;
     }
 
@@ -473,7 +629,11 @@ library FixedPoint {
      * @param b an int256.
      * @return True if `a >= b`, or False.
      */
-    function isGreaterThanOrEqual(Signed memory a, int256 b) internal pure returns (bool) {
+    function isGreaterThanOrEqual(Signed memory a, int256 b)
+        internal
+        pure
+        returns (bool)
+    {
         return a.rawValue >= fromUnscaledInt(b).rawValue;
     }
 
@@ -483,7 +643,11 @@ library FixedPoint {
      * @param b a FixedPoint.Signed.
      * @return True if `a >= b`, or False.
      */
-    function isGreaterThanOrEqual(int256 a, Signed memory b) internal pure returns (bool) {
+    function isGreaterThanOrEqual(int256 a, Signed memory b)
+        internal
+        pure
+        returns (bool)
+    {
         return fromUnscaledInt(a).rawValue >= b.rawValue;
     }
 
@@ -493,7 +657,11 @@ library FixedPoint {
      * @param b a FixedPoint.Signed.
      * @return True if `a < b`, or False.
      */
-    function isLessThan(Signed memory a, Signed memory b) internal pure returns (bool) {
+    function isLessThan(Signed memory a, Signed memory b)
+        internal
+        pure
+        returns (bool)
+    {
         return a.rawValue < b.rawValue;
     }
 
@@ -503,7 +671,11 @@ library FixedPoint {
      * @param b an int256.
      * @return True if `a < b`, or False.
      */
-    function isLessThan(Signed memory a, int256 b) internal pure returns (bool) {
+    function isLessThan(Signed memory a, int256 b)
+        internal
+        pure
+        returns (bool)
+    {
         return a.rawValue < fromUnscaledInt(b).rawValue;
     }
 
@@ -513,7 +685,11 @@ library FixedPoint {
      * @param b a FixedPoint.Signed.
      * @return True if `a < b`, or False.
      */
-    function isLessThan(int256 a, Signed memory b) internal pure returns (bool) {
+    function isLessThan(int256 a, Signed memory b)
+        internal
+        pure
+        returns (bool)
+    {
         return fromUnscaledInt(a).rawValue < b.rawValue;
     }
 
@@ -523,7 +699,11 @@ library FixedPoint {
      * @param b a FixedPoint.Signed.
      * @return True if `a <= b`, or False.
      */
-    function isLessThanOrEqual(Signed memory a, Signed memory b) internal pure returns (bool) {
+    function isLessThanOrEqual(Signed memory a, Signed memory b)
+        internal
+        pure
+        returns (bool)
+    {
         return a.rawValue <= b.rawValue;
     }
 
@@ -533,7 +713,11 @@ library FixedPoint {
      * @param b an int256.
      * @return True if `a <= b`, or False.
      */
-    function isLessThanOrEqual(Signed memory a, int256 b) internal pure returns (bool) {
+    function isLessThanOrEqual(Signed memory a, int256 b)
+        internal
+        pure
+        returns (bool)
+    {
         return a.rawValue <= fromUnscaledInt(b).rawValue;
     }
 
@@ -543,7 +727,11 @@ library FixedPoint {
      * @param b a FixedPoint.Signed.
      * @return True if `a <= b`, or False.
      */
-    function isLessThanOrEqual(int256 a, Signed memory b) internal pure returns (bool) {
+    function isLessThanOrEqual(int256 a, Signed memory b)
+        internal
+        pure
+        returns (bool)
+    {
         return fromUnscaledInt(a).rawValue <= b.rawValue;
     }
 
@@ -553,7 +741,11 @@ library FixedPoint {
      * @param b a FixedPoint.Signed.
      * @return the minimum of `a` and `b`.
      */
-    function min(Signed memory a, Signed memory b) internal pure returns (Signed memory) {
+    function min(Signed memory a, Signed memory b)
+        internal
+        pure
+        returns (Signed memory)
+    {
         return a.rawValue < b.rawValue ? a : b;
     }
 
@@ -563,7 +755,11 @@ library FixedPoint {
      * @param b a FixedPoint.Signed.
      * @return the maximum of `a` and `b`.
      */
-    function max(Signed memory a, Signed memory b) internal pure returns (Signed memory) {
+    function max(Signed memory a, Signed memory b)
+        internal
+        pure
+        returns (Signed memory)
+    {
         return a.rawValue > b.rawValue ? a : b;
     }
 
@@ -573,7 +769,11 @@ library FixedPoint {
      * @param b a FixedPoint.Signed.
      * @return the sum of `a` and `b`.
      */
-    function add(Signed memory a, Signed memory b) internal pure returns (Signed memory) {
+    function add(Signed memory a, Signed memory b)
+        internal
+        pure
+        returns (Signed memory)
+    {
         return Signed(a.rawValue.add(b.rawValue));
     }
 
@@ -583,7 +783,11 @@ library FixedPoint {
      * @param b an int256.
      * @return the sum of `a` and `b`.
      */
-    function add(Signed memory a, int256 b) internal pure returns (Signed memory) {
+    function add(Signed memory a, int256 b)
+        internal
+        pure
+        returns (Signed memory)
+    {
         return add(a, fromUnscaledInt(b));
     }
 
@@ -593,7 +797,11 @@ library FixedPoint {
      * @param b a FixedPoint.Signed.
      * @return the difference of `a` and `b`.
      */
-    function sub(Signed memory a, Signed memory b) internal pure returns (Signed memory) {
+    function sub(Signed memory a, Signed memory b)
+        internal
+        pure
+        returns (Signed memory)
+    {
         return Signed(a.rawValue.sub(b.rawValue));
     }
 
@@ -603,7 +811,11 @@ library FixedPoint {
      * @param b an int256.
      * @return the difference of `a` and `b`.
      */
-    function sub(Signed memory a, int256 b) internal pure returns (Signed memory) {
+    function sub(Signed memory a, int256 b)
+        internal
+        pure
+        returns (Signed memory)
+    {
         return sub(a, fromUnscaledInt(b));
     }
 
@@ -613,7 +825,11 @@ library FixedPoint {
      * @param b a FixedPoint.Signed.
      * @return the difference of `a` and `b`.
      */
-    function sub(int256 a, Signed memory b) internal pure returns (Signed memory) {
+    function sub(int256 a, Signed memory b)
+        internal
+        pure
+        returns (Signed memory)
+    {
         return sub(fromUnscaledInt(a), b);
     }
 
@@ -624,7 +840,11 @@ library FixedPoint {
      * @param b a FixedPoint.Signed.
      * @return the product of `a` and `b`.
      */
-    function mul(Signed memory a, Signed memory b) internal pure returns (Signed memory) {
+    function mul(Signed memory a, Signed memory b)
+        internal
+        pure
+        returns (Signed memory)
+    {
         // There are two caveats with this computation:
         // 1. Max output for the represented number is ~10^41, otherwise an intermediate value overflows. 10^41 is
         // stored internally as an int256 ~10^59.
@@ -641,7 +861,11 @@ library FixedPoint {
      * @param b an int256.
      * @return the product of `a` and `b`.
      */
-    function mul(Signed memory a, int256 b) internal pure returns (Signed memory) {
+    function mul(Signed memory a, int256 b)
+        internal
+        pure
+        returns (Signed memory)
+    {
         return Signed(a.rawValue.mul(b));
     }
 
@@ -651,7 +875,11 @@ library FixedPoint {
      * @param b a FixedPoint.Signed.
      * @return the product of `a` and `b`.
      */
-    function mulAwayFromZero(Signed memory a, Signed memory b) internal pure returns (Signed memory) {
+    function mulAwayFromZero(Signed memory a, Signed memory b)
+        internal
+        pure
+        returns (Signed memory)
+    {
         int256 mulRaw = a.rawValue.mul(b.rawValue);
         int256 mulTowardsZero = mulRaw / SFP_SCALING_FACTOR;
         // Manual mod because SignedSafeMath doesn't support it.
@@ -671,7 +899,11 @@ library FixedPoint {
      * @param b a FixedPoint.Signed.
      * @return the product of `a` and `b`.
      */
-    function mulAwayFromZero(Signed memory a, int256 b) internal pure returns (Signed memory) {
+    function mulAwayFromZero(Signed memory a, int256 b)
+        internal
+        pure
+        returns (Signed memory)
+    {
         // Since b is an int, there is no risk of truncation and we can just mul it normally
         return Signed(a.rawValue.mul(b));
     }
@@ -683,7 +915,11 @@ library FixedPoint {
      * @param b a FixedPoint denominator.
      * @return the quotient of `a` divided by `b`.
      */
-    function div(Signed memory a, Signed memory b) internal pure returns (Signed memory) {
+    function div(Signed memory a, Signed memory b)
+        internal
+        pure
+        returns (Signed memory)
+    {
         // There are two caveats with this computation:
         // 1. Max value for the number dividend `a` represents is ~10^41, otherwise an intermediate value overflows.
         // 10^41 is stored internally as an int256 10^59.
@@ -699,7 +935,11 @@ library FixedPoint {
      * @param b an int256 denominator.
      * @return the quotient of `a` divided by `b`.
      */
-    function div(Signed memory a, int256 b) internal pure returns (Signed memory) {
+    function div(Signed memory a, int256 b)
+        internal
+        pure
+        returns (Signed memory)
+    {
         return Signed(a.rawValue.div(b));
     }
 
@@ -710,7 +950,11 @@ library FixedPoint {
      * @param b a FixedPoint denominator.
      * @return the quotient of `a` divided by `b`.
      */
-    function div(int256 a, Signed memory b) internal pure returns (Signed memory) {
+    function div(int256 a, Signed memory b)
+        internal
+        pure
+        returns (Signed memory)
+    {
         return div(fromUnscaledInt(a), b);
     }
 
@@ -720,7 +964,11 @@ library FixedPoint {
      * @param b a FixedPoint denominator.
      * @return the quotient of `a` divided by `b`.
      */
-    function divAwayFromZero(Signed memory a, Signed memory b) internal pure returns (Signed memory) {
+    function divAwayFromZero(Signed memory a, Signed memory b)
+        internal
+        pure
+        returns (Signed memory)
+    {
         int256 aScaled = a.rawValue.mul(SFP_SCALING_FACTOR);
         int256 divTowardsZero = aScaled.div(b.rawValue);
         // Manual mod because SignedSafeMath doesn't support it.
@@ -740,7 +988,11 @@ library FixedPoint {
      * @param b an int256 denominator.
      * @return the quotient of `a` divided by `b`.
      */
-    function divAwayFromZero(Signed memory a, int256 b) internal pure returns (Signed memory) {
+    function divAwayFromZero(Signed memory a, int256 b)
+        internal
+        pure
+        returns (Signed memory)
+    {
         // Because it is possible that a quotient gets truncated, we can't just call "Signed(a.rawValue.div(b))"
         // similarly to mulCeil with an int256 as the second parameter. Therefore we need to convert b into an Signed.
         // This creates the possibility of overflow if b is very large.
@@ -754,7 +1006,11 @@ library FixedPoint {
      * @param b a uint256 (negative exponents are not allowed).
      * @return output is `a` to the power of `b`.
      */
-    function pow(Signed memory a, uint256 b) internal pure returns (Signed memory output) {
+    function pow(Signed memory a, uint256 b)
+        internal
+        pure
+        returns (Signed memory output)
+    {
         output = fromUnscaledInt(1);
         for (uint256 i = 0; i < b; i = i.add(1)) {
             output = mul(output, a);

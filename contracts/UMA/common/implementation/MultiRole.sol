@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
 library Exclusive {
@@ -6,20 +6,35 @@ library Exclusive {
         address member;
     }
 
-    function isMember(RoleMembership storage roleMembership, address memberToCheck) internal view returns (bool) {
+    function isMember(
+        RoleMembership storage roleMembership,
+        address memberToCheck
+    ) internal view returns (bool) {
         return roleMembership.member == memberToCheck;
     }
 
-    function resetMember(RoleMembership storage roleMembership, address newMember) internal {
-        require(newMember != address(0x0), "Cannot set an exclusive role to 0x0");
+    function resetMember(
+        RoleMembership storage roleMembership,
+        address newMember
+    ) internal {
+        require(
+            newMember != address(0x0),
+            "Cannot set an exclusive role to 0x0"
+        );
         roleMembership.member = newMember;
     }
 
-    function getMember(RoleMembership storage roleMembership) internal view returns (address) {
+    function getMember(RoleMembership storage roleMembership)
+        internal
+        view
+        returns (address)
+    {
         return roleMembership.member;
     }
 
-    function init(RoleMembership storage roleMembership, address initialMember) internal {
+    function init(RoleMembership storage roleMembership, address initialMember)
+        internal
+    {
         resetMember(roleMembership, initialMember);
     }
 }
@@ -29,20 +44,32 @@ library Shared {
         mapping(address => bool) members;
     }
 
-    function isMember(RoleMembership storage roleMembership, address memberToCheck) internal view returns (bool) {
+    function isMember(
+        RoleMembership storage roleMembership,
+        address memberToCheck
+    ) internal view returns (bool) {
         return roleMembership.members[memberToCheck];
     }
 
-    function addMember(RoleMembership storage roleMembership, address memberToAdd) internal {
+    function addMember(
+        RoleMembership storage roleMembership,
+        address memberToAdd
+    ) internal {
         require(memberToAdd != address(0x0), "Cannot add 0x0 to a shared role");
         roleMembership.members[memberToAdd] = true;
     }
 
-    function removeMember(RoleMembership storage roleMembership, address memberToRemove) internal {
+    function removeMember(
+        RoleMembership storage roleMembership,
+        address memberToRemove
+    ) internal {
         roleMembership.members[memberToRemove] = false;
     }
 
-    function init(RoleMembership storage roleMembership, address[] memory initialMembers) internal {
+    function init(
+        RoleMembership storage roleMembership,
+        address[] memory initialMembers
+    ) internal {
         for (uint256 i = 0; i < initialMembers.length; i++) {
             addMember(roleMembership, initialMembers[i]);
         }
@@ -56,7 +83,11 @@ abstract contract MultiRole {
     using Exclusive for Exclusive.RoleMembership;
     using Shared for Shared.RoleMembership;
 
-    enum RoleType { Invalid, Exclusive, Shared }
+    enum RoleType {
+        Invalid,
+        Exclusive,
+        Shared
+    }
 
     struct Role {
         uint256 managingRole;
@@ -67,15 +98,30 @@ abstract contract MultiRole {
 
     mapping(uint256 => Role) private roles;
 
-    event ResetExclusiveMember(uint256 indexed roleId, address indexed newMember, address indexed manager);
-    event AddedSharedMember(uint256 indexed roleId, address indexed newMember, address indexed manager);
-    event RemovedSharedMember(uint256 indexed roleId, address indexed oldMember, address indexed manager);
+    event ResetExclusiveMember(
+        uint256 indexed roleId,
+        address indexed newMember,
+        address indexed manager
+    );
+    event AddedSharedMember(
+        uint256 indexed roleId,
+        address indexed newMember,
+        address indexed manager
+    );
+    event RemovedSharedMember(
+        uint256 indexed roleId,
+        address indexed oldMember,
+        address indexed manager
+    );
 
     /**
      * @notice Reverts unless the caller is a member of the specified roleId.
      */
     modifier onlyRoleHolder(uint256 roleId) {
-        require(holdsRole(roleId, msg.sender), "Sender does not hold required role");
+        require(
+            holdsRole(roleId, msg.sender),
+            "Sender does not hold required role"
+        );
         _;
     }
 
@@ -83,7 +129,10 @@ abstract contract MultiRole {
      * @notice Reverts unless the caller is a member of the manager role for the specified roleId.
      */
     modifier onlyRoleManager(uint256 roleId) {
-        require(holdsRole(roles[roleId].managingRole, msg.sender), "Can only be called by a role manager");
+        require(
+            holdsRole(roles[roleId].managingRole, msg.sender),
+            "Can only be called by a role manager"
+        );
         _;
     }
 
@@ -91,7 +140,10 @@ abstract contract MultiRole {
      * @notice Reverts unless the roleId represents an initialized, exclusive roleId.
      */
     modifier onlyExclusive(uint256 roleId) {
-        require(roles[roleId].roleType == RoleType.Exclusive, "Must be called on an initialized Exclusive role");
+        require(
+            roles[roleId].roleType == RoleType.Exclusive,
+            "Must be called on an initialized Exclusive role"
+        );
         _;
     }
 
@@ -99,7 +151,10 @@ abstract contract MultiRole {
      * @notice Reverts unless the roleId represents an initialized, shared roleId.
      */
     modifier onlyShared(uint256 roleId) {
-        require(roles[roleId].roleType == RoleType.Shared, "Must be called on an initialized Shared role");
+        require(
+            roles[roleId].roleType == RoleType.Shared,
+            "Must be called on an initialized Shared role"
+        );
         _;
     }
 
@@ -110,7 +165,11 @@ abstract contract MultiRole {
      * @param memberToCheck the address to check.
      * @return True if `memberToCheck` is a member of `roleId`.
      */
-    function holdsRole(uint256 roleId, address memberToCheck) public view returns (bool) {
+    function holdsRole(uint256 roleId, address memberToCheck)
+        public
+        view
+        returns (bool)
+    {
         Role storage role = roles[roleId];
         if (role.roleType == RoleType.Exclusive) {
             return role.exclusiveRoleMembership.isMember(memberToCheck);
@@ -127,7 +186,11 @@ abstract contract MultiRole {
      * @param roleId the ExclusiveRole membership to modify.
      * @param newMember the new ExclusiveRole member.
      */
-    function resetMember(uint256 roleId, address newMember) public onlyExclusive(roleId) onlyRoleManager(roleId) {
+    function resetMember(uint256 roleId, address newMember)
+        public
+        onlyExclusive(roleId)
+        onlyRoleManager(roleId)
+    {
         roles[roleId].exclusiveRoleMembership.resetMember(newMember);
         emit ResetExclusiveMember(roleId, newMember, msg.sender);
     }
@@ -138,7 +201,12 @@ abstract contract MultiRole {
      * @param roleId the ExclusiveRole membership to check.
      * @return the address of the current ExclusiveRole member.
      */
-    function getMember(uint256 roleId) public view onlyExclusive(roleId) returns (address) {
+    function getMember(uint256 roleId)
+        public
+        view
+        onlyExclusive(roleId)
+        returns (address)
+    {
         return roles[roleId].exclusiveRoleMembership.getMember();
     }
 
@@ -149,7 +217,11 @@ abstract contract MultiRole {
      * @param roleId the SharedRole membership to modify.
      * @param newMember the new SharedRole member.
      */
-    function addMember(uint256 roleId, address newMember) public onlyShared(roleId) onlyRoleManager(roleId) {
+    function addMember(uint256 roleId, address newMember)
+        public
+        onlyShared(roleId)
+        onlyRoleManager(roleId)
+    {
         roles[roleId].sharedRoleMembership.addMember(newMember);
         emit AddedSharedMember(roleId, newMember, msg.sender);
     }
@@ -161,7 +233,11 @@ abstract contract MultiRole {
      * @param roleId the SharedRole membership to modify.
      * @param memberToRemove the current SharedRole member to remove.
      */
-    function removeMember(uint256 roleId, address memberToRemove) public onlyShared(roleId) onlyRoleManager(roleId) {
+    function removeMember(uint256 roleId, address memberToRemove)
+        public
+        onlyShared(roleId)
+        onlyRoleManager(roleId)
+    {
         roles[roleId].sharedRoleMembership.removeMember(memberToRemove);
         emit RemovedSharedMember(roleId, memberToRemove, msg.sender);
     }
@@ -172,7 +248,11 @@ abstract contract MultiRole {
      * initialized, SharedRole.
      * @param roleId the SharedRole membership to modify.
      */
-    function renounceMembership(uint256 roleId) public onlyShared(roleId) onlyRoleHolder(roleId) {
+    function renounceMembership(uint256 roleId)
+        public
+        onlyShared(roleId)
+        onlyRoleHolder(roleId)
+    {
         roles[roleId].sharedRoleMembership.removeMember(msg.sender);
         emit RemovedSharedMember(roleId, msg.sender, msg.sender);
     }
@@ -181,7 +261,10 @@ abstract contract MultiRole {
      * @notice Reverts if `roleId` is not initialized.
      */
     modifier onlyValidRole(uint256 roleId) {
-        require(roles[roleId].roleType != RoleType.Invalid, "Attempted to use an invalid roleId");
+        require(
+            roles[roleId].roleType != RoleType.Invalid,
+            "Attempted to use an invalid roleId"
+        );
         _;
     }
 
@@ -189,7 +272,10 @@ abstract contract MultiRole {
      * @notice Reverts if `roleId` is initialized.
      */
     modifier onlyInvalidRole(uint256 roleId) {
-        require(roles[roleId].roleType == RoleType.Invalid, "Cannot use a pre-existing role");
+        require(
+            roles[roleId].roleType == RoleType.Invalid,
+            "Cannot use a pre-existing role"
+        );
         _;
     }
 

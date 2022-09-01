@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
 import "../../common/implementation/MultiRole.sol";
@@ -25,7 +25,10 @@ contract Registry is RegistryInterface, MultiRole {
 
     // This enum is required because a `WasValid` state is required
     // to ensure that financial contracts cannot be re-registered.
-    enum Validity { Invalid, Valid }
+    enum Validity {
+        Invalid,
+        Valid
+    }
 
     // Local information about a contract.
     struct FinancialContract {
@@ -52,7 +55,11 @@ contract Registry is RegistryInterface, MultiRole {
      *                EVENTS                *
      ****************************************/
 
-    event NewContractRegistered(address indexed contractAddress, address indexed creator, address[] parties);
+    event NewContractRegistered(
+        address indexed contractAddress,
+        address indexed creator,
+        address[] parties
+    );
     event PartyAdded(address indexed contractAddress, address indexed party);
     event PartyRemoved(address indexed contractAddress, address indexed party);
 
@@ -60,9 +67,17 @@ contract Registry is RegistryInterface, MultiRole {
      * @notice Construct the Registry contract.
      */
     constructor() {
-        _createExclusiveRole(uint256(Roles.Owner), uint256(Roles.Owner), msg.sender);
+        _createExclusiveRole(
+            uint256(Roles.Owner),
+            uint256(Roles.Owner),
+            msg.sender
+        );
         // Start with no contract creators registered.
-        _createSharedRole(uint256(Roles.ContractCreator), uint256(Roles.Owner), new address[](0));
+        _createSharedRole(
+            uint256(Roles.ContractCreator),
+            uint256(Roles.Owner),
+            new address[](0)
+        );
     }
 
     /****************************************
@@ -75,13 +90,17 @@ contract Registry is RegistryInterface, MultiRole {
      * @param parties array of addresses who become parties in the contract.
      * @param contractAddress address of the contract against which the parties are registered.
      */
-    function registerContract(address[] calldata parties, address contractAddress)
-        external
-        override
-        onlyRoleHolder(uint256(Roles.ContractCreator))
-    {
-        FinancialContract storage financialContract = contractMap[contractAddress];
-        require(contractMap[contractAddress].valid == Validity.Invalid, "Can only register once");
+    function registerContract(
+        address[] calldata parties,
+        address contractAddress
+    ) external override onlyRoleHolder(uint256(Roles.ContractCreator)) {
+        FinancialContract storage financialContract = contractMap[
+            contractAddress
+        ];
+        require(
+            contractMap[contractAddress].valid == Validity.Invalid,
+            "Can only register once"
+        );
 
         // Store contract address as a registered contract.
         registeredContracts.push(contractAddress);
@@ -105,7 +124,10 @@ contract Registry is RegistryInterface, MultiRole {
      */
     function addPartyToContract(address party) external override {
         address contractAddress = msg.sender;
-        require(contractMap[contractAddress].valid == Validity.Valid, "Can only add to valid contract");
+        require(
+            contractMap[contractAddress].valid == Validity.Valid,
+            "Can only add to valid contract"
+        );
 
         _addPartyToContract(party, contractAddress);
     }
@@ -121,8 +143,14 @@ contract Registry is RegistryInterface, MultiRole {
         uint256 numberOfContracts = party.contracts.length;
 
         require(numberOfContracts != 0, "Party has no contracts");
-        require(contractMap[contractAddress].valid == Validity.Valid, "Remove only from valid contract");
-        require(isPartyMemberOfContract(partyAddress, contractAddress), "Can only remove existing party");
+        require(
+            contractMap[contractAddress].valid == Validity.Valid,
+            "Remove only from valid contract"
+        );
+        require(
+            isPartyMemberOfContract(partyAddress, contractAddress),
+            "Can only remove existing party"
+        );
 
         // Index of the current location of the contract to remove.
         uint256 deleteIndex = party.contractIndex[contractAddress];
@@ -153,7 +181,12 @@ contract Registry is RegistryInterface, MultiRole {
      * @param contractAddress address of the financial contract.
      * @return bool indicates whether the contract is registered.
      */
-    function isContractRegistered(address contractAddress) external view override returns (bool) {
+    function isContractRegistered(address contractAddress)
+        external
+        view
+        override
+        returns (bool)
+    {
         return contractMap[contractAddress].valid == Validity.Valid;
     }
 
@@ -162,7 +195,12 @@ contract Registry is RegistryInterface, MultiRole {
      * @param party address of the party.
      * @return an array of the contracts the party is registered to.
      */
-    function getRegisteredContracts(address party) external view override returns (address[] memory) {
+    function getRegisteredContracts(address party)
+        external
+        view
+        override
+        returns (address[] memory)
+    {
         return partyMap[party].contracts;
     }
 
@@ -170,7 +208,12 @@ contract Registry is RegistryInterface, MultiRole {
      * @notice Returns all registered contracts.
      * @return all registered contract addresses within the system.
      */
-    function getAllRegisteredContracts() external view override returns (address[] memory) {
+    function getAllRegisteredContracts()
+        external
+        view
+        override
+        returns (address[] memory)
+    {
         return registeredContracts;
     }
 
@@ -180,17 +223,29 @@ contract Registry is RegistryInterface, MultiRole {
      * @param contractAddress address to check against the party.
      * @return bool indicating if the address is a party of the contract.
      */
-    function isPartyMemberOfContract(address party, address contractAddress) public view override returns (bool) {
+    function isPartyMemberOfContract(address party, address contractAddress)
+        public
+        view
+        override
+        returns (bool)
+    {
         uint256 index = partyMap[party].contractIndex[contractAddress];
-        return partyMap[party].contracts.length > index && partyMap[party].contracts[index] == contractAddress;
+        return
+            partyMap[party].contracts.length > index &&
+            partyMap[party].contracts[index] == contractAddress;
     }
 
     /****************************************
      *           INTERNAL FUNCTIONS         *
      ****************************************/
 
-    function _addPartyToContract(address party, address contractAddress) internal {
-        require(!isPartyMemberOfContract(party, contractAddress), "Can only register a party once");
+    function _addPartyToContract(address party, address contractAddress)
+        internal
+    {
+        require(
+            !isPartyMemberOfContract(party, contractAddress),
+            "Can only register a party once"
+        );
         uint256 contractIndex = partyMap[party].contracts.length;
         partyMap[party].contracts.push(contractAddress);
         partyMap[party].contractIndex[contractAddress] = contractIndex;

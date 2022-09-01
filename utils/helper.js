@@ -59,7 +59,7 @@ function getUsdcOrThrow(network) {
     if (network.name === 'kovan') {
         return "0xb7a4F3E9097C08dA09517b5aB877F7a917224ede";
     } else if (network.name === "goerli") {
-        return "0x07865c6e87b9f70255377e024ace6630c1eaa37f";
+        return "0x07865c6E87B9F70255377e024ace6630C1Eaa37F";
     }
     else {
         throw new Error(`Unable to find USDC Address for network ${network.name}`);

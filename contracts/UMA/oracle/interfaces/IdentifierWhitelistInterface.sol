@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
 /**
@@ -24,5 +24,8 @@ interface IdentifierWhitelistInterface {
      * @param identifier bytes32 encoding of the string identifier. Eg: BTC/USD.
      * @return bool if the identifier is supported (or not).
      */
-    function isIdentifierSupported(bytes32 identifier) external view returns (bool);
+    function isIdentifierSupported(bytes32 identifier)
+        external
+        view
+        returns (bool);
 }

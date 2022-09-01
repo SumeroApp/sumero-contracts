@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 import "../../../../common/implementation/FixedPoint.sol";
 
@@ -45,7 +45,12 @@ abstract contract FinancialProductLibrary {
      * @param priceIdentifier input price identifier defined for the financial contract.
      * @return transformedPriceIdentifier input price identifier with the transformation function applied.
      */
-    function transformPriceIdentifier(bytes32 priceIdentifier, uint256) public view virtual returns (bytes32) {
+    function transformPriceIdentifier(bytes32 priceIdentifier, uint256)
+        public
+        view
+        virtual
+        returns (bytes32)
+    {
         return priceIdentifier;
     }
 }

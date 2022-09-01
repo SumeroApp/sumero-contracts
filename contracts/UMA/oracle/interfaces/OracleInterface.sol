@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
 /**
@@ -21,7 +21,11 @@ abstract contract OracleInterface {
      * @param time unix timestamp for the price request.
      * @return bool if the DVM has resolved to a price for the given identifier and timestamp.
      */
-    function hasPrice(bytes32 identifier, uint256 time) public view virtual returns (bool);
+    function hasPrice(bytes32 identifier, uint256 time)
+        public
+        view
+        virtual
+        returns (bool);
 
     /**
      * @notice Gets the price for `identifier` and `time` if it has already been requested and resolved.
@@ -30,5 +34,9 @@ abstract contract OracleInterface {
      * @param time unix timestamp for the price request.
      * @return int256 representing the resolved price for the given identifier and timestamp.
      */
-    function getPrice(bytes32 identifier, uint256 time) public view virtual returns (int256);
+    function getPrice(bytes32 identifier, uint256 time)
+        public
+        view
+        virtual
+        returns (int256);
 }

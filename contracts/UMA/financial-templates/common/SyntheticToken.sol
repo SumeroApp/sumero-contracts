@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 import "../../common/implementation/ExpandedERC20.sol";
 import "../../common/implementation/Lockable.sol";
@@ -26,7 +26,7 @@ contract SyntheticToken is ExpandedERC20, Lockable {
      * @dev The caller must have the Owner role.
      * @param account The address to which the Minter role is added.
      */
-    function addMinter(address account) external override nonReentrant() {
+    function addMinter(address account) external override nonReentrant {
         addMember(uint256(Roles.Minter), account);
     }
 
@@ -35,7 +35,7 @@ contract SyntheticToken is ExpandedERC20, Lockable {
      * @dev The caller must have the Owner role.
      * @param account The address from which the Minter role is removed.
      */
-    function removeMinter(address account) external nonReentrant() {
+    function removeMinter(address account) external nonReentrant {
         removeMember(uint256(Roles.Minter), account);
     }
 
@@ -44,7 +44,7 @@ contract SyntheticToken is ExpandedERC20, Lockable {
      * @dev The caller must have the Owner role.
      * @param account The address to which the Burner role is added.
      */
-    function addBurner(address account) external override nonReentrant() {
+    function addBurner(address account) external override nonReentrant {
         addMember(uint256(Roles.Burner), account);
     }
 
@@ -53,7 +53,7 @@ contract SyntheticToken is ExpandedERC20, Lockable {
      * @dev The caller must have the Owner role.
      * @param account The address from which the Burner role is removed.
      */
-    function removeBurner(address account) external nonReentrant() {
+    function removeBurner(address account) external nonReentrant {
         removeMember(uint256(Roles.Burner), account);
     }
 
@@ -62,7 +62,7 @@ contract SyntheticToken is ExpandedERC20, Lockable {
      * @dev The caller must have the Owner role.
      * @param account The new holder of the Owner role.
      */
-    function resetOwner(address account) external override nonReentrant() {
+    function resetOwner(address account) external override nonReentrant {
         resetMember(uint256(Roles.Owner), account);
     }
 
@@ -71,7 +71,12 @@ contract SyntheticToken is ExpandedERC20, Lockable {
      * @param account The address which is checked for the Minter role.
      * @return bool True if the provided account is a Minter.
      */
-    function isMinter(address account) public view nonReentrantView() returns (bool) {
+    function isMinter(address account)
+        public
+        view
+        nonReentrantView
+        returns (bool)
+    {
         return holdsRole(uint256(Roles.Minter), account);
     }
 
@@ -80,7 +85,12 @@ contract SyntheticToken is ExpandedERC20, Lockable {
      * @param account The address which is checked for the Burner role.
      * @return bool True if the provided account is a Burner.
      */
-    function isBurner(address account) public view nonReentrantView() returns (bool) {
+    function isBurner(address account)
+        public
+        view
+        nonReentrantView
+        returns (bool)
+    {
         return holdsRole(uint256(Roles.Burner), account);
     }
 }

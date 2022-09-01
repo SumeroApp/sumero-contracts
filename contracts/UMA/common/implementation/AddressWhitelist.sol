@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
 import "../interfaces/AddressWhitelistInterface.sol";
@@ -9,7 +9,11 @@ import "./Lockable.sol";
  * @title A contract to track a whitelist of addresses.
  */
 contract AddressWhitelist is AddressWhitelistInterface, Ownable, Lockable {
-    enum Status { None, In, Out }
+    enum Status {
+        None,
+        In,
+        Out
+    }
     mapping(address => Status) public whitelist;
 
     address[] public whitelistIndices;
@@ -21,7 +25,12 @@ contract AddressWhitelist is AddressWhitelistInterface, Ownable, Lockable {
      * @notice Adds an address to the whitelist.
      * @param newElement the new address to add.
      */
-    function addToWhitelist(address newElement) external override nonReentrant() onlyOwner {
+    function addToWhitelist(address newElement)
+        external
+        override
+        nonReentrant
+        onlyOwner
+    {
         // Ignore if address is already included
         if (whitelist[newElement] == Status.In) {
             return;
@@ -41,7 +50,12 @@ contract AddressWhitelist is AddressWhitelistInterface, Ownable, Lockable {
      * @notice Removes an address from the whitelist.
      * @param elementToRemove the existing address to remove.
      */
-    function removeFromWhitelist(address elementToRemove) external override nonReentrant() onlyOwner {
+    function removeFromWhitelist(address elementToRemove)
+        external
+        override
+        nonReentrant
+        onlyOwner
+    {
         if (whitelist[elementToRemove] != Status.Out) {
             whitelist[elementToRemove] = Status.Out;
             emit RemovedFromWhitelist(elementToRemove);
@@ -53,7 +67,13 @@ contract AddressWhitelist is AddressWhitelistInterface, Ownable, Lockable {
      * @param elementToCheck the address to check.
      * @return True if `elementToCheck` is on the whitelist, or False.
      */
-    function isOnWhitelist(address elementToCheck) external view override nonReentrantView() returns (bool) {
+    function isOnWhitelist(address elementToCheck)
+        external
+        view
+        override
+        nonReentrantView
+        returns (bool)
+    {
         return whitelist[elementToCheck] == Status.In;
     }
 
@@ -65,7 +85,13 @@ contract AddressWhitelist is AddressWhitelistInterface, Ownable, Lockable {
      * the empty index.
      * @return activeWhitelist the list of addresses on the whitelist.
      */
-    function getWhitelist() external view override nonReentrantView() returns (address[] memory activeWhitelist) {
+    function getWhitelist()
+        external
+        view
+        override
+        nonReentrantView
+        returns (address[] memory activeWhitelist)
+    {
         // Determine size of whitelist first
         uint256 activeCount = 0;
         for (uint256 i = 0; i < whitelistIndices.length; i++) {
