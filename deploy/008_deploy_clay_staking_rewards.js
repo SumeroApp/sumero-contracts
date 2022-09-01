@@ -10,9 +10,9 @@ const func = async function (hre) {
 
     const ClayToken = await deployments.get("ClayToken");
 
-    let sumeroLpTokenAddress = undefined;
+    let sumeroLpToken = { address: "0x9C8Ea80Ea49a5D70A98f76fcacebf01CC04Cb6ED" };
     // hardcode above address to point to correct LP token address
-    if (!sumeroLpTokenAddress) throw new Error("Need the LP token address");
+    if (!sumeroLpToken.address) throw new Error("Need the LP token address");
 
     await deploy("ClayStakingRewards", {
         from: deployer,
