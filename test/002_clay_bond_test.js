@@ -99,22 +99,21 @@ describe("Clay Bonds Contract", function () {
         let multiplier = ethers.BigNumber.from("1000000000000000000")
         let dailyYield = multiplier.mul(apy_percent.add(bonus_apy_percent)).div(365)
 
-        // 3 years in seconds: 94608000
-        expect(maturationDate.sub(depositStartDate)).to.be.eq(94608000)
+        // 1 week in seconds: 604800
+        expect(maturationDate.sub(depositStartDate)).to.be.eq(604800)
         // 1 year in seconds: 31536000
-        expect(depositCloseDate.sub(depositStartDate)).to.be.eq(31536000)
+        expect(depositCloseDate.sub(depositStartDate)).to.be.eq(604800)
         expect(dailyYield).to.be.eq(dailyYieldPercent)
     });
     it("Issues zCLAY bonds ", async () => {
         console.log("\nIssuing zClayBonds: .....")
 
         clayAmount = ethers.utils.parseUnits('1.0', 'ether')
-        const issueTx = await clayBonds.connect(accounts[1]).issue(clayAmount)
-        const issueReceipt = await issueTx.wait()
-        daysLeftToMaturationDate = clayBonds.getDaysLeftToMaturationDate()
+        daysLeftToMaturationDate = await clayBonds.getDaysLeftToMaturationDate()
         let rewardPercent = ethers.BigNumber.from(await clayBonds.getRewardPercent(daysLeftToMaturationDate))
         let reward = ethers.BigNumber.from(await clayBonds.getReward(clayAmount, rewardPercent))
-
+        await expect(clayBonds.connect(accounts[1]).issue(clayAmount))
+            .to.emit(clayBonds, "Issued").withArgs(accounts[1].address, clayAmount, daysLeftToMaturationDate, rewardPercent, reward)
 
         let bondBalanceOfUser = await clayBonds.balanceOf(accounts[1].address)
         let contractBalance = await clayToken.balanceOf(ClayBondsAddress)
@@ -144,9 +143,9 @@ describe("Clay Bonds Contract", function () {
     it("Claims after the maturation", async () => {
         console.log("\nClaiming after the maturation: .....")
         console.log(" User's Clay balance before claim: " + await clayToken.balanceOf(accounts[1].address))
-        const claimResult = await clayBonds.connect(accounts[1]).claim()
-        const issueReceipt = await claimResult.wait()
-        // console.log(issueReceipt)
+        const userBondsBalance = await clayBonds.balanceOf(accounts[1].address)
+        await expect(clayBonds.connect(accounts[1]).claim()).to.emit(clayBonds, "Claimed").withArgs(accounts[1].address, userBondsBalance);
+
         const afterBalance = await clayToken.balanceOf(accounts[1].address)
         console.log("User's Clay balance after claim: " + afterBalance)
 
@@ -170,9 +169,9 @@ describe("Clay Bonds Contract", function () {
         let beforeContractBalance = await clayToken.balanceOf(ClayBondsAddress)
         // only owner can call
         await expect(clayBonds.connect(accounts[3]).burn()).to.be.reverted
-        const burnResult = await clayBonds.burn()
-        const issueReceipt = await burnResult.wait()
-        // console.log(issueReceipt)
+
+        const BondsContractClayBalance = await clayToken.balanceOf(ClayBondsAddress)
+        await expect(clayBonds.burn()).to.emit(clayBonds, "Burned").withArgs(BondsContractClayBalance);
 
         let afterClaySupply = await clayToken.totalSupply();
         let afterContractBalance = await clayToken.balanceOf(ClayBondsAddress)

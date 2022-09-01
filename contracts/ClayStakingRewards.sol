@@ -19,9 +19,9 @@ import "./interfaces/IClayToken.sol";
     - change reward rate
  */
 contract ClayStakingRewards is Ownable, ReentrancyGuard, Pausable {
-    IClayToken public clayToken;
+    IClayToken public immutable clayToken;
     // Staking token would be Sumero LP tokens
-    IERC20 public stakingToken;
+    IERC20 public immutable stakingToken;
 
     // Reward Rate per day
     // 10 gwei CLAY per second
@@ -92,9 +92,15 @@ contract ClayStakingRewards is Ownable, ReentrancyGuard, Pausable {
         whenNotPaused
         updateReward(msg.sender)
     {
+        require(_amount > 0, "ClayStakingRewards: AMOUNT_IS_ZERO");
         _totalSupply += _amount;
         _balances[msg.sender] += _amount;
-        stakingToken.transferFrom(msg.sender, address(this), _amount);
+        bool success = stakingToken.transferFrom(
+            msg.sender,
+            address(this),
+            _amount
+        );
+        require(success, "ClayStakingRewards: TRANSFER_FAILED");
         emit Staked(msg.sender, _amount);
     }
 
@@ -103,9 +109,16 @@ contract ClayStakingRewards is Ownable, ReentrancyGuard, Pausable {
         nonReentrant
         updateReward(msg.sender)
     {
+        require(_amount > 0, "ClayStakingRewards: AMOUNT_IS_ZERO");
+        require(
+            _amount <= _balances[msg.sender],
+            "ClayStakingRewards: INSUFFICIENT_BALANCE"
+        );
+
         _totalSupply -= _amount;
         _balances[msg.sender] -= _amount;
-        stakingToken.transfer(msg.sender, _amount);
+        bool success = stakingToken.transfer(msg.sender, _amount);
+        require(success, "ClayStakingRewards: TRANSFER_FAILED");
         emit Withdrawn(msg.sender, _amount);
     }
 
@@ -139,7 +152,6 @@ contract ClayStakingRewards is Ownable, ReentrancyGuard, Pausable {
 
     /* ========== EVENTS ========== */
 
-    event RewardAdded(uint256 reward);
     event Staked(address indexed user, uint256 amount);
     event Withdrawn(address indexed user, uint256 amount);
     event RewardPaid(address indexed user, uint256 reward);

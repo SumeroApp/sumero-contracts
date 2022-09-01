@@ -19,6 +19,7 @@ require("./tasks/close-asset");
 require("./tasks/list-assets");
 require("./tasks/mint-emp");
 require("./tasks/add-impl-to-finder");
+require("./tasks/create-lp");
 
 const solcVersion = "0.8.0";
 

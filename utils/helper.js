@@ -71,6 +71,14 @@ function isZeroAddress(address) {
     return (address === '0x0000000000000000000000000000000000000000');
 }
 
+function getAddressUrl(network, url) {
+    if (!isLocalNetwork() && isForkedNetwork()) {
+        let addressUrl = "https://" + network.name + ".etherscan.io/address/" + url
+        return "Etherscan Address URL: " + addressUrl;
+    }
+    return null;
+}
+
 module.exports = {
     isLocalNetwork,
     isForkedNetwork,
@@ -78,5 +86,7 @@ module.exports = {
     getTxUrl,
     iterateAssets,
     getWethAddressOrThrow,
-    isZeroAddress
+    getUsdcOrThrow,
+    isZeroAddress,
+    getAddressUrl
 }

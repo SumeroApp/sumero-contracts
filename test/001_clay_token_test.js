@@ -36,8 +36,21 @@ describe("Clay Token Contract", function () {
         expect(symbol).to.equal("CLAY")
         expect(decimals).to.equal(18)
     });
+    it('Mints & burn only if caller has minter or burner role', async function () {
+        const amount = ethers.utils.parseUnits('10.0', 'ether')
+        expect(await clayToken.balanceOf(accounts[5].address)).to.equal(0)
+        // caller(Account[3]) doesn't have minter & burner role
+        await expect(clayToken.connect(accounts[3]).mint(accounts[5].address, amount)).to.be.reverted
+        expect(await clayToken.balanceOf(accounts[5].address)).to.equal(0)
+        expect(await clayToken.mint(accounts[5].address, amount))
+        expect(await clayToken.balanceOf(accounts[5].address)).to.equal(amount)
 
-    it('Mints Clay token to  Account 1', async function () {
+        await expect(clayToken.connect(accounts[3]).burn(accounts[5].address, amount)).to.be.reverted
+        expect(await clayToken.balanceOf(accounts[5].address)).to.equal(amount)
+        expect(await clayToken.burn(accounts[5].address, amount))
+        expect(await clayToken.balanceOf(accounts[5].address)).to.equal(0)
+    });
+    it('Mints Clay token to  Account1', async function () {
         expect(await clayToken.balanceOf(accounts[1].address)).to.equal(0)
         await clayToken.mint(accounts[1].address, ethers.utils.parseUnits('10.0', 'ether'))
         const balance = await clayToken.balanceOf(accounts[1].address)
@@ -60,4 +73,5 @@ describe("Clay Token Contract", function () {
 
         expect(await clayToken.allowance(accounts[2].address, accounts[3].address)).to.equal(ethers.utils.parseUnits('0.0', 'ether'))
     })
+
 });
