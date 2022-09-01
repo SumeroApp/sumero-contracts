@@ -25,23 +25,23 @@ task("create-emp", "Deploys the EMP (Expiring Multi Party) Contract using UMA's 
     .addParam("disputerDisputeReward", "Dispute reward paid to the disputer")
     .addParam("minSponsorTokens", "The minimum number of tokens required in a sponsor position")
     .setAction(
-        async (args, deployments,) => {
+        async (args, hre) => {
+            const { deployments, getNamedAccounts } = hre;
             const { deployer } = await getNamedAccounts();
-            const colors = require('colors');
-            const { ethers } = require("hardhat")
+
             const { getTxUrl } = require('../utils/helper');
+            const colors = require('colors');
 
-            const { ExpiringMultiPartyCreatorEthers__factory, getAddress } = require('@uma/contracts-node');
+            const { ExpiringMultiPartyCreatorEthers__factory } = require('@uma/contracts-node');
 
-            console.log(colors.bold("\n==> Running create-emp-param task..."));
+            console.log(colors.bold("\n==> Running create-emp task..."));
 
-            const KOVAN_NETWORK_ID = 42;
-
-            const UMA_EMPC_ADDRESS = await getAddress("ExpiringMultiPartyCreator", KOVAN_NETWORK_ID);
-            console.log(colors.green("\nEMPC_ADDRESS: ", UMA_EMPC_ADDRESS));
+            const ExpiringMultiPartyCreator = await deployments.get("ExpiringMultiPartyCreator");
+            console.log(colors.green("\nEMPC_ADDRESS: ", ExpiringMultiPartyCreator.address));
+            if (!ExpiringMultiPartyCreator || !ExpiringMultiPartyCreator.address) throw new Error("Unable to get deployed EMPC address");
 
             const signer0 = ethers.provider.getSigner(deployer);
-            const emp_creator_instance = ExpiringMultiPartyCreatorEthers__factory.connect(UMA_EMPC_ADDRESS, signer0);
+            const emp_creator_instance = ExpiringMultiPartyCreatorEthers__factory.connect(ExpiringMultiPartyCreator.address, signer0);
             const syntheticDecimals = await emp_creator_instance._getSyntheticDecimals(args.collateralAddress);
             const tokenFactoryAddress = await emp_creator_instance.tokenFactoryAddress();
 
@@ -49,7 +49,7 @@ task("create-emp", "Deploys the EMP (Expiring Multi Party) Contract using UMA's 
             console.log(colors.blue("\n Token Factory Address: ", tokenFactoryAddress));
 
             // Price Feed
-            const priceFeedIdentifierHex = ethers.utils.hexlify(ethers.utils.toUtf8Bytes(arzgs.priceFeed));
+            const priceFeedIdentifierHex = ethers.utils.hexlify(ethers.utils.toUtf8Bytes(args.priceFeed));
             const priceFeedIdentifierPaddedHex = priceFeedIdentifierHex.padEnd(66, '0');
 
             const currentTimestamp = Date.now() / 1000;

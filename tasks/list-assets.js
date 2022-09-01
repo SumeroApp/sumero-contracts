@@ -1,13 +1,12 @@
 // npx hardhat list-assets --network <network-name>
 task("list-assets", "List assets in Asset Manager")
     .setAction(
-        async (args, deployments) => {
+        async (args, hre) => {
             const { iterateAssets } = require('../utils/helper');
             const colors = require('colors');
-
             const { deployer } = await hre.getNamedAccounts();
 
-            const assetManager = await ethers.getContract("AssetManager", deployer);
+            const assetManager = await hre.ethers.getContract("AssetManager", deployer);
 
             console.log(colors.green("\nASSET MANAGER CONTRACT ADDRESS:", assetManager.address));
 

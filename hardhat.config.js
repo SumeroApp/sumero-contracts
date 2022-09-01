@@ -18,6 +18,7 @@ require("./tasks/unpause-asset");
 require("./tasks/close-asset");
 require("./tasks/list-assets");
 require("./tasks/mint-emp");
+require("./tasks/add-impl-to-finder");
 
 const solcVersion = "0.8.0";
 
