@@ -4,7 +4,12 @@ const func = async function (hre) {
 
     const { deployer } = await getNamedAccounts();
 
-    const Finder = await deployments.get("Finder");
+    // Deploy our own Finder
+    // const Finder = await deployments.get("Finder");
+
+    // Using Finder deployed by UMA on goerli
+    const Finder = { address: "0xE60dBa66B85E10E7Fd18a67a6859E241A243950e" };
+
     const TokenFactory = await deployments.get("TokenFactory");
     const Timer = await deployments.get("Timer");
 
@@ -20,4 +25,7 @@ const func = async function (hre) {
 };
 module.exports = func;
 func.tags = ["ExpiringMultiPartyCreator"];
-func.dependencies = ["Finder", "TokenFactory", "Timer"];
+// When deploying our own finder, uncomment below
+// func.dependencies = ["Finder", "TokenFactory", "Timer"];
+func.dependencies = ["TokenFactory", "Timer"];
+

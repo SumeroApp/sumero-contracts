@@ -1,9 +1,9 @@
-// npx hardhat add-impl-to-finder --name <interface-name> --address <interface-address> --skip-if-implmentation-exists --network <network-name>
-// npx hardhat add-impl-to-finder --name x --address x --network goerli 
+// npx hardhat add-impl-to-finder --name <interface-name> --address <interface-address> --skip-if-implementation-exists --network <network-name>
+// npx hardhat add-impl-to-finder --name Registry --address 0x9214454Ff30410a1558b8749Ab3FB0fD6F942539 --skip-if-implementation-exists --network goerli
 task("add-impl-to-finder", "Adds assets to Asset Manager")
     .addParam("name", "The name of the interface")
     .addParam("address", "The address of the implementation")
-    .addParam("skipIfImplemenationExists", "boolean value to skip changing implementation if it already exists")
+    .addFlag("skipIfImplementationExists", "boolean value to skip changing implementation if it already exists")
     .setAction(
         async (args, hre) => {
             const colors = require('colors');
@@ -13,32 +13,27 @@ task("add-impl-to-finder", "Adds assets to Asset Manager")
             const finder = await hre.ethers.getContract("Finder", deployer);
             console.log(colors.green("\nFINDER CONTRACT ADDRESS:", finder.address));
 
-            // const name = "Registry";
-            // const bytes32Name = hre.ethers.utils.formatBytes32String(name);
-            // const address = "0x9214454Ff30410a1558b8749Ab3FB0fD6F942539";
-
+            const bytes32Name = hre.ethers.utils.formatBytes32String(args.name);
             const existingInterfaceAddress = await finder.interfacesImplemented(bytes32Name);
-            console.log(existingInterfaceAddress);
+            console.log(colors.green("\n current interface name (bytes32): ", bytes32Name));
+            console.log(colors.green("\n current interface address: ", existingInterfaceAddress));
 
-            if (isZeroAddress(existingInterfaceAddress) || args.skipIfImplemenationExists) {
-                console.log(colors.green("\n current interface address: ", existingInterfaceAddress));
 
-                console.log(colors.green("\n adding new interface -> ", name));
+            if (isZeroAddress(existingInterfaceAddress) || !args.skipIfImplementationExists) {
+                console.log(colors.green("\n adding new interface -> ", args.name));
                 console.log(colors.green(" converted interface to bytes32 -> ", bytes32Name));
-                console.log(colors.green(" implementation address -> ", address));
-                return;
+                console.log(colors.green(" implementation address -> ", args.address));
 
-
-                const tx = await finder.changeImplementationAddress(hre.ethers.utils.formatBytes32String(name), address);
-                // emit InterfaceImplementationChanged(interfaceName, implementationAddress);
+                const tx = await finder.changeImplementationAddress(bytes32Name, args.address);
+                await tx.wait()
 
                 txUrl = getTxUrl(hre.deployments.network, tx.hash);
                 if (txUrl != null) {
                     console.log(txUrl);
                 }
+            } else {
+                console.log(colors.green("\n skipping since implementation exists"));
             }
 
         }
     );
-
-    // npx hardhat add-impl-to-finder --name x --address x --skip-if-implmentation-exists true --network goerli

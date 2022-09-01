@@ -97,8 +97,10 @@ UMA's EMPC (ExpiringMultiPartyCreator)
 ## Sample Env File
 
     HARDHAT_FORK="goerli"
-    ETH_NODE_URI_GOERLI="https://goerli.infura.io/v3/xxxx"
+    ETH_NODE_URI_GOERLI="https://goerli.infura.io/v3/xxxx" 
+    // ETH_NODE_URI_<NETWORK_NAME>
     MNEMONIC_GOERLI="random random random random random"
+    // MNEMONIC_<NETWORK_NAME>
 
     APPROVED_EMPs='["0xc1eb9d0dfef93f0c81fd7eceb4f3cf0039e24f7e", "0xd63c91fd4fa5b3d843b5a104d505403e07908ba4"]'
     APPROVED_SWAP_PAIRs='[]'
@@ -156,22 +158,13 @@ NOTE: Deployment scripts are to be used for deployment to Networks like Kovan, R
 
 ## Flatten Contracts
 
-    npx hardhat flatten ./contracts/ClayToken.sol > TestClayToken.sol      
+    npx hardhat flatten ./contracts/ClayToken.sol > TestClayToken.sol  
 
-Deployment addresses and parameters:
+## Contracts deployed by UMA
 
-(*deployer is the address that deploys the contract*)
+kovan -> https://github.com/UMAprotocol/protocol/blob/master/packages/core/networks/42.json
 
-CLAY_TOKEN 
-- deployer
-
-UNISWAP_FACTORY
-- deployer
-
-UNISWAP_ROUTER
-- deployer
-- UNISWAP_FACTORY address
-----
+goerli -> https://github.com/UMAprotocol/protocol/blob/master/packages/core/networks/5.json
 
 ## Clay Token
 
