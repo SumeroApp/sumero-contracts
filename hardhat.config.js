@@ -21,6 +21,8 @@ require("./tasks/mint-emp");
 require("./tasks/add-impl-to-finder");
 require("./tasks/create-lp");
 require("./tasks/setup-finder");
+require("./tasks/expire-emp");
+require("./tasks/settle-emp");
 
 const solcVersion = "0.8.0";
 

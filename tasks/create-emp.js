@@ -25,27 +25,23 @@ task("create-emp", "Deploys the EMP (Expiring Multi Party) Contract using UMA's 
     .addParam("disputerDisputeReward", "Dispute reward paid to the disputer")
     .addParam("minSponsorTokens", "The minimum number of tokens required in a sponsor position")
     .setAction(
-        async (args, hre) => {
-            const { deployments, getNamedAccounts } = hre;
+        async (args, deployments,) => {
             const { deployer } = await getNamedAccounts();
-
-            const { getTxUrl } = require('../utils/helper');
             const colors = require('colors');
+            const { ethers } = require("hardhat")
+            const { getTxUrl } = require('../utils/helper');
 
-            const { ExpiringMultiPartyCreatorEthers__factory } = require('@uma/contracts-node');
+            const { ExpiringMultiPartyCreatorEthers__factory, getAddress } = require('@uma/contracts-node');
 
-            console.log(colors.bold("\n==> Running create-emp task..."));
+            console.log(colors.bold("\n==> Running create-emp-param task..."));
 
-            // const emp_creator_instance = await hre.ethers.getContract("ExpiringMultiPartyCreator", deployer);
+            const KOVAN_NETWORK_ID = 42;
 
-            const ExpiringMultiPartyCreator = await deployments.get("ExpiringMultiPartyCreator");
-            // console.log(colors.green("\nEMPC_ADDRESS: ", emp_creator_instance.address));
-            console.log(colors.green("\nEMPC_ADDRESS: ", ExpiringMultiPartyCreator.address));
-            if (!ExpiringMultiPartyCreator || !ExpiringMultiPartyCreator.address) throw new Error("Unable to get deployed EMPC address");
-
+            const UMA_EMPC_ADDRESS = await getAddress("ExpiringMultiPartyCreator", KOVAN_NETWORK_ID);
+            console.log(colors.green("\nEMPC_ADDRESS: ", UMA_EMPC_ADDRESS));
 
             const signer0 = ethers.provider.getSigner(deployer);
-            const emp_creator_instance = ExpiringMultiPartyCreatorEthers__factory.connect(ExpiringMultiPartyCreator.address, signer0);
+            const emp_creator_instance = ExpiringMultiPartyCreatorEthers__factory.connect(UMA_EMPC_ADDRESS, signer0);
             const syntheticDecimals = await emp_creator_instance._getSyntheticDecimals(args.collateralAddress);
             const tokenFactoryAddress = await emp_creator_instance.tokenFactoryAddress();
 
@@ -96,19 +92,22 @@ task("create-emp", "Deploys the EMP (Expiring Multi Party) Contract using UMA's 
             }
 
             console.log(colors.blue("\n Creating EMP via EMPC: ....."));
-            try {
-                const createEmpTx = await emp_creator_instance.createExpiringMultiParty(createEmpParams, { gasLimit: 6700000 });
-                await createEmpTx.wait();
-
-                console.log("\nTransaction Receipt: \n", createEmpTx)
-                const txUrl = getTxUrl(deployments.network, createEmpTx.hash);
-                if (txUrl != null) {
-                    console.log(txUrl);
-                }
-            } catch (error) {
-                console.log("createExpiringMultiParty failed!");
-                console.log(error);
+            const createEmpTx = await emp_creator_instance.createExpiringMultiParty(createEmpParams);
+            const receipt = await createEmpTx.wait()        
+            let expiringMultiPartyAddress;
+            let empDeployerAddress;
+                
+            console.log(colors.green("\nCreatedExpiringMultiParty Event Found!"));
+            expiringMultiPartyAddress = receipt.logs[7].topics[1].replace('0x000000000000000000000000', '0x');
+            empDeployerAddress = receipt.logs[7].topics[2].replace('0x000000000000000000000000', '0x');
+            console.log("\nTransaction Receipt: \n", createEmpTx)
+            const txUrl = getTxUrl(deployments.network, createEmpTx.hash);
+            if (txUrl != null) {
+                console.log(txUrl);
             }
+            console.log("empDeployerAddress: "+empDeployerAddress)
+            console.log("expiringMultiPartyAddress: "+expiringMultiPartyAddress)
+
         }
     );
 
