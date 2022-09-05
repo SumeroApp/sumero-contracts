@@ -48,6 +48,16 @@ Read more about creationCode / initcode / bytecode in solidity / eth.
 
 3. Uniswap Error UniswapV2: INSUFFICIENT_OUTPUT_AMOUNT. The liquidity maintained by pools is incorrect. // TODO
 
+## Deployment
+
+UMA's EMPC (ExpiringMultiPartyCreator)
+
+1. Deploy using script deploy_empc which is dependent on Finder.sol, TokenFactory.sol and Timer.sol (Timer is zero_address for live network)
+
+2. Deployment of EMPCLib was failing due to Out of gas errors and max code size exceeded.
+
+3. Reducing the optimizer runs (to 200) made the deployment go through, but users would have to pay more for using the contracts.
+
 ## Hardhat
 
 1.  hardhat.config.js is the main configuration file
@@ -79,7 +89,23 @@ Read more about creationCode / initcode / bytecode in solidity / eth.
 
         npx hardhat deploy --network kovan --tags ClayBonds
 
-7. Variable HARDHAT_FORK in .env manages the forking details. If it's an empty string, hardhat network does not add any forking details to HRE. Otherwise it adds the forking network details at hre.config.networks.hardhat.forking . e.g. HARDHAT_FORK="kovan". running npx hardhat node would fork the "kovan" network and run locally, along with adding the forking details.
+7. Fork details ->
+    Variable HARDHAT_FORK in .env manages the forking details. If it's an empty string, hardhat network does not add any forking details to HRE. Otherwise it adds the forking network details at hre.config.networks.hardhat.forking . e.g. HARDHAT_FORK="kovan". running npx hardhat node would fork the "kovan" network and run locally, along with adding the forking details.
+
+    HARDHAT_FORK, ETH_NODE_URI_*networkname* and MNEMONIC_*networkname* need to be added for each forked network
+
+## Sample Env File
+
+    HARDHAT_FORK="goerli"
+    ETH_NODE_URI_GOERLI="https://goerli.infura.io/v3/xxxx" 
+    // ETH_NODE_URI_<NETWORK_NAME>
+    MNEMONIC_GOERLI="random random random random random"
+    // MNEMONIC_<NETWORK_NAME>
+
+    APPROVED_EMPs='["0xc1eb9d0dfef93f0c81fd7eceb4f3cf0039e24f7e", "0xd63c91fd4fa5b3d843b5a104d505403e07908ba4"]'
+    APPROVED_SWAP_PAIRs='[]'
+    APPROVED_STAKING_REWARDs='[]'
+    ETHERSCAN_API_KEY='9K49VNXGEATGF9MYU57MGAEEV952MEAYCD'
 
 NOTE: Deployment scripts are to be used for deployment to Networks like Kovan, Ropsten, Mainnet etc. Make sure HARDHAT_FORK is pointing to correct network before deployment. Tests folder to be used for local testing before deployment.
 
@@ -130,20 +156,24 @@ NOTE: Deployment scripts are to be used for deployment to Networks like Kovan, R
 
     npx hardhat verify  --network kovan 0x7A16395c9566B4678B8f166bEcC2AbCae41f3DbC "0xE0544883f42Dc1812528234ea8B2b7687d8FA38A" "0x995b62fC9681db170e5312229acF7250F91DF719"
 
-Deployment addresses and parameters:
+    npx hardhat verify --network goerli 0xF28887a69aC368A1b76c3D81cdd876acc4211a06 "0xE60dBa66B85E10E7Fd18a67a6859E241A243950e" "0x6F9db85C1661769514Ab750547E29651B26e2D47" "0xE35256fb9adc9421F4d2246219AeA99B9F946B5c"
 
-(*deployer is the address that deploys the contract*)
+    npx hardhat --network goerli  etherscan-verify 
 
-CLAY_TOKEN 
-- deployer
+## Flatten Contracts
 
-UNISWAP_FACTORY
-- deployer
+    npx hardhat flatten ./contracts/ClayToken.sol > TestClayToken.sol  
 
-UNISWAP_ROUTER
-- deployer
-- UNISWAP_FACTORY address
-----
+## Contracts deployed by UMA
+
+kovan -> https://github.com/UMAprotocol/protocol/blob/master/packages/core/networks/42.json
+
+goerli -> https://github.com/UMAprotocol/protocol/blob/master/packages/core/networks/5.json
+
+AddressWhitelist -> check whitelisted tokens / collateral by UMA
+
+add registry contract to Finder
+Use UMA's Finder which points to UMA's registry code
 
 ## Clay Token
 

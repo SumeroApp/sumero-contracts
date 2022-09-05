@@ -1,5 +1,5 @@
 /**
- * This script deploys the native CLAY token contract
+ * This script deploys the Asset Manager Contract
  * 
  */
 const func = async function (hre) {
@@ -8,7 +8,7 @@ const func = async function (hre) {
 
     const { deployer } = await getNamedAccounts();
 
-    await deploy("ClayToken", { from: deployer, log: true, skipIfAlreadyDeployed: true });
+    await deploy("AssetManager", { from: deployer, log: true, skipIfAlreadyDeployed: true });
 };
 module.exports = func;
-func.tags = ["ClayToken"];
+func.tags = ["AssetManager"];

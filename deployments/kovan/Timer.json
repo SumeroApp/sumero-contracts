@@ -1,0 +1,107 @@
+{
+  "address": "0x0295160D0AC5edA8bB2df8c91783dC7cBd74D550",
+  "abi": [
+    {
+      "inputs": [],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "inputs": [],
+      "name": "getCurrentTime",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "time",
+          "type": "uint256"
+        }
+      ],
+      "name": "setCurrentTime",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "transactionHash": "0x792a7e01d8648ca0f1f98909d211689b6176eef3e3cdd225015944541cfe7bc3",
+  "receipt": {
+    "to": null,
+    "from": "0x8D9656505A20C9562488bfa6EA0d1eF6B12966d7",
+    "contractAddress": "0x0295160D0AC5edA8bB2df8c91783dC7cBd74D550",
+    "transactionIndex": 2,
+    "gasUsed": "112712",
+    "logsBloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "blockHash": "0xee5d6e3b8c36c76a5ff2ef9c0bff0fcda4aa1db4ab7672f0c66e03b9bb594659",
+    "transactionHash": "0x792a7e01d8648ca0f1f98909d211689b6176eef3e3cdd225015944541cfe7bc3",
+    "logs": [],
+    "blockNumber": 33528537,
+    "cumulativeGasUsed": "553716",
+    "status": 1,
+    "byzantium": true
+  },
+  "args": [],
+  "numDeployments": 1,
+  "solcInputHash": "07a819d72194783f01aa70299ec79949",
+  "metadata": "{\"compiler\":{\"version\":\"0.8.9+commit.e5eed63a\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"inputs\":[],\"name\":\"getCurrentTime\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"time\",\"type\":\"uint256\"}],\"name\":\"setCurrentTime\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{\"getCurrentTime()\":{\"returns\":{\"_0\":\"uint256 for the current Testable timestamp.\"}},\"setCurrentTime(uint256)\":{\"details\":\"Will revert if not running in test mode.\",\"params\":{\"time\":\"timestamp to set `currentTime` to.\"}}},\"title\":\"Universal store of current contract time for testing environments.\",\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{\"getCurrentTime()\":{\"notice\":\"Gets the currentTime variable set in the Timer.\"},\"setCurrentTime(uint256)\":{\"notice\":\"Sets the current time.\"}},\"version\":1}},\"settings\":{\"compilationTarget\":{\"contracts/UMA/common/implementation/Timer.sol\":\"Timer\"},\"evmVersion\":\"london\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\",\"useLiteralContent\":true},\"optimizer\":{\"enabled\":true,\"runs\":1000},\"remappings\":[]},\"sources\":{\"contracts/UMA/common/implementation/Timer.sol\":{\"content\":\"// SPDX-License-Identifier: AGPL-3.0-only\\npragma solidity ^0.8.0;\\n\\n/**\\n * @title Universal store of current contract time for testing environments.\\n */\\ncontract Timer {\\n    uint256 private currentTime;\\n\\n    constructor() {\\n        currentTime = block.timestamp; // solhint-disable-line not-rely-on-time\\n    }\\n\\n    /**\\n     * @notice Sets the current time.\\n     * @dev Will revert if not running in test mode.\\n     * @param time timestamp to set `currentTime` to.\\n     */\\n    function setCurrentTime(uint256 time) external {\\n        currentTime = time;\\n    }\\n\\n    /**\\n     * @notice Gets the currentTime variable set in the Timer.\\n     * @return uint256 for the current Testable timestamp.\\n     */\\n    function getCurrentTime() public view returns (uint256) {\\n        return currentTime;\\n    }\\n}\\n\",\"keccak256\":\"0x9e0dd7389718bd5d1da910273a6f4cee98ee22bfc0c92bde0f0955c0e23adb5e\",\"license\":\"AGPL-3.0-only\"}},\"version\":1}",
+  "bytecode": "0x608060405234801561001057600080fd5b504260005560ac806100236000396000f3fe6080604052348015600f57600080fd5b506004361060325760003560e01c806322f8e56614603757806329cb924d146049575b600080fd5b60476042366004605e565b600055565b005b60005460405190815260200160405180910390f35b600060208284031215606f57600080fd5b503591905056fea2646970667358221220514a2d63ded839b7790b7d47751b5fe52a41870b77df2556fedbea4d220ba4dc64736f6c63430008090033",
+  "deployedBytecode": "0x6080604052348015600f57600080fd5b506004361060325760003560e01c806322f8e56614603757806329cb924d146049575b600080fd5b60476042366004605e565b600055565b005b60005460405190815260200160405180910390f35b600060208284031215606f57600080fd5b503591905056fea2646970667358221220514a2d63ded839b7790b7d47751b5fe52a41870b77df2556fedbea4d220ba4dc64736f6c63430008090033",
+  "devdoc": {
+    "kind": "dev",
+    "methods": {
+      "getCurrentTime()": {
+        "returns": {
+          "_0": "uint256 for the current Testable timestamp."
+        }
+      },
+      "setCurrentTime(uint256)": {
+        "details": "Will revert if not running in test mode.",
+        "params": {
+          "time": "timestamp to set `currentTime` to."
+        }
+      }
+    },
+    "title": "Universal store of current contract time for testing environments.",
+    "version": 1
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {
+      "getCurrentTime()": {
+        "notice": "Gets the currentTime variable set in the Timer."
+      },
+      "setCurrentTime(uint256)": {
+        "notice": "Sets the current time."
+      }
+    },
+    "version": 1
+  },
+  "storageLayout": {
+    "storage": [
+      {
+        "astId": 6678,
+        "contract": "contracts/UMA/common/implementation/Timer.sol:Timer",
+        "label": "currentTime",
+        "offset": 0,
+        "slot": "0",
+        "type": "t_uint256"
+      }
+    ],
+    "types": {
+      "t_uint256": {
+        "encoding": "inplace",
+        "label": "uint256",
+        "numberOfBytes": "32"
+      }
+    }
+  }
+}
