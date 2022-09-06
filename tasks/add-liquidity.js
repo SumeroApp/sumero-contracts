@@ -53,7 +53,8 @@ task("add-liquidity", "Adds liquidity to the pool.")
                     0, //amount1min
                     0, //amount2min
                     deployer,
-                    timestamp
+                    timestamp,
+                    { gasLimit: 6700000 }
                 );
                 console.log(colors.blue("\nLiquidity Added to: " + args.token1 + " - " + args.token2 + " pair"));
                 // Print transaction details
