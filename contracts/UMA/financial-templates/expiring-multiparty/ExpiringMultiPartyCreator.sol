@@ -147,7 +147,8 @@ contract ExpiringMultiPartyCreator is ContractCreator, Testable, Lockable {
         tokenCurrency.addBurner(derivative);
         tokenCurrency.resetOwner(derivative);
 
-        _registerContract(new address[](0), derivative);
+        // DO NOT REGISTER Financial Contract with UMA's Registry
+        // _registerContract(new address[](0), derivative);
 
         emit CreatedExpiringMultiParty(derivative, msg.sender);
 
