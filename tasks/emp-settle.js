@@ -12,8 +12,8 @@ task("emp-settle", "Settles emps")
             const EMP = await hre.ethers.getContractFactory("contracts/UMA/financial-templates/expiring-multiparty/ExpiringMultiParty.sol:ExpiringMultiParty");
             const emp = await EMP.attach(args.empAddress);
 
-            const synthToken = await hre.ethers.getContractFactory("contracts/UMA/common/implementation/ExpandedERC20.sol:ExpandedERC20");
-            const synth = await synthToken.attach(args.synthAddress);
+            const SYNTH = await hre.ethers.getContractFactory("contracts/UMA/common/implementation/ExpandedERC20.sol:ExpandedERC20");
+            const synth = await SYNTH.attach(args.synthAddress);
 
             const synthBalance = synth.balanceOf(deployer)
             console.log(colors.blue("\n Approving synths: ....."));
@@ -21,7 +21,7 @@ task("emp-settle", "Settles emps")
                 const approveTX = await synth.approve(args.address, synthBalance)
                 const approveTxUrl = getTxUrl(deployments.network, approveTX.hash);
                 if (approveTxUrl != null) {
-                    console.log(approveTxUrl);
+                    console.log(colors.yellow("\n",approveTxUrl));
                 }
                 console.log("Approve completed...")
             } catch (error) {
@@ -36,7 +36,7 @@ task("emp-settle", "Settles emps")
                 await expireEmpTx.wait();
                 const txUrl = getTxUrl(deployments.network, expireEmpTx.hash);
                 if (txUrl != null) {
-                    console.log(colors.green(txUrl));
+                    console.log(colors.yellow("\n",txUrl));
                 }
             } catch (error) {
                 console.log(colors.red("\n Settling EMP failed: ....."));

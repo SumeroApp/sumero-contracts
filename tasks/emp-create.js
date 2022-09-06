@@ -33,7 +33,7 @@ task("emp-create", "Deploys the EMP (Expiring Multi Party) Contract using UMA's 
             const { ExpiringMultiPartyCreatorEthers__factory, getAddress } = require('@uma/contracts-node');
 
 
-            console.log(colors.bold("\n==> Running create-emp-param task..."));
+            console.log(colors.bold("\n==> Running emp-create task..."));
 
             const KOVAN_NETWORK_ID = 42;
 
@@ -103,7 +103,7 @@ task("emp-create", "Deploys the EMP (Expiring Multi Party) Contract using UMA's 
                 console.log("\nTransaction Receipt: \n", createEmpTx)
                 const txUrl = getTxUrl(deployments.network, createEmpTx.hash);
                 if (txUrl != null) {
-                    console.log(colors.green(txUrl));
+                    console.log(colors.yellow("\n",txUrl));
                 }
                 console.log("empDeployerAddress: " + empDeployerAddress)
                 console.log("expiringMultiPartyAddress: " + expiringMultiPartyAddress)

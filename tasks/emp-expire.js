@@ -18,7 +18,7 @@ task("emp-expire", "Expires EMPs")
                 expect(await emp.contractState()).to.eq(1);
                 const txUrl = getTxUrl(deployments.network, expireEmpTx.hash);
                 if (txUrl != null) {
-                    console.log(colors.green(txUrl));
+                    console.log(colors.yellow("\n",txUrl));
                 }
             } catch (error) {
                 console.log(colors.red("\n Expiring EMP failed: ....."));

@@ -26,7 +26,7 @@
  *      - position CR Ratio => collateralRequirement + 15%
  * */
 // npx hardhat emp-mint --emp-address <address> --collateral-amount <collateral-amount> --additional-collateral-ratio <additional collateral ratio (e.g. 0.15 => 15%)>
-task("mint-emp", "Mint the EMP")
+task("emp-mint", "Mint the EMP")
     .addParam("empAddress", "Deployed EMP contract address")
     .addParam("collateralAmount", "The number of collateral tokens to collateralize the position with")
     .addParam("additionalCollateralRatio", "Additional collateral ratio (e.g. 0.15)")
@@ -130,7 +130,7 @@ task("mint-emp", "Mint the EMP")
                 txUrl = getTxUrl(deployments.network, mintEmpTx.hash)
                 console.log("\nTransaction Receipt: \n", mintEmpTx)
                 if (txUrl != null) {
-                    console.log(colors.green(txUrl));
+                    console.log(colors.yellow("\n",txUrl));
                 }
             } catch (error) {
                 console.log(colors.red("\n Minting EMP failed: ....."));
