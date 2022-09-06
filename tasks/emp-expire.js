@@ -1,31 +1,27 @@
-// npx hardhat expire-emp --address 0xF7b20AD6239133B71878f6AA885123095F47026b --network kovan
-// before expiry contract state is 0
+// npx hardhat emp-expire --address <address> --network <network-name>
 
-const { provider } = require('ganache');
-
-// after expiry contract state is 1
-task("expire-emp", "Expires emps")
-    .addParam("address", "Emp Address")
+task("emp-expire", "Expires EMPs")
+    .addParam("address", "Address of EMP to expire")
     .setAction(
         async (args, deployments, network) => {
             const { expect } = require('chai');
-            const { deployer } = await hre.getNamedAccounts();
             const { getTxUrl } = require('../utils/helper');
+            const colors = require('colors');
 
             const EMP = await hre.ethers.getContractFactory("contracts/UMA/financial-templates/expiring-multiparty/ExpiringMultiParty.sol:ExpiringMultiParty");
             const emp = await EMP.attach(args.address);
-            console.log("\n Expriring EMP: .....");
+            console.log(colors.blue("\n Expiring EMP: ....."));
             try {
-                console.log("Contract State: " + await emp.contractState())
+                expect(await emp.contractState()).to.eq(0);
                 const expireEmpTx = await emp.expire()
                 await expireEmpTx.wait();
+                expect(await emp.contractState()).to.eq(1);
                 const txUrl = getTxUrl(deployments.network, expireEmpTx.hash);
                 if (txUrl != null) {
-                    console.log(txUrl);
+                    console.log(colors.green(txUrl));
                 }
-
             } catch (error) {
-                console.log("expireEmpTx failed!");
+                console.log(colors.red("\n Expiring EMP failed: ....."));
                 console.log(error);
             }
 

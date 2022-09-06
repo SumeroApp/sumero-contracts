@@ -1,5 +1,5 @@
 /**
- * npx hardhat create-emp  
+ * npx hardhat emp-create  
  *      --life-time <period-in-days> 
  *      --collateral-address <address> 
  *      --price-feed <plain-text-price-feed-identifier> 
@@ -11,9 +11,9 @@
  *      --disputer-dispute-reward <Dispute reward paid to the disputer> 
  *      --min-sponsor-tokens <The minimum number of tokens required in a sponsor position>
  *  */
-// npx hardhat create-emp  --life-time 1 --collateral-address 0xb7a4F3E9097C08dA09517b5aB877F7a917224ede --price-feed USDETH --synth-name Test_USDETH  --synth-symbol zUSDETH --collateral-requirement 1.25 --dispute-bond 0.1 --sponsor-dispute-reward 0.05 --disputer-dispute-reward 0.2 --min-sponsor-tokens 0.02
+// npx hardhat emp-create  --life-time 1 --collateral-address 0xb7a4F3E9097C08dA09517b5aB877F7a917224ede --price-feed USDETH --synth-name Test_USDETH  --synth-symbol zUSDETH --collateral-requirement 1.25 --dispute-bond 0.1 --sponsor-dispute-reward 0.05 --disputer-dispute-reward 0.2 --min-sponsor-tokens 0.02
 
-task("create-emp", "Deploys the EMP (Expiring Multi Party) Contract using UMA's EMPC")
+task("emp-create", "Deploys the EMP (Expiring Multi Party) Contract using UMA's EMPC")
     .addParam("lifeTime", "synth life time period in days")
     .addParam("collateralAddress", "address of collateral to be used")
     .addParam("priceFeed", " The plaintext price identifier e.g. USDETH")
@@ -30,8 +30,8 @@ task("create-emp", "Deploys the EMP (Expiring Multi Party) Contract using UMA's 
             const colors = require('colors');
             const { ethers } = require("hardhat")
             const { getTxUrl } = require('../utils/helper');
-
             const { ExpiringMultiPartyCreatorEthers__factory, getAddress } = require('@uma/contracts-node');
+
 
             console.log(colors.bold("\n==> Running create-emp-param task..."));
 
@@ -92,21 +92,25 @@ task("create-emp", "Deploys the EMP (Expiring Multi Party) Contract using UMA's 
             }
 
             console.log(colors.blue("\n Creating EMP via EMPC: ....."));
-            const createEmpTx = await emp_creator_instance.createExpiringMultiParty(createEmpParams);
-            const receipt = await createEmpTx.wait()        
-            let expiringMultiPartyAddress;
-            let empDeployerAddress;
-                
-            console.log(colors.green("\nCreatedExpiringMultiParty Event Found!"));
-            expiringMultiPartyAddress = receipt.logs[7].topics[1].replace('0x000000000000000000000000', '0x');
-            empDeployerAddress = receipt.logs[7].topics[2].replace('0x000000000000000000000000', '0x');
-            console.log("\nTransaction Receipt: \n", createEmpTx)
-            const txUrl = getTxUrl(deployments.network, createEmpTx.hash);
-            if (txUrl != null) {
-                console.log(txUrl);
+            try {
+                const createEmpTx = await emp_creator_instance.createExpiringMultiParty(createEmpParams);
+                const receipt = await createEmpTx.wait()
+                let expiringMultiPartyAddress;
+                let empDeployerAddress;
+                console.log(colors.green("\nCreatedExpiringMultiParty Event Found!"));
+                expiringMultiPartyAddress = receipt.logs[7].topics[1].replace('0x000000000000000000000000', '0x');
+                empDeployerAddress = receipt.logs[7].topics[2].replace('0x000000000000000000000000', '0x');
+                console.log("\nTransaction Receipt: \n", createEmpTx)
+                const txUrl = getTxUrl(deployments.network, createEmpTx.hash);
+                if (txUrl != null) {
+                    console.log(colors.green(txUrl));
+                }
+                console.log("empDeployerAddress: " + empDeployerAddress)
+                console.log("expiringMultiPartyAddress: " + expiringMultiPartyAddress)
+            } catch (error) {
+                console.log(colors.red("\n Creating EMP failed: ....."));
+                console.log(error)
             }
-            console.log("empDeployerAddress: "+empDeployerAddress)
-            console.log("expiringMultiPartyAddress: "+expiringMultiPartyAddress)
 
         }
     );
