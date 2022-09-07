@@ -1,6 +1,6 @@
 // Before running this task approve operations must be done!
-// Approve CLAY:  npx hardhat clay-approve --spender <spender-address> --amount <amount> --network <network-name>
-// Approve ERC20: npx hardhat erc20-approve --name <deployed-token-name> --address <token-address> --spender <spender-address> --amount <amount> --network <network-name>
+// Approve CLAY for uniswap router:  npx hardhat clay-approve --spender <spender-address> --amount <amount> --network <network-name>
+// Approve ERC20 for uniswap router: npx hardhat erc20-approve --name <deployed-token-name> --address <token-address> --spender <spender-address> --amount <amount> --network <network-name>
 // Add Liquidity: npx hardhat add-liquidity --token1 <token-1-name> --address1 <address> --decimal1 <decimal> --amount1 <token-1-amount> --token2 <token-2-name> --address2 <address> --decimal2 <decimal> --amount2 <token-2-amount> --network <network-name>
 // Add Liquidity: npx hardhat add-liquidity --token1 ClayToken --address1 0xE0544883f42Dc1812528234ea8B2b7687d8FA38A --decimal1 18 --amount1 1000 --token2 USDCoin --address2 0xb7a4F3E9097C08dA09517b5aB877F7a917224ede --decimal2 6 --amount2 10
 
@@ -44,6 +44,8 @@ task("add-liquidity", "Adds liquidity to the pool.")
                 const block = await ethers.provider.getBlock(currentBlock);
                 const timestamp = block.timestamp + 300;
 
+                console.log("Providing Liquidity ..");
+
                 // Provide Liquidity
                 const tx = await router.addLiquidity(
                     args.address1,
@@ -56,6 +58,8 @@ task("add-liquidity", "Adds liquidity to the pool.")
                     timestamp,
                     { gasLimit: 6700000 }
                 );
+                await tx.wait();
+
                 console.log(colors.blue("\nLiquidity Added to: " + args.token1 + " - " + args.token2 + " pair"));
                 // Print transaction details
                 console.log("\nTransaction Receipt: \n", tx)

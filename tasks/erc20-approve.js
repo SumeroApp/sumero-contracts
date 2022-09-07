@@ -14,18 +14,21 @@ task("erc20-approve", "Approves ERC20 tokens to the given account")
             const token = await Token.attach(args.address);
 
             const tokenName = await token.name();
+            const tokenDecimals = await token.decimals();
             // expect(tokenName).to.eq(args.name);
 
             // to get USDC with ETH 
             // await token.deposit({ value: ethers.utils.parseEther(args.amount) })
 
             const tokenBalance = await token.balanceOf(deployer);
-            console.log("My account's balance is : " + ethers.utils.formatEther(tokenBalance));
+            console.log("My account's balance is : " + ethers.utils.formatUnits(tokenBalance, tokenDecimals));
 
             //Convert ether  to wei
             const amountInWei = ethers.utils.parseUnits(args.amount, 'ether');
 
+            console.log("Approving ERC20 token ", tokenName);
             const tx = await token.approve(args.spender, amountInWei);
+            await tx.wait();
 
             expect(await token.allowance(deployer, args.spender)).to.eq(amountInWei);
             console.log(tokenName + " Approved");
