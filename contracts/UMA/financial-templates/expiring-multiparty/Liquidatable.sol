@@ -74,6 +74,7 @@ contract Liquidatable is PricelessPositionManager {
         address timerAddress;
         address financialProductLibraryAddress;
         bytes32 priceFeedIdentifier;
+        bytes ancillaryData;
         FixedPoint.Unsigned minSponsorTokens;
         // Params specifically for Liquidatable.
         uint256 liquidationLiveness;
@@ -188,7 +189,8 @@ contract Liquidatable is PricelessPositionManager {
             params.priceFeedIdentifier,
             params.minSponsorTokens,
             params.timerAddress,
-            params.financialProductLibraryAddress
+            params.financialProductLibraryAddress,
+            params.ancillaryData
         )
         nonReentrant()
     {

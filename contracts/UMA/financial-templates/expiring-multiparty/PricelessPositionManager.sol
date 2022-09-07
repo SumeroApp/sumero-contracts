@@ -92,6 +92,9 @@ contract PricelessPositionManager is FeePayer {
     // the functionality of the EMP to support a wider range of financial products.
     FinancialProductLibrary public financialProductLibrary;
 
+    // Ancillary data to pass to the Optimistic Oracle system when requesting and fetching prices
+    bytes public ancillaryData;
+
     /****************************************
      *                EVENTS                *
      ****************************************/
@@ -204,7 +207,8 @@ contract PricelessPositionManager is FeePayer {
         bytes32 _priceIdentifier,
         FixedPoint.Unsigned memory _minSponsorTokens,
         address _timerAddress,
-        address _financialProductLibraryAddress
+        address _financialProductLibraryAddress,
+        bytes memory _ancillaryData
     )
         FeePayer(_collateralAddress, _finderAddress, _timerAddress)
         nonReentrant()
@@ -219,6 +223,7 @@ contract PricelessPositionManager is FeePayer {
         tokenCurrency = ExpandedIERC20(_tokenAddress);
         minSponsorTokens = _minSponsorTokens;
         priceIdentifier = _priceIdentifier;
+        ancillaryData = _ancillaryData;
 
         // Initialize the financialProductLibrary at the provided address.
         financialProductLibrary = FinancialProductLibrary(
@@ -1012,7 +1017,7 @@ contract PricelessPositionManager is FeePayer {
         optimisticOracle.requestPrice(
             _transformPriceIdentifier(requestedTime),
             requestedTime,
-            _getAncillaryData(),
+            ancillaryData,
             collateralCurrency,
             reward.rawValue // Reward is equal to the final fee
         );
@@ -1033,13 +1038,13 @@ contract PricelessPositionManager is FeePayer {
                 address(this),
                 _transformPriceIdentifier(requestedTime),
                 requestedTime,
-                _getAncillaryData()
+                ancillaryData
             )
         );
         int256 optimisticOraclePrice = optimisticOracle.settleAndGetPrice(
             _transformPriceIdentifier(requestedTime),
             requestedTime,
-            _getAncillaryData()
+            ancillaryData
         );
 
         // For now we don't want to deal with negative prices in positions.
@@ -1268,11 +1273,5 @@ contract PricelessPositionManager is FeePayer {
         } catch {
             return priceIdentifier;
         }
-    }
-
-    function _getAncillaryData() internal view returns (bytes memory) {
-        // Note: when ancillary data is passed to the optimistic oracle, it should be tagged with the token address
-        // whose funding rate it's trying to get.
-        return abi.encodePacked(address(tokenCurrency));
     }
 }
