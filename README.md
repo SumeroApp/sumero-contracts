@@ -158,6 +158,9 @@ NOTE: Deployment scripts are to be used for deployment to Networks like Kovan, R
 
     npx hardhat verify --network goerli 0xF28887a69aC368A1b76c3D81cdd876acc4211a06 "0xE60dBa66B85E10E7Fd18a67a6859E241A243950e" "0x6F9db85C1661769514Ab750547E29651B26e2D47" "0xE35256fb9adc9421F4d2246219AeA99B9F946B5c"
 
+    EMPC Verification
+    npx hardhat verify 0xC5830Fa3786F48D60846Add7505F3E69aCC29C6e "0xE60dBa66B85E10E7Fd18a67a6859E241A243950e" "0x6F9db85C1661769514Ab750547E29651B26e2D47" "0xE35256fb9adc9421F4d2246219AeA99B9F946B5c" --network goerli
+
     npx hardhat --network goerli  etherscan-verify 
 
 ## Flatten Contracts

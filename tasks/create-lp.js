@@ -20,14 +20,14 @@ task("create-lp", "Creates liquidity pools in Uniswap")
                 if (pairAddress == 0x0000000000000000000000000000000000000000) {
                     console.log("Creating the pair...");
                     const tx = await factory.createPair(args.token2, args.token1);
-                    tx.wait();
+                    await tx.wait();
 
                     PAIR = await router.getPair(args.token2, args.token1);
                     console.log(args.token1 + " - " + args.token2 + " created on: ", PAIR);
 
-                    expect(await factory.getPair(args.token1, args.token2)).to.equal(PAIR, args.token2 + " - " + args.token1 + " not matching with what's there in factory");
-
                     pairAddress = await factory.getPair(args.token1, args.token2);
+                    expect(pairAddress).to.equal(PAIR, "Pair address from router not matching with what's there in factory");
+
                     const pairUrl = getAddressUrl(deployments.network, pairAddress);
                     console.log("\nTransaction Receipt: \n", tx)
 
