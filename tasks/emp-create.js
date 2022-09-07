@@ -1,5 +1,5 @@
 /**
- * npx hardhat emp-create  
+ * npx hardhat create-emp  
  *      --life-time <period-in-days> 
  *      --collateral-address <address> 
  *      --price-feed <plain-text-price-feed-identifier> 
@@ -11,7 +11,7 @@
  *      --disputer-dispute-reward <Dispute reward paid to the disputer> 
  *      --min-sponsor-tokens <The minimum number of tokens required in a sponsor position>
  *  */
-// npx hardhat emp-create  --life-time 1 --collateral-address 0xb7a4F3E9097C08dA09517b5aB877F7a917224ede --price-feed USDETH --synth-name Test_USDETH  --synth-symbol zUSDETH --collateral-requirement 1.25 --dispute-bond 0.1 --sponsor-dispute-reward 0.05 --disputer-dispute-reward 0.2 --min-sponsor-tokens 0.02
+// npx hardhat create-emp  --life-time 1 --collateral-address 0xb7a4F3E9097C08dA09517b5aB877F7a917224ede --price-feed USDETH --synth-name Test_USDETH  --synth-symbol zUSDETH --collateral-requirement 1.25 --dispute-bond 0.1 --sponsor-dispute-reward 0.05 --disputer-dispute-reward 0.2 --min-sponsor-tokens 0.02
 
 task("emp-create", "Deploys the EMP (Expiring Multi Party) Contract using UMA's EMPC")
     .addParam("lifeTime", "synth life time period in days")
@@ -25,23 +25,27 @@ task("emp-create", "Deploys the EMP (Expiring Multi Party) Contract using UMA's 
     .addParam("disputerDisputeReward", "Dispute reward paid to the disputer")
     .addParam("minSponsorTokens", "The minimum number of tokens required in a sponsor position")
     .setAction(
-        async (args, deployments,) => {
+        async (args, hre) => {
+            const { deployments, getNamedAccounts } = hre;
             const { deployer } = await getNamedAccounts();
-            const colors = require('colors');
-            const { ethers } = require("hardhat")
+
             const { getTxUrl } = require('../utils/helper');
-            const { ExpiringMultiPartyCreatorEthers__factory, getAddress } = require('@uma/contracts-node');
+            const colors = require('colors');
 
+            const { ExpiringMultiPartyCreatorEthers__factory } = require('@uma/contracts-node');
 
-            console.log(colors.bold("\n==> Running emp-create task..."));
+            console.log(colors.bold("\n==> Running create-emp task..."));
 
-            const KOVAN_NETWORK_ID = 42;
+            // const emp_creator_instance = await hre.ethers.getContract("ExpiringMultiPartyCreator", deployer);
 
-            const UMA_EMPC_ADDRESS = await getAddress("ExpiringMultiPartyCreator", KOVAN_NETWORK_ID);
-            console.log(colors.green("\nEMPC_ADDRESS: ", UMA_EMPC_ADDRESS));
+            const ExpiringMultiPartyCreator = await deployments.get("ExpiringMultiPartyCreator");
+            // console.log(colors.green("\nEMPC_ADDRESS: ", emp_creator_instance.address));
+            console.log(colors.green("\nEMPC_ADDRESS: ", ExpiringMultiPartyCreator.address));
+            if (!ExpiringMultiPartyCreator || !ExpiringMultiPartyCreator.address) throw new Error("Unable to get deployed EMPC address");
+
 
             const signer0 = ethers.provider.getSigner(deployer);
-            const emp_creator_instance = ExpiringMultiPartyCreatorEthers__factory.connect(UMA_EMPC_ADDRESS, signer0);
+            const emp_creator_instance = ExpiringMultiPartyCreatorEthers__factory.connect(ExpiringMultiPartyCreator.address, signer0);
             const syntheticDecimals = await emp_creator_instance._getSyntheticDecimals(args.collateralAddress);
             const tokenFactoryAddress = await emp_creator_instance.tokenFactoryAddress();
 
@@ -93,25 +97,19 @@ task("emp-create", "Deploys the EMP (Expiring Multi Party) Contract using UMA's 
 
             console.log(colors.blue("\n Creating EMP via EMPC: ....."));
             try {
-                const createEmpTx = await emp_creator_instance.createExpiringMultiParty(createEmpParams);
+                const createEmpTx = await emp_creator_instance.createExpiringMultiParty(createEmpParams, { gasLimit: 6700000 });
                 const receipt = await createEmpTx.wait()
-                let expiringMultiPartyAddress;
-                let empDeployerAddress;
-                console.log(colors.green("\nCreatedExpiringMultiParty Event Found!"));
-                expiringMultiPartyAddress = receipt.logs[7].topics[1].replace('0x000000000000000000000000', '0x');
-                empDeployerAddress = receipt.logs[7].topics[2].replace('0x000000000000000000000000', '0x');
+                let expiringMultiPartyAddress = receipt.logs[7].topics[1].replace('0x000000000000000000000000', '0x');
                 console.log("\nTransaction Receipt: \n", createEmpTx)
                 const txUrl = getTxUrl(deployments.network, createEmpTx.hash);
                 if (txUrl != null) {
-                    console.log(colors.yellow("\n",txUrl));
+                    console.log(txUrl);
+                    console.log("Expiring Multi Party Address: " + expiringMultiPartyAddress)
                 }
-                console.log("empDeployerAddress: " + empDeployerAddress)
-                console.log("expiringMultiPartyAddress: " + expiringMultiPartyAddress)
             } catch (error) {
-                console.log(colors.red("\n Creating EMP failed: ....."));
-                console.log(error)
+                console.log("createExpiringMultiParty failed!");
+                console.log(error);
             }
-
         }
     );
 
