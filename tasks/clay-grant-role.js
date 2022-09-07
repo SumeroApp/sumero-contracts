@@ -15,6 +15,7 @@ task("clay-grant-role", "Grants role to the given address")
 
             const roleHash = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(args.role));
             const tx = await clayToken.grantRole(roleHash, args.account);
+            await tx.wait();
 
             expect(await clayToken.hasRole(roleHash, args.account)).eq(true);
 
