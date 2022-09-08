@@ -4,7 +4,7 @@ task("emp-settle", "Settles emps")
     .addParam("empAddress", "Address of EMP contract")
     .addParam("synthAddress", "Address of the synthetic token contract")
     .setAction(
-        async (args, deployments, network) => {
+        async (args, deployments) => {
             const { deployer } = await hre.getNamedAccounts();
             const { getTxUrl } = require('../utils/helper');
             const colors = require('colors');
@@ -18,10 +18,10 @@ task("emp-settle", "Settles emps")
             const synthBalance = synth.balanceOf(deployer)
             console.log(colors.blue("\n Approving synths: ....."));
             try {
-                const approveTX = await synth.approve(args.address, synthBalance)
+                const approveTX = await synth.approve(args.empAddress, synthBalance);
                 const approveTxUrl = getTxUrl(deployments.network, approveTX.hash);
                 if (approveTxUrl != null) {
-                    console.log(colors.yellow("\n",approveTxUrl));
+                    console.log(colors.yellow("\n", approveTxUrl));
                 }
                 console.log("Approve completed...")
             } catch (error) {
@@ -36,7 +36,7 @@ task("emp-settle", "Settles emps")
                 await expireEmpTx.wait();
                 const txUrl = getTxUrl(deployments.network, expireEmpTx.hash);
                 if (txUrl != null) {
-                    console.log(colors.yellow("\n",txUrl));
+                    console.log(colors.yellow("\n", txUrl));
                 }
             } catch (error) {
                 console.log(colors.red("\n Settling EMP failed: ....."));

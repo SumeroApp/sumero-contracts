@@ -26,6 +26,7 @@ task("emp-create", "Deploys the EMP (Expiring Multi Party) Contract using UMA's 
     .addParam("minSponsorTokens", "The minimum number of tokens required in a sponsor position")
     .setAction(
         async (args, hre) => {
+
             const { deployments, getNamedAccounts } = hre;
             const { deployer } = await getNamedAccounts();
 
@@ -36,10 +37,8 @@ task("emp-create", "Deploys the EMP (Expiring Multi Party) Contract using UMA's 
 
             console.log(colors.bold("\n==> Running create-emp task..."));
 
-            // const emp_creator_instance = await hre.ethers.getContract("ExpiringMultiPartyCreator", deployer);
 
             const ExpiringMultiPartyCreator = await deployments.get("ExpiringMultiPartyCreator");
-            // console.log(colors.green("\nEMPC_ADDRESS: ", emp_creator_instance.address));
             console.log(colors.green("\nEMPC_ADDRESS: ", ExpiringMultiPartyCreator.address));
             if (!ExpiringMultiPartyCreator || !ExpiringMultiPartyCreator.address) throw new Error("Unable to get deployed EMPC address");
 
@@ -98,13 +97,15 @@ task("emp-create", "Deploys the EMP (Expiring Multi Party) Contract using UMA's 
             console.log(colors.blue("\n Creating EMP via EMPC: ....."));
             try {
                 const createEmpTx = await emp_creator_instance.createExpiringMultiParty(createEmpParams, { gasLimit: 6700000 });
-                const receipt = await createEmpTx.wait()
-                let expiringMultiPartyAddress = receipt.logs[7].topics[1].replace('0x000000000000000000000000', '0x');
-                console.log("\nTransaction Receipt: \n", createEmpTx)
-                const txUrl = getTxUrl(deployments.network, createEmpTx.hash);
+                const receipt = await createEmpTx.wait();
+                console.log("\nTransaction Receipt: \n", createEmpTx);
+
+                let expiringMultiPartyAddress = receipt.logs[4].topics[1].replace('0x000000000000000000000000', '0x');
+                console.log("Expiring Multi Party Address: " + expiringMultiPartyAddress);
+
+                const txUrl = getTxUrl(deployments.getNetworkName(), createEmpTx.hash);
                 if (txUrl != null) {
                     console.log(txUrl);
-                    console.log("Expiring Multi Party Address: " + expiringMultiPartyAddress)
                 }
             } catch (error) {
                 console.log("createExpiringMultiParty failed!");
