@@ -74,6 +74,7 @@ contract ExpiringMultiPartyCreator is ContractCreator, Testable, Lockable {
         uint256 expirationTimestamp;
         address collateralAddress;
         bytes32 priceFeedIdentifier;
+        bytes ancillaryData;
         string syntheticName;
         string syntheticSymbol;
         FixedPoint.Unsigned collateralRequirement;
@@ -206,6 +207,7 @@ contract ExpiringMultiPartyCreator is ContractCreator, Testable, Lockable {
         constructorParams.expirationTimestamp = params.expirationTimestamp;
         constructorParams.collateralAddress = params.collateralAddress;
         constructorParams.priceFeedIdentifier = params.priceFeedIdentifier;
+        constructorParams.ancillaryData = params.ancillaryData;
         constructorParams.collateralRequirement = params.collateralRequirement;
         constructorParams.disputeBondPercentage = params.disputeBondPercentage;
         constructorParams.sponsorDisputeRewardPercentage = params
