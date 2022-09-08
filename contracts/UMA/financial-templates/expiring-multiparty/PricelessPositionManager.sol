@@ -10,7 +10,6 @@ import "../../common/implementation/FixedPoint.sol";
 import "../../common/interfaces/ExpandedIERC20.sol";
 import "../../common/interfaces/IERC20Standard.sol";
 
-import "../../oracle/interfaces/OracleInterface.sol";
 import "../../oracle/interfaces/OptimisticOracleInterface.sol";
 import "../../oracle/interfaces/IdentifierWhitelistInterface.sol";
 import "../../oracle/implementation/Constants.sol";
@@ -653,7 +652,7 @@ contract PricelessPositionManager is FeePayer {
 
         // Get the current settlement price and store it. If it is not resolved will revert.
         if (contractState != ContractState.ExpiredPriceReceived) {
-            expiryPrice = _getOraclePriceExpiration(expirationTimestamp);
+            expiryPrice = _getOraclePrice(expirationTimestamp);
             contractState = ContractState.ExpiredPriceReceived;
         }
 
@@ -742,7 +741,7 @@ contract PricelessPositionManager is FeePayer {
         contractState = ContractState.ExpiredPriceRequested;
 
         // Final fees do not need to be paid when sending a request to the optimistic oracle.
-        _requestOraclePriceExpiration(expirationTimestamp);
+        _requestOraclePrice_sponsorsPay(expirationTimestamp);
 
         emit ContractExpired(msg.sender);
     }
@@ -769,7 +768,7 @@ contract PricelessPositionManager is FeePayer {
         // Price requested at this time stamp. `settleExpired` can now withdraw at this timestamp.
         uint256 oldExpirationTimestamp = expirationTimestamp;
         expirationTimestamp = getCurrentTime();
-        _requestOraclePriceExpiration(expirationTimestamp);
+        _requestOraclePrice_sponsorsPay(expirationTimestamp);
 
         emit EmergencyShutdown(
             msg.sender,
@@ -973,13 +972,6 @@ contract PricelessPositionManager is FeePayer {
             );
     }
 
-    function _getOracle() internal view returns (OracleInterface) {
-        return
-            OracleInterface(
-                finder.getImplementationAddress(OracleInterfaces.Oracle)
-            );
-    }
-
     function _getOptimisticOracle()
         internal
         view
@@ -1004,8 +996,8 @@ contract PricelessPositionManager is FeePayer {
             );
     }
 
-    // Requests a price for transformed `priceIdentifier` at `requestedTime` from the Oracle.
-    function _requestOraclePriceExpiration(uint256 requestedTime) internal {
+    // Requests a price for transformed `priceIdentifier` at `requestedTime` from the Oracle, socializing the cost to sponsors.
+    function _requestOraclePrice_sponsorsPay(uint256 requestedTime) internal {
         OptimisticOracleInterface optimisticOracle = _getOptimisticOracle();
 
         // Increase token allowance to enable the optimistic oracle reward transfer.
@@ -1026,8 +1018,29 @@ contract PricelessPositionManager is FeePayer {
         _adjustCumulativeFeeMultiplier(reward, _pfc());
     }
 
+    // Requests a price for transformed `priceIdentifier` at `requestedTime` from the Oracle, socializing the cost to sponsors.
+    function _requestOraclePrice_senderPays(uint256 requestedTime) internal {
+        OptimisticOracleInterface optimisticOracle = _getOptimisticOracle();
+
+        FixedPoint.Unsigned memory finalFee = _computeFinalFees();
+
+        
+        // Pull final fee from sender
+        collateralCurrency.safeTransferFrom(msg.sender, address(this), finalFee.rawValue);
+
+        // Increase token allowance to enable the optimistic oracle fee payment.
+        collateralCurrency.safeIncreaseAllowance(address(optimisticOracle), finalFee.rawValue);
+        optimisticOracle.requestPrice(
+            _transformPriceIdentifier(requestedTime),
+            requestedTime,
+            ancillaryData,
+            collateralCurrency,
+            finalFee.rawValue
+        );
+    }
+
     // Fetches a resolved Oracle price from the Oracle. Reverts if the Oracle hasn't resolved for this request.
-    function _getOraclePriceExpiration(uint256 requestedTime)
+    function _getOraclePrice(uint256 requestedTime)
         internal
         returns (FixedPoint.Unsigned memory)
     {
@@ -1059,44 +1072,45 @@ contract PricelessPositionManager is FeePayer {
     }
 
     // Requests a price for transformed `priceIdentifier` at `requestedTime` from the Oracle.
-    function _requestOraclePriceLiquidation(uint256 requestedTime) internal {
-        OracleInterface oracle = _getOracle();
-        oracle.requestPrice(
-            _transformPriceIdentifier(requestedTime),
-            requestedTime
-        );
-    }
+    // function _requestOraclePriceLiquidation(uint256 requestedTime) internal {
+    //     OptimisticOracleInterface optimisticOracle = _getOptimisticOracle();
+    //     OracleInterface oracle = _getOracle();
+    //     oracle.requestPrice(
+    //         _transformPriceIdentifier(requestedTime),
+    //         requestedTime
+    //     );
+    // }
 
     // Fetches a resolved Oracle price from the Oracle. Reverts if the Oracle hasn't resolved for this request.
-    function _getOraclePriceLiquidation(uint256 requestedTime)
-        internal
-        view
-        returns (FixedPoint.Unsigned memory)
-    {
-        // Create an instance of the oracle and get the price. If the price is not resolved revert.
-        OracleInterface oracle = _getOracle();
-        require(
-            oracle.hasPrice(
-                _transformPriceIdentifier(requestedTime),
-                requestedTime
-            ),
-            "Unresolved oracle price"
-        );
-        int256 oraclePrice = oracle.getPrice(
-            _transformPriceIdentifier(requestedTime),
-            requestedTime
-        );
+    // function _getOraclePriceLiquidation(uint256 requestedTime)
+    //     internal
+    //     view
+    //     returns (FixedPoint.Unsigned memory)
+    // {
+    //     // Create an instance of the oracle and get the price. If the price is not resolved revert.
+    //     OracleInterface oracle = _getOracle();
+    //     require(
+    //         oracle.hasPrice(
+    //             _transformPriceIdentifier(requestedTime),
+    //             requestedTime
+    //         ),
+    //         "Unresolved oracle price"
+    //     );
+    //     int256 oraclePrice = oracle.getPrice(
+    //         _transformPriceIdentifier(requestedTime),
+    //         requestedTime
+    //     );
 
-        // For now we don't want to deal with negative prices in positions.
-        if (oraclePrice < 0) {
-            oraclePrice = 0;
-        }
-        return
-            _transformPrice(
-                FixedPoint.Unsigned(uint256(oraclePrice)),
-                requestedTime
-            );
-    }
+    //     // For now we don't want to deal with negative prices in positions.
+    //     if (oraclePrice < 0) {
+    //         oraclePrice = 0;
+    //     }
+    //     return
+    //         _transformPrice(
+    //             FixedPoint.Unsigned(uint256(oraclePrice)),
+    //             requestedTime
+    //         );
+    // }
 
     // Reset withdrawal request by setting the withdrawal request and withdrawal timestamp to 0.
     function _resetWithdrawalRequest(PositionData storage positionData)
