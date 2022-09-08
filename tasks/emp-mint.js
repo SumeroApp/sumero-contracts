@@ -127,7 +127,7 @@ task("emp-mint", "Mint the EMP")
             try {
                 mintEmpTx = await empInstance.create(collateralAmountObject, numTokensObject)
                 await mintEmpTx.wait()
-                txUrl = getTxUrl(deployments.network, mintEmpTx.hash)
+                txUrl = getTxUrl(hre.deployments.getNetworkName(), mintEmpTx.hash)
                 console.log("\nTransaction Receipt: \n", mintEmpTx)
                 if (txUrl != null) {
                     console.log(colors.yellow("\n",txUrl));

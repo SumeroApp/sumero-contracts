@@ -34,7 +34,7 @@ task("erc20-approve", "Approves ERC20 tokens to the given account")
             console.log(tokenName + " Approved");
 
             console.log("\nTransaction Receipt: \n", tx)
-            const txUrl = getTxUrl(deployments.network, tx.hash);
+            const txUrl = getTxUrl(hre.deployments.getNetworkName(), tx.hash);
             if (txUrl != null) {
                 console.log(txUrl);
             }

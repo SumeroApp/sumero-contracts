@@ -63,7 +63,7 @@ task("add-liquidity", "Adds liquidity to the pool.")
                 console.log(colors.blue("\nLiquidity Added to: " + args.token1 + " - " + args.token2 + " pair"));
                 // Print transaction details
                 console.log("\nTransaction Receipt: \n", tx)
-                const txUrl = getTxUrl(deployments.network, tx.hash);
+                const txUrl = getTxUrl(hre.deployments.getNetworkName(), tx.hash);
                 if (txUrl != null) {
                     console.log(txUrl);
                 }

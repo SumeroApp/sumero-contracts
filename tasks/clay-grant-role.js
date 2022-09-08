@@ -20,7 +20,7 @@ task("clay-grant-role", "Grants role to the given address")
             expect(await clayToken.hasRole(roleHash, args.account)).eq(true);
 
             console.log("\nTransaction Receipt: \n", tx);
-            const txUrl = getTxUrl(deployments.network, tx.hash);
+            const txUrl = getTxUrl(hre.deployments.getNetworkName(), tx.hash);
             if (txUrl != null) {
                 console.log(txUrl);
             }

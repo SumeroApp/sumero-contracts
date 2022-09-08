@@ -103,7 +103,7 @@ task("emp-create", "Deploys the EMP (Expiring Multi Party) Contract using UMA's 
                 let expiringMultiPartyAddress = receipt.logs[4].topics[1].replace('0x000000000000000000000000', '0x');
                 console.log("Expiring Multi Party Address: " + expiringMultiPartyAddress);
 
-                const txUrl = getTxUrl(deployments.getNetworkName(), createEmpTx.hash);
+                const txUrl = getTxUrl(hre.deployments.getNetworkName(), createEmpTx.hash);
                 if (txUrl != null) {
                     console.log(txUrl);
                 }

@@ -19,7 +19,7 @@ task("emp-settle", "Settles emps")
             console.log(colors.blue("\n Approving synths: ....."));
             try {
                 const approveTX = await synth.approve(args.empAddress, synthBalance);
-                const approveTxUrl = getTxUrl(deployments.network, approveTX.hash);
+                const approveTxUrl = getTxUrl(hre.deployments.getNetworkName(), approveTX.hash);
                 if (approveTxUrl != null) {
                     console.log(colors.yellow("\n", approveTxUrl));
                 }
@@ -34,7 +34,7 @@ task("emp-settle", "Settles emps")
                 console.log("Contract State: " + await emp.contractState())
                 const expireEmpTx = await emp.settleExpired()
                 await expireEmpTx.wait();
-                const txUrl = getTxUrl(deployments.network, expireEmpTx.hash);
+                const txUrl = getTxUrl(hre.deployments.getNetworkName(), expireEmpTx.hash);
                 if (txUrl != null) {
                     console.log(colors.yellow("\n", txUrl));
                 }

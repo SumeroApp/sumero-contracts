@@ -24,7 +24,7 @@ task("close-asset", "Closes assets on asset manager")
                     expect((await assetManager.idToVerifiedEmps(args.id)).status).eq(0)
                     console.log("Emp successfully closed!")
                     console.log("\nTransaction Receipt: \n", tx)
-                    txUrl = getTxUrl(deployments.network, tx.hash);
+                    txUrl = getTxUrl(hre.deployments.getNetworkName(), tx.hash);
                 } catch (error) {
                     console.log(error)
                 }
@@ -38,7 +38,7 @@ task("close-asset", "Closes assets on asset manager")
                     expect((await assetManager.idToVerifiedSwapPairs(args.id)).status).eq(0)
                     console.log("Swap pair successfully closed!")
                     console.log("\nTransaction Receipt: \n", tx)
-                    txUrl = getTxUrl(deployments.network, tx.hash);
+                    txUrl = getTxUrl(hre.deployments.getNetworkName(), tx.hash);
                 } catch (error) {
                     console.log(error)
                 }
@@ -52,7 +52,7 @@ task("close-asset", "Closes assets on asset manager")
                     expect((await assetManager.idToVerifiedStakingRewards(args.id)).status).eq(0)
                     console.log("Staking rewards successfully closed!")
                     console.log("\nTransaction Receipt: \n", tx)
-                    txUrl = getTxUrl(deployments.network, tx.hash);
+                    txUrl = getTxUrl(hre.deployments.getNetworkName(), tx.hash);
                 } catch (error) {
                     console.log(error)
                 }
