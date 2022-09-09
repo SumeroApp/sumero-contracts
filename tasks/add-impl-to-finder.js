@@ -27,7 +27,7 @@ task("add-impl-to-finder", "Adds assets to Asset Manager")
                 const tx = await finder.changeImplementationAddress(bytes32Name, args.address);
                 await tx.wait()
 
-                txUrl = getTxUrl(hre.deployments.network, tx.hash);
+                txUrl = getTxUrl(hre.deployments.getNetworkName(), tx.hash);
                 if (txUrl != null) {
                     console.log(txUrl);
                 }

@@ -1,4 +1,3 @@
-
 /**
  *  What all does the task need in order to do a successful initial mint?
  *  - Price of the identifier i.e. ETHUSD http://18.219.111.187/prices.json
@@ -26,9 +25,8 @@
  *      - globalCR => formatEther(rawGCR)/price     
  *      - position CR Ratio => collateralRequirement + 15%
  * */
-// npx hardhat mint-emp --emp-address <address> --collateral-amount <collateral-amount> --additional-collateral-ratio <additional collateral ratio (e.g. 0.15 => 15%)>
-// npx hardhat mint-emp --emp-address 0x54fa5f6f19d2fee7071ac6aad970bf1497cdfcfe --collateral-amount 1000 --additional-collateral-ratio 0.15
-task("mint-emp", "Mint the EMP")
+// npx hardhat emp-mint --emp-address <address> --collateral-amount <collateral-amount> --additional-collateral-ratio <additional collateral ratio (e.g. 0.15 => 15%)>
+task("emp-mint", "Mint the EMP")
     .addParam("empAddress", "Deployed EMP contract address")
     .addParam("collateralAmount", "The number of collateral tokens to collateralize the position with")
     .addParam("additionalCollateralRatio", "Additional collateral ratio (e.g. 0.15)")
@@ -39,6 +37,7 @@ task("mint-emp", "Mint the EMP")
             const { ethers } = require("hardhat")
             const { getTxUrl } = require('../utils/helper');
             const fetch = require('node-fetch');
+            const colors = require('colors');
 
             const priceIdentifierConversions = { // maps Uma price identifiers to the price server's identifiers. Only needed if they don't already match.
                 'btc/usd': 'btcusd'
@@ -70,11 +69,10 @@ task("mint-emp", "Mint the EMP")
                 if (!price || price === "") throw "Fetch Price Feed Empty";
                 console.log(loweredIdentifier + ": " + price)
             } catch (error) {
+                console.log(colors.red("\n Fetch Price Feed Error. Mint EMP Task Failed: ....."));
                 console.log(error);
-                console.log("Fetch Price Feed Error. Mint EMP Task Failed.");
                 return;
             }
-
 
             //---- Calculations--------------------
 
@@ -129,18 +127,16 @@ task("mint-emp", "Mint the EMP")
             try {
                 mintEmpTx = await empInstance.create(collateralAmountObject, numTokensObject)
                 await mintEmpTx.wait()
-                txUrl = getTxUrl(deployments.network, mintEmpTx.hash)
+                txUrl = getTxUrl(deployments.getNetworkName(), mintEmpTx.hash)
+                console.log("\nTransaction Receipt: \n", mintEmpTx)
+                if (txUrl != null) {
+                    console.log(colors.yellow("\n", txUrl));
+                }
             } catch (error) {
+                console.log(colors.red("\n Minting EMP failed: ....."));
                 console.log(error)
             }
-
-            console.log("\nTransaction Receipt: \n", mintEmpTx)
-            if (txUrl != null) {
-                console.log(txUrl)
-            }
-
         }
     );
 
 module.exports = {};
-
