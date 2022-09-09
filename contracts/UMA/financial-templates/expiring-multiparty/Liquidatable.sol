@@ -74,6 +74,7 @@ contract Liquidatable is PricelessPositionManager {
         address timerAddress;
         address financialProductLibraryAddress;
         bytes32 priceFeedIdentifier;
+        bytes ancillaryData;
         FixedPoint.Unsigned minSponsorTokens;
         // Params specifically for Liquidatable.
         uint256 liquidationLiveness;
@@ -188,7 +189,8 @@ contract Liquidatable is PricelessPositionManager {
             params.priceFeedIdentifier,
             params.minSponsorTokens,
             params.timerAddress,
-            params.financialProductLibraryAddress
+            params.financialProductLibraryAddress,
+            params.ancillaryData
         )
         nonReentrant()
     {
@@ -441,7 +443,7 @@ contract Liquidatable is PricelessPositionManager {
         disputedLiquidation.disputer = msg.sender;
 
         // Enqueue a request with the DVM.
-        _requestOraclePriceLiquidation(disputedLiquidation.liquidationTime);
+        _requestOraclePrice_senderPays(disputedLiquidation.liquidationTime);
 
         emit LiquidationDisputed(
             sponsor,
@@ -451,9 +453,6 @@ contract Liquidatable is PricelessPositionManager {
             disputeBondAmount.rawValue
         );
         totalPaid = disputeBondAmount.add(disputedLiquidation.finalFee);
-
-        // Pay the final fee for requesting price from the DVM.
-        _payFinalFees(msg.sender, disputedLiquidation.finalFee);
 
         // Transfer the dispute bond amount from the caller to this contract.
         collateralCurrency.safeTransferFrom(
@@ -671,7 +670,7 @@ contract Liquidatable is PricelessPositionManager {
         }
 
         // Get the returned price from the oracle. If this has not yet resolved will revert.
-        liquidation.settlementPrice = _getOraclePriceLiquidation(
+        liquidation.settlementPrice = _getOraclePrice(
             liquidation.liquidationTime
         );
 

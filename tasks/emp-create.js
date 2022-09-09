@@ -17,6 +17,7 @@ task("emp-create", "Deploys the EMP (Expiring Multi Party) Contract using UMA's 
     .addParam("lifeTime", "synth life time period in days")
     .addParam("collateralAddress", "address of collateral to be used")
     .addParam("priceFeed", " The plaintext price identifier e.g. USDETH")
+    .addParam("ancillaryData", "ancillary data augment price identifier")
     .addParam("synthName", "The plaintext synthetic token name")
     .addParam("synthSymbol", "The plaintext synthetic token symbol")
     .addParam("collateralRequirement", "The collateralization requirement ratio (e.g. 1.25)")
@@ -37,6 +38,7 @@ task("emp-create", "Deploys the EMP (Expiring Multi Party) Contract using UMA's 
 
             console.log(colors.bold("\n==> Running create-emp task..."));
 
+            const emp_creator_instance = await hre.ethers.getContract("ExpiringMultiPartyCreator", deployer);
 
             const ExpiringMultiPartyCreator = await deployments.get("ExpiringMultiPartyCreator");
             console.log(colors.green("\nEMPC_ADDRESS: ", ExpiringMultiPartyCreator.address));
@@ -44,7 +46,7 @@ task("emp-create", "Deploys the EMP (Expiring Multi Party) Contract using UMA's 
 
 
             const signer0 = ethers.provider.getSigner(deployer);
-            const emp_creator_instance = ExpiringMultiPartyCreatorEthers__factory.connect(ExpiringMultiPartyCreator.address, signer0);
+            // const emp_creator_instance = ExpiringMultiPartyCreatorEthers__factory.connect(ExpiringMultiPartyCreator.address, signer0);
             const syntheticDecimals = await emp_creator_instance._getSyntheticDecimals(args.collateralAddress);
             const tokenFactoryAddress = await emp_creator_instance.tokenFactoryAddress();
 
@@ -66,6 +68,7 @@ task("emp-create", "Deploys the EMP (Expiring Multi Party) Contract using UMA's 
                 expirationTimestamp: expirationTimestamp,
                 collateralAddress: args.collateralAddress,
                 priceFeedIdentifier: priceFeedIdentifierPaddedHex,
+                ancillaryData: args.ancillaryData,
                 syntheticName: args.synthName,
                 syntheticSymbol: args.synthSymbol,
                 // 1.25 collateralization ratio
