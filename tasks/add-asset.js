@@ -21,9 +21,9 @@ task("add-asset", "Adds assets to Asset Manager")
                     await tx.wait()
                     const totalEMP = await assetManager.totalEmpAssets()
                     expect((await assetManager.idToVerifiedEmps(totalEMP)).addr).eq(ethers.utils.getAddress(args.address))
-                    console.log(colors.blue("Emp successfully added!" + "Total EMP: "+ totalEMP))
+                    console.log(colors.blue("Emp successfully added!" + "Total EMP: " + totalEMP))
                     console.log("\nTransaction Receipt: \n", tx)
-                    txUrl = getTxUrl(hre.deployments.getNetworkName(), tx.hash);
+                    txUrl = getTxUrl(deployments.getNetworkName(), tx.hash);
                 } catch (error) {
                     console.log(colors.red("\n Adding EMP failed: ....."));
                     console.log(error);
@@ -36,9 +36,9 @@ task("add-asset", "Adds assets to Asset Manager")
                     await tx.wait()
                     const totalSwapPair = await assetManager.totalSwapPairAssets()
                     expect((await assetManager.idToVerifiedSwapPairs(totalSwapPair)).addr).eq(ethers.utils.getAddress(args.address))
-                    console.log(colors.blue("Swap pair successfully added!" + "Total swap pair: "+ totalSwapPair))
+                    console.log(colors.blue("Swap pair successfully added!" + "Total swap pair: " + totalSwapPair))
                     console.log("\nTransaction Receipt: \n", tx)
-                    txUrl = getTxUrl(hre.deployments.getNetworkName(), tx.hash);
+                    txUrl = getTxUrl(deployments.getNetworkName(), tx.hash);
                 } catch (error) {
                     console.log(colors.red("\n Adding swap pair failed: ....."));
                     console.log(error)
@@ -51,10 +51,10 @@ task("add-asset", "Adds assets to Asset Manager")
                     await tx.wait()
                     const totalStakingReward = await assetManager.totalStakingRewardAssets()
                     expect((await assetManager.idToVerifiedStakingRewards(totalStakingReward)).addr).eq(ethers.utils.getAddress(args.address))
-                    console.log(colors.blue("Staking rewards successfully added!" + "Total staking reward: "+ totalStakingReward))
+                    console.log(colors.blue("Staking rewards successfully added!" + "Total staking reward: " + totalStakingReward))
 
                     console.log("\nTransaction Receipt: \n", tx)
-                    txUrl = getTxUrl(hre.deployments.getNetworkName(), tx.hash);
+                    txUrl = getTxUrl(deployments.getNetworkName(), tx.hash);
                 }
                 catch (error) {
                     console.log(colors.red("\n Adding staking reward failed: ....."));
@@ -66,7 +66,7 @@ task("add-asset", "Adds assets to Asset Manager")
             }
 
             if (txUrl != null) {
-                console.log(colors.yellow("\n",txUrl));
+                console.log(colors.yellow("\n", txUrl));
             }
         }
     );

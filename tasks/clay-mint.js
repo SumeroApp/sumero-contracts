@@ -19,7 +19,7 @@ task("clay-mint", "Mints clay token to the given address")
             expect(afterBalance.sub(beforeBalance)).eq(ethers.utils.parseUnits(amount, 'ether'));
 
             console.log("\nTransaction Receipt: \n", tx);
-            const txUrl = getTxUrl(hre.deployments.getNetworkName(), tx.hash);
+            const txUrl = getTxUrl(deployments.getNetworkName(), tx.hash);
             if (txUrl != null) {
                 console.log(txUrl);
             }

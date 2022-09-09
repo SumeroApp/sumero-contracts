@@ -17,7 +17,7 @@ task("emp-expire", "Expires EMPs")
                 const expireEmpTx = await emp.expire()
                 await expireEmpTx.wait();
                 expect(await emp.contractState()).to.eq(1);
-                const txUrl = getTxUrl(hre.deployments.getNetworkName(), expireEmpTx.hash);
+                const txUrl = getTxUrl(deployments.getNetworkName(), expireEmpTx.hash);
                 if (txUrl != null) {
                     console.log(colors.yellow("\n", txUrl));
                 }

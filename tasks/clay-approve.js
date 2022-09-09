@@ -24,7 +24,7 @@ task("clay-approve", "Approves clay token to given account")
             console.log("\nCLAY Approved");
 
             console.log("\nTransaction Receipt: \n", tx)
-            const txUrl = getTxUrl(hre.deployments.getNetworkName(), tx.hash);
+            const txUrl = getTxUrl(deployments.getNetworkName(), tx.hash);
             if (txUrl != null) {
                 console.log(txUrl);
             }

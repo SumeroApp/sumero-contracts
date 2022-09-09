@@ -4,7 +4,7 @@ task("clay-grant-role", "Grants role to the given address")
     .addParam("account", "The account address for which role is to be granted")
     .addParam("role", "The role to be assigned")
     .setAction(
-        async (args, deployments, network) => {
+        async (args, deployments) => {
             const { expect } = require('chai');
             const { deployer } = await hre.getNamedAccounts();
             const { ethers } = require("hardhat");
@@ -20,7 +20,7 @@ task("clay-grant-role", "Grants role to the given address")
             expect(await clayToken.hasRole(roleHash, args.account)).eq(true);
 
             console.log("\nTransaction Receipt: \n", tx);
-            const txUrl = getTxUrl(hre.deployments.getNetworkName(), tx.hash);
+            const txUrl = getTxUrl(deployments.getNetworkName(), tx.hash);
             if (txUrl != null) {
                 console.log(txUrl);
             }
