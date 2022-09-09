@@ -36,7 +36,7 @@ task("create-emp", "Deploys the EMP (Expiring Multi Party) Contract using UMA's 
 
             console.log(colors.bold("\n==> Running create-emp task..."));
 
-            // const emp_creator_instance = await hre.ethers.getContract("ExpiringMultiPartyCreator", deployer);
+            const emp_creator_instance = await hre.ethers.getContract("ExpiringMultiPartyCreator", deployer);
 
             const ExpiringMultiPartyCreator = await deployments.get("ExpiringMultiPartyCreator");
             // console.log(colors.green("\nEMPC_ADDRESS: ", emp_creator_instance.address));
@@ -45,7 +45,7 @@ task("create-emp", "Deploys the EMP (Expiring Multi Party) Contract using UMA's 
 
 
             const signer0 = ethers.provider.getSigner(deployer);
-            const emp_creator_instance = ExpiringMultiPartyCreatorEthers__factory.connect(ExpiringMultiPartyCreator.address, signer0);
+            // const emp_creator_instance = ExpiringMultiPartyCreatorEthers__factory.connect(ExpiringMultiPartyCreator.address, signer0);
             const syntheticDecimals = await emp_creator_instance._getSyntheticDecimals(args.collateralAddress);
             const tokenFactoryAddress = await emp_creator_instance.tokenFactoryAddress();
 
@@ -67,6 +67,7 @@ task("create-emp", "Deploys the EMP (Expiring Multi Party) Contract using UMA's 
                 expirationTimestamp: expirationTimestamp,
                 collateralAddress: args.collateralAddress,
                 priceFeedIdentifier: priceFeedIdentifierPaddedHex,
+                ancillaryData: "0x",
                 syntheticName: args.synthName,
                 syntheticSymbol: args.synthSymbol,
                 // 1.25 collateralization ratio
