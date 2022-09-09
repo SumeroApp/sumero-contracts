@@ -17,6 +17,7 @@ task("create-emp", "Deploys the EMP (Expiring Multi Party) Contract using UMA's 
     .addParam("lifeTime", "synth life time period in days")
     .addParam("collateralAddress", "address of collateral to be used")
     .addParam("priceFeed", " The plaintext price identifier e.g. USDETH")
+    .addParam("ancillaryData", "ancillary data augment price identifier")
     .addParam("synthName", "The plaintext synthetic token name")
     .addParam("synthSymbol", "The plaintext synthetic token symbol")
     .addParam("collateralRequirement", "The collateralization requirement ratio (e.g. 1.25)")
@@ -67,7 +68,7 @@ task("create-emp", "Deploys the EMP (Expiring Multi Party) Contract using UMA's 
                 expirationTimestamp: expirationTimestamp,
                 collateralAddress: args.collateralAddress,
                 priceFeedIdentifier: priceFeedIdentifierPaddedHex,
-                ancillaryData: "0x",
+                ancillaryData: args.ancillaryData,
                 syntheticName: args.synthName,
                 syntheticSymbol: args.synthSymbol,
                 // 1.25 collateralization ratio
