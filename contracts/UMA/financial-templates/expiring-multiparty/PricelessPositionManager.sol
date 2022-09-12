@@ -1024,7 +1024,6 @@ contract PricelessPositionManager is FeePayer {
 
         FixedPoint.Unsigned memory finalFee = _computeFinalFees();
 
-        
         // Pull final fee from sender
         collateralCurrency.safeTransferFrom(msg.sender, address(this), finalFee.rawValue);
 
@@ -1035,7 +1034,7 @@ contract PricelessPositionManager is FeePayer {
             requestedTime,
             ancillaryData,
             collateralCurrency,
-            finalFee.rawValue
+            finalFee.rawValue // Reward is equal to the final fee
         );
     }
 
