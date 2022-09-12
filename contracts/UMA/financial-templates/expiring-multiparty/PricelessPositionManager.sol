@@ -996,7 +996,7 @@ contract PricelessPositionManager is FeePayer {
             );
     }
 
-    // Requests a price for transformed `priceIdentifier` at `requestedTime` from the Oracle, socializing the cost to sponsors.
+    // Requests a price for transformed `priceIdentifier` at `requestedTime` from the Oracle, socializing the cost of the OO proposer reward to sponsors.
     function _requestOraclePrice_sponsorsPay(uint256 requestedTime) internal {
         OptimisticOracleInterface optimisticOracle = _getOptimisticOracle();
 
@@ -1018,7 +1018,7 @@ contract PricelessPositionManager is FeePayer {
         _adjustCumulativeFeeMultiplier(reward, _pfc());
     }
 
-    // Requests a price for transformed `priceIdentifier` at `requestedTime` from the Oracle, socializing the cost to sponsors.
+    // Requests a price for transformed `priceIdentifier` at `requestedTime` from the Oracle, charging the caller for the OO proposer reward.
     function _requestOraclePrice_senderPays(uint256 requestedTime) internal {
         OptimisticOracleInterface optimisticOracle = _getOptimisticOracle();
 
