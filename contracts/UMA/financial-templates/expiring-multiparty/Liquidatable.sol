@@ -438,11 +438,11 @@ contract Liquidatable is PricelessPositionManager {
             );
         _addCollateral(rawLiquidationCollateral, disputeBondAmount);
 
-        // Request a price from DVM. Liquidation is pending dispute until DVM returns a price.
+        // Request a price from Optimistic Oracle. Liquidation is pending dispute until OO returns a price.
         disputedLiquidation.state = Status.Disputed;
         disputedLiquidation.disputer = msg.sender;
 
-        // Enqueue a request with the DVM.
+        // Enqueue a request with the Optimistic Oracle.
         _requestOraclePrice_senderPays(disputedLiquidation.liquidationTime);
 
         emit LiquidationDisputed(
