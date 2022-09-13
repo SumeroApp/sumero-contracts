@@ -52,7 +52,7 @@ module.exports = {
       chainId: 42,
     },
     goerli: {
-      live: false,
+      live: true,
       tags: ["test-goerli"],
       blockGasLimit: 67000000,
       url: node_url('goerli'),
