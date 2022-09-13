@@ -11,7 +11,7 @@
  *      --disputer-dispute-reward <Dispute reward paid to the disputer> 
  *      --min-sponsor-tokens <The minimum number of tokens required in a sponsor position>
  *  */
-// npx hardhat create-emp  --life-time 1 --collateral-address 0xb7a4F3E9097C08dA09517b5aB877F7a917224ede --price-feed USDETH --synth-name Test_USDETH  --synth-symbol zUSDETH --collateral-requirement 1.25 --dispute-bond 0.1 --sponsor-dispute-reward 0.05 --disputer-dispute-reward 0.2 --min-sponsor-tokens 0.02
+// npx hardhat create-emp  --life-time 1 --collateral-address 0xb7a4F3E9097C08dA09517b5aB877F7a917224ede --price-feed USDETH --ancillary-data 0x73756d65726f3a205573657320746865204e554d45524943414c207072696365206665656420746f20717565727920445859 --synth-name Test_USDETH  --synth-symbol zUSDETH --collateral-requirement 1.25 --dispute-bond 0.1 --sponsor-dispute-reward 0.05 --disputer-dispute-reward 0.2 --min-sponsor-tokens 0.02
 
 task("emp-create", "Deploys the EMP (Expiring Multi Party) Contract using UMA's EMPC")
     .addParam("lifeTime", "synth life time period in days")
