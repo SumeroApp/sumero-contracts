@@ -3,6 +3,7 @@ const func = async function (hre) {
     const { deploy } = deployments;
 
     const { deployer } = await getNamedAccounts();
+    const { live } = network;
 
     // Deploy our own Finder
     // const Finder = await deployments.get("Finder");
@@ -11,7 +12,14 @@ const func = async function (hre) {
     const Finder = { address: "0xE60dBa66B85E10E7Fd18a67a6859E241A243950e" };
 
     const TokenFactory = await deployments.get("TokenFactory");
-    const Timer = await deployments.get("Timer");
+
+    let Timer;
+    if (live === false) {
+        Timer = await deployments.get("Timer");
+
+    } else {
+        Timer = { address: "0x0000000000000000000000000000000000000000" };
+    }
 
     const EMPLib = await deploy("ExpiringMultiPartyLib", { from: deployer, log: true, skipIfAlreadyDeployed: true });
 
