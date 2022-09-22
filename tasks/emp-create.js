@@ -25,6 +25,7 @@ task("emp-create", "Deploys the EMP (Expiring Multi Party) Contract using UMA's 
     .addParam("sponsorDisputeReward", "Dispute reward paid to the position sponsor")
     .addParam("disputerDisputeReward", "Dispute reward paid to the disputer")
     .addParam("minSponsorTokens", "The minimum number of tokens required in a sponsor position")
+    .addParam("ooReward", "How much of the collateral to offer to the Optimistic Oracle system when requesting a price")
     .setAction(
         async (args, hre) => {
 
@@ -48,6 +49,7 @@ task("emp-create", "Deploys the EMP (Expiring Multi Party) Contract using UMA's 
             const signer0 = ethers.provider.getSigner(deployer);
             // const emp_creator_instance = ExpiringMultiPartyCreatorEthers__factory.connect(ExpiringMultiPartyCreator.address, signer0);
             const syntheticDecimals = await emp_creator_instance._getSyntheticDecimals(args.collateralAddress);
+            const collateralDecimals = syntheticDecimals;
             const tokenFactoryAddress = await emp_creator_instance.tokenFactoryAddress();
 
             console.log(colors.blue("\n Synthetic Decimals for USDC: ", syntheticDecimals));
@@ -91,6 +93,9 @@ task("emp-create", "Deploys the EMP (Expiring Multi Party) Contract using UMA's 
                 // 100 tokens
                 minSponsorTokens: {
                     rawValue: ethers.utils.parseUnits(args.minSponsorTokens, syntheticDecimals)
+                },
+                ooReward: {
+                    rawValue: ethers.utils.parseUnits(args.ooReward, collateralDecimals)
                 },
                 withdrawalLiveness: 7200,
                 liquidationLiveness: 7200,

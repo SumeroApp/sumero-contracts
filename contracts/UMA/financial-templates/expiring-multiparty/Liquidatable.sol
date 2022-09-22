@@ -76,6 +76,7 @@ contract Liquidatable is PricelessPositionManager {
         bytes32 priceFeedIdentifier;
         bytes ancillaryData;
         FixedPoint.Unsigned minSponsorTokens;
+        FixedPoint.Unsigned ooReward;
         // Params specifically for Liquidatable.
         uint256 liquidationLiveness;
         FixedPoint.Unsigned collateralRequirement;
@@ -188,6 +189,7 @@ contract Liquidatable is PricelessPositionManager {
             params.finderAddress,
             params.priceFeedIdentifier,
             params.minSponsorTokens,
+            params.ooReward,
             params.timerAddress,
             params.financialProductLibraryAddress,
             params.ancillaryData
@@ -300,7 +302,7 @@ contract Liquidatable is PricelessPositionManager {
         }
 
         // Compute final fee at time of liquidation.
-        finalFeeBond = _computeFinalFees();
+        finalFeeBond = ooReward;
 
         // These will be populated within the scope below.
         FixedPoint.Unsigned memory lockedCollateral;

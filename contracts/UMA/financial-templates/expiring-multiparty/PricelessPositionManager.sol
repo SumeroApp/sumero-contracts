@@ -87,6 +87,9 @@ contract PricelessPositionManager is FeePayer {
     // The expiry price pulled from the DVM.
     FixedPoint.Unsigned public expiryPrice;
 
+    // How much to offer the Optimistic Oracle as a reward for price requests
+    FixedPoint.Unsigned public ooReward;
+
     // Instance of FinancialProductLibrary to provide custom price and collateral requirement transformations to extend
     // the functionality of the EMP to support a wider range of financial products.
     FinancialProductLibrary public financialProductLibrary;
@@ -193,6 +196,7 @@ contract PricelessPositionManager is FeePayer {
      * @param _finderAddress UMA protocol Finder used to discover other protocol contracts.
      * @param _priceIdentifier registered in the DVM for the synthetic.
      * @param _minSponsorTokens minimum number of tokens that must exist at any time in a position.
+     * @param _ooReward How much collateral to offer to the Optimistic Oracle when resolving prices
      * @param _timerAddress Contract that stores the current time in a testing environment.
      * Must be set to 0x0 for production environments that use live time.
      * @param _financialProductLibraryAddress Contract providing contract state transformations.
@@ -205,6 +209,7 @@ contract PricelessPositionManager is FeePayer {
         address _finderAddress,
         bytes32 _priceIdentifier,
         FixedPoint.Unsigned memory _minSponsorTokens,
+        FixedPoint.Unsigned memory _ooReward,
         address _timerAddress,
         address _financialProductLibraryAddress,
         bytes memory _ancillaryData
@@ -221,6 +226,7 @@ contract PricelessPositionManager is FeePayer {
         withdrawalLiveness = _withdrawalLiveness;
         tokenCurrency = ExpandedIERC20(_tokenAddress);
         minSponsorTokens = _minSponsorTokens;
+        ooReward = _ooReward;
         priceIdentifier = _priceIdentifier;
         ancillaryData = _ancillaryData;
 
@@ -1001,40 +1007,37 @@ contract PricelessPositionManager is FeePayer {
         OptimisticOracleInterface optimisticOracle = _getOptimisticOracle();
 
         // Increase token allowance to enable the optimistic oracle reward transfer.
-        FixedPoint.Unsigned memory reward = _computeFinalFees();
         collateralCurrency.safeIncreaseAllowance(
             address(optimisticOracle),
-            reward.rawValue
+            ooReward.rawValue
         );
         optimisticOracle.requestPrice(
             _transformPriceIdentifier(requestedTime),
             requestedTime,
             ancillaryData,
             collateralCurrency,
-            reward.rawValue // Reward is equal to the final fee
+            ooReward.rawValue
         );
 
         // Apply haircut to all sponsors by decrementing the cumlativeFeeMultiplier by the amount lost from the final fee.
-        _adjustCumulativeFeeMultiplier(reward, _pfc());
+        _adjustCumulativeFeeMultiplier(ooReward, _pfc());
     }
 
     // Requests a price for transformed `priceIdentifier` at `requestedTime` from the Oracle, charging the caller for the OO proposer reward.
     function _requestOraclePrice_senderPays(uint256 requestedTime) internal {
         OptimisticOracleInterface optimisticOracle = _getOptimisticOracle();
 
-        FixedPoint.Unsigned memory finalFee = _computeFinalFees();
-
         // Pull final fee from sender
-        collateralCurrency.safeTransferFrom(msg.sender, address(this), finalFee.rawValue);
+        collateralCurrency.safeTransferFrom(msg.sender, address(this), ooReward.rawValue);
 
         // Increase token allowance to enable the optimistic oracle fee payment.
-        collateralCurrency.safeIncreaseAllowance(address(optimisticOracle), finalFee.rawValue);
+        collateralCurrency.safeIncreaseAllowance(address(optimisticOracle), ooReward.rawValue);
         optimisticOracle.requestPrice(
             _transformPriceIdentifier(requestedTime),
             requestedTime,
             ancillaryData,
             collateralCurrency,
-            finalFee.rawValue // Reward is equal to the final fee
+            ooReward.rawValue
         );
     }
 
