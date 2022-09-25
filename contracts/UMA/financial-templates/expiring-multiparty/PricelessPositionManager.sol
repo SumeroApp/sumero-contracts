@@ -1073,47 +1073,6 @@ contract PricelessPositionManager is FeePayer {
             );
     }
 
-    // Requests a price for transformed `priceIdentifier` at `requestedTime` from the Oracle.
-    // function _requestOraclePriceLiquidation(uint256 requestedTime) internal {
-    //     OptimisticOracleInterface optimisticOracle = _getOptimisticOracle();
-    //     OracleInterface oracle = _getOracle();
-    //     oracle.requestPrice(
-    //         _transformPriceIdentifier(requestedTime),
-    //         requestedTime
-    //     );
-    // }
-
-    // Fetches a resolved Oracle price from the Oracle. Reverts if the Oracle hasn't resolved for this request.
-    // function _getOraclePriceLiquidation(uint256 requestedTime)
-    //     internal
-    //     view
-    //     returns (FixedPoint.Unsigned memory)
-    // {
-    //     // Create an instance of the oracle and get the price. If the price is not resolved revert.
-    //     OracleInterface oracle = _getOracle();
-    //     require(
-    //         oracle.hasPrice(
-    //             _transformPriceIdentifier(requestedTime),
-    //             requestedTime
-    //         ),
-    //         "Unresolved oracle price"
-    //     );
-    //     int256 oraclePrice = oracle.getPrice(
-    //         _transformPriceIdentifier(requestedTime),
-    //         requestedTime
-    //     );
-
-    //     // For now we don't want to deal with negative prices in positions.
-    //     if (oraclePrice < 0) {
-    //         oraclePrice = 0;
-    //     }
-    //     return
-    //         _transformPrice(
-    //             FixedPoint.Unsigned(uint256(oraclePrice)),
-    //             requestedTime
-    //         );
-    // }
-
     // Reset withdrawal request by setting the withdrawal request and withdrawal timestamp to 0.
     function _resetWithdrawalRequest(PositionData storage positionData)
         internal
