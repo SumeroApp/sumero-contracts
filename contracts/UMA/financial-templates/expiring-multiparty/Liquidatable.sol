@@ -241,7 +241,6 @@ contract Liquidatable is PricelessPositionManager {
         uint256 deadline
     )
         external
-        fees
         onlyPreExpiration
         nonReentrant
         returns (
@@ -311,7 +310,7 @@ contract Liquidatable is PricelessPositionManager {
         // Scoping to get rid of a stack too deep error.
         {
             FixedPoint.Unsigned memory ratio = tokensLiquidated.div(
-                positionToLiquidate.tokensOutstanding
+                positionToLiquidate.tokensOutstanding 
             );
 
             // The actual amount of collateral that gets moved to the liquidation.
@@ -422,7 +421,6 @@ contract Liquidatable is PricelessPositionManager {
     function dispute(uint256 liquidationId, address sponsor)
         external
         disputable(liquidationId, sponsor)
-        fees
         nonReentrant
         returns (FixedPoint.Unsigned memory totalPaid)
     {
@@ -477,7 +475,6 @@ contract Liquidatable is PricelessPositionManager {
     function withdrawLiquidation(uint256 liquidationId, address sponsor)
         public
         withdrawable(liquidationId, sponsor)
-        fees
         nonReentrant
         returns (RewardsData memory)
     {

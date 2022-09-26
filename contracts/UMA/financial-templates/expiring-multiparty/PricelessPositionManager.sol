@@ -317,7 +317,7 @@ contract PricelessPositionManager is FeePayer {
     function depositTo(
         address sponsor,
         FixedPoint.Unsigned memory collateralAmount
-    ) public onlyPreExpiration noPendingWithdrawal(sponsor) fees nonReentrant {
+    ) public onlyPreExpiration noPendingWithdrawal(sponsor) nonReentrant {
         require(collateralAmount.isGreaterThan(0));
         PositionData storage positionData = _getPositionData(sponsor);
 
@@ -356,7 +356,6 @@ contract PricelessPositionManager is FeePayer {
         public
         onlyPreExpiration
         noPendingWithdrawal(msg.sender)
-        fees
         nonReentrant
         returns (FixedPoint.Unsigned memory amountWithdrawn)
     {
@@ -419,7 +418,6 @@ contract PricelessPositionManager is FeePayer {
     function withdrawPassedRequest()
         external
         onlyPreExpiration
-        fees
         nonReentrant
         returns (FixedPoint.Unsigned memory amountWithdrawn)
     {
@@ -486,7 +484,7 @@ contract PricelessPositionManager is FeePayer {
     function create(
         FixedPoint.Unsigned memory collateralAmount,
         FixedPoint.Unsigned memory numTokens
-    ) public onlyPreExpiration fees nonReentrant {
+    ) public onlyPreExpiration nonReentrant {
         PositionData storage positionData = positions[msg.sender];
 
         // Either the new create ratio or the resultant position CR must be above the current GCR.
@@ -548,7 +546,6 @@ contract PricelessPositionManager is FeePayer {
         public
         onlyPreExpiration
         noPendingWithdrawal(msg.sender)
-        fees
         nonReentrant
     {
         PositionData storage positionData = _getPositionData(msg.sender);
@@ -587,7 +584,6 @@ contract PricelessPositionManager is FeePayer {
     function redeem(FixedPoint.Unsigned memory numTokens)
         public
         noPendingWithdrawal(msg.sender)
-        fees
         nonReentrant
         returns (FixedPoint.Unsigned memory amountWithdrawn)
     {
@@ -649,7 +645,6 @@ contract PricelessPositionManager is FeePayer {
     function settleExpired()
         external
         onlyPostExpiration
-        fees
         nonReentrant
         returns (FixedPoint.Unsigned memory amountWithdrawn)
     {
@@ -741,7 +736,6 @@ contract PricelessPositionManager is FeePayer {
         external
         onlyPostExpiration
         onlyOpenState
-        fees
         nonReentrant
     {
         contractState = ContractState.ExpiredPriceRequested;
@@ -809,10 +803,7 @@ contract PricelessPositionManager is FeePayer {
         returns (FixedPoint.Unsigned memory)
     {
         // Note: do a direct access to avoid the validity check.
-        return
-            _getPendingRegularFeeAdjustedCollateral(
-                _getFeeAdjustedCollateral(positions[sponsor].rawCollateral)
-            );
+        return _getFeeAdjustedCollateral(positions[sponsor].rawCollateral);
     }
 
     /**
@@ -827,10 +818,7 @@ contract PricelessPositionManager is FeePayer {
         nonReentrantView
         returns (FixedPoint.Unsigned memory)
     {
-        return
-            _getPendingRegularFeeAdjustedCollateral(
-                _getFeeAdjustedCollateral(rawTotalPositionCollateral)
-            );
+        return _getFeeAdjustedCollateral(rawTotalPositionCollateral);
     }
 
     /**

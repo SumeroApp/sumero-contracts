@@ -34,9 +34,6 @@ abstract contract FeePayer is AdministrateeInterface, Testable, Lockable {
     // Finder contract used to look up addresses for UMA system contracts.
     FinderInterface public finder;
 
-    // Tracks the last block time when the fees were paid.
-    uint256 private lastPaymentTime;
-
     // Tracks the cumulative fees that have been paid by the contract for use by derived contracts.
     // The multiplier starts at 1, and is updated by computing cumulativeFeeMultiplier * (1 - effectiveFee).
     // Put another way, the cumulativeFeeMultiplier is (1 - effectiveFee1) * (1 - effectiveFee2) ...
@@ -45,28 +42,6 @@ abstract contract FeePayer is AdministrateeInterface, Testable, Lockable {
     // If a 1% fee is charged, the multiplier should update to .99.
     // If another 1% fee is charged, the multiplier should be 0.99^2 (0.9801).
     FixedPoint.Unsigned public cumulativeFeeMultiplier;
-
-    /****************************************
-     *                EVENTS                *
-     ****************************************/
-
-    event RegularFeesPaid(uint256 indexed regularFee, uint256 indexed lateFee);
-    event FinalFeesPaid(uint256 indexed amount);
-
-    /****************************************
-     *              MODIFIERS               *
-     ****************************************/
-
-    // modifier that calls payRegularFees().
-    modifier fees() virtual {
-        // Note: the regular fee is applied on every fee-accruing transaction, where the total change is simply the
-        // regular fee applied linearly since the last update. This implies that the compounding rate depends on the
-        // frequency of update transactions that have this modifier, and it never reaches the ideal of continuous
-        // compounding. This approximate-compounding pattern is common in the Ethereum ecosystem because of the
-        // complexity of compounding data on-chain.
-        payRegularFees();
-        _;
-    }
 
     /**
      * @notice Constructs the FeePayer contract. Called by child contracts.
@@ -82,112 +57,7 @@ abstract contract FeePayer is AdministrateeInterface, Testable, Lockable {
     ) Testable(_timerAddress) {
         collateralCurrency = IERC20(_collateralAddress);
         finder = FinderInterface(_finderAddress);
-        lastPaymentTime = getCurrentTime();
         cumulativeFeeMultiplier = FixedPoint.fromUnscaledUint(1);
-    }
-
-    /****************************************
-     *        FEE PAYMENT FUNCTIONS         *
-     ****************************************/
-
-    /**
-     * @notice Pays UMA DVM regular fees (as a % of the collateral pool) to the Store contract.
-     * @dev These must be paid periodically for the life of the contract. If the contract has not paid its regular fee
-     * in a week or more then a late penalty is applied which is sent to the caller. If the amount of
-     * fees owed are greater than the pfc, then this will pay as much as possible from the available collateral.
-     * An event is only fired if the fees charged are greater than 0.
-     * @return totalPaid Amount of collateral that the contract paid (sum of the amount paid to the Store and caller).
-     * This returns 0 and exit early if there is no pfc, fees were already paid during the current block, or the fee rate is 0.
-     */
-    function payRegularFees()
-        public
-        nonReentrant
-        returns (FixedPoint.Unsigned memory)
-    {
-        uint256 time = getCurrentTime();
-        FixedPoint.Unsigned memory collateralPool = _pfc();
-
-        // Fetch the regular fees, late penalty and the max possible to pay given the current collateral within the contract.
-        (
-            FixedPoint.Unsigned memory regularFee,
-            FixedPoint.Unsigned memory latePenalty,
-            FixedPoint.Unsigned memory totalPaid
-        ) = getOutstandingRegularFees(time);
-        lastPaymentTime = time;
-
-        // If there are no fees to pay then exit early.
-        if (totalPaid.isEqual(0)) {
-            return totalPaid;
-        }
-
-        emit RegularFeesPaid(regularFee.rawValue, latePenalty.rawValue);
-
-        _adjustCumulativeFeeMultiplier(totalPaid, collateralPool);
-
-        if (regularFee.isGreaterThan(0)) {
-            StoreInterface store = _getStore();
-            collateralCurrency.safeIncreaseAllowance(
-                address(store),
-                regularFee.rawValue
-            );
-            store.payOracleFeesErc20(address(collateralCurrency), regularFee);
-        }
-
-        if (latePenalty.isGreaterThan(0)) {
-            collateralCurrency.safeTransfer(msg.sender, latePenalty.rawValue);
-        }
-        return totalPaid;
-    }
-
-    /**
-     * @notice Fetch any regular fees that the contract has pending but has not yet paid. If the fees to be paid are more
-     * than the total collateral within the contract then the totalPaid returned is full contract collateral amount.
-     * @dev This returns 0 and exit early if there is no pfc, fees were already paid during the current block, or the fee rate is 0.
-     * @return regularFee outstanding unpaid regular fee.
-     * @return latePenalty outstanding unpaid late fee for being late in previous fee payments.
-     * @return totalPaid Amount of collateral that the contract paid (sum of the amount paid to the Store and caller).
-     */
-    function getOutstandingRegularFees(uint256 time)
-        public
-        view
-        returns (
-            FixedPoint.Unsigned memory regularFee,
-            FixedPoint.Unsigned memory latePenalty,
-            FixedPoint.Unsigned memory totalPaid
-        )
-    {
-        StoreInterface store = _getStore();
-        FixedPoint.Unsigned memory collateralPool = _pfc();
-
-        // Exit early if there is no collateral or if fees were already paid during this block.
-        if (collateralPool.isEqual(0) || lastPaymentTime == time) {
-            return (regularFee, latePenalty, totalPaid);
-        }
-
-        (regularFee, latePenalty) = store.computeRegularFee(
-            lastPaymentTime,
-            time,
-            collateralPool
-        );
-
-        totalPaid = regularFee.add(latePenalty);
-        if (totalPaid.isEqual(0)) {
-            return (regularFee, latePenalty, totalPaid);
-        }
-        // If the effective fees paid as a % of the pfc is > 100%, then we need to reduce it and make the contract pay
-        // as much of the fee that it can (up to 100% of its pfc). We'll reduce the late penalty first and then the
-        // regular fee, which has the effect of paying the store first, followed by the caller if there is any fee remaining.
-        if (totalPaid.isGreaterThan(collateralPool)) {
-            FixedPoint.Unsigned memory deficit = totalPaid.sub(collateralPool);
-            FixedPoint.Unsigned memory latePenaltyReduction = FixedPoint.min(
-                latePenalty,
-                deficit
-            );
-            latePenalty = latePenalty.sub(latePenaltyReduction);
-            deficit = deficit.sub(latePenaltyReduction);
-            regularFee = regularFee.sub(FixedPoint.min(regularFee, deficit));
-            totalPaid = collateralPool;
-        }
     }
 
     /**
@@ -216,48 +86,6 @@ abstract contract FeePayer is AdministrateeInterface, Testable, Lockable {
         _gulp();
     }
 
-    /****************************************
-     *         INTERNAL FUNCTIONS           *
-     ****************************************/
-
-    // Pays UMA Oracle final fees of `amount` in `collateralCurrency` to the Store contract. Final fee is a flat fee
-    // charged for each price request. If payer is the contract, adjusts internal bookkeeping variables. If payer is not
-    // the contract, pulls in `amount` of collateral currency.
-    function _payFinalFees(address payer, FixedPoint.Unsigned memory amount)
-        internal
-    {
-        if (amount.isEqual(0)) {
-            return;
-        }
-
-        if (payer != address(this)) {
-            // If the payer is not the contract pull the collateral from the payer.
-            collateralCurrency.safeTransferFrom(
-                payer,
-                address(this),
-                amount.rawValue
-            );
-        } else {
-            // If the payer is the contract, adjust the cumulativeFeeMultiplier to compensate.
-            FixedPoint.Unsigned memory collateralPool = _pfc();
-
-            // The final fee must be < available collateral or the fee will be larger than 100%.
-            // Note: revert reason removed to save bytecode.
-            require(collateralPool.isGreaterThan(amount));
-
-            _adjustCumulativeFeeMultiplier(amount, collateralPool);
-        }
-
-        emit FinalFeesPaid(amount.rawValue);
-
-        StoreInterface store = _getStore();
-        collateralCurrency.safeIncreaseAllowance(
-            address(store),
-            amount.rawValue
-        );
-        store.payOracleFeesErc20(address(collateralCurrency), amount);
-    }
-
     function _gulp() internal {
         FixedPoint.Unsigned memory currentPfc = _pfc();
         FixedPoint.Unsigned memory currentBalance = FixedPoint.Unsigned(
@@ -272,22 +100,6 @@ abstract contract FeePayer is AdministrateeInterface, Testable, Lockable {
 
     function _pfc() internal view virtual returns (FixedPoint.Unsigned memory);
 
-    function _getStore() internal view returns (StoreInterface) {
-        return
-            StoreInterface(
-                finder.getImplementationAddress(OracleInterfaces.Store)
-            );
-    }
-
-    function _computeFinalFees()
-        internal
-        view
-        returns (FixedPoint.Unsigned memory finalFees)
-    {
-        StoreInterface store = _getStore();
-        return store.computeFinalFee(address(collateralCurrency));
-    }
-
     // Returns the user's collateral minus any fees that have been subtracted since it was originally
     // deposited into the contract. Note: if the contract has paid fees since it was deployed, the raw
     // value should be larger than the returned value.
@@ -297,33 +109,6 @@ abstract contract FeePayer is AdministrateeInterface, Testable, Lockable {
         returns (FixedPoint.Unsigned memory collateral)
     {
         return rawCollateral.mul(cumulativeFeeMultiplier);
-    }
-
-    // Returns the user's collateral minus any pending fees that have yet to be subtracted.
-    function _getPendingRegularFeeAdjustedCollateral(
-        FixedPoint.Unsigned memory rawCollateral
-    ) internal view returns (FixedPoint.Unsigned memory) {
-        (
-            ,
-            ,
-            FixedPoint.Unsigned memory currentTotalOutstandingRegularFees
-        ) = getOutstandingRegularFees(getCurrentTime());
-        if (
-            currentTotalOutstandingRegularFees.isEqual(
-                FixedPoint.fromUnscaledUint(0)
-            )
-        ) return rawCollateral;
-
-        // Calculate the total outstanding regular fee as a fraction of the total contract PFC.
-        FixedPoint.Unsigned
-            memory effectiveOutstandingFee = currentTotalOutstandingRegularFees
-                .divCeil(_pfc());
-
-        // Scale as rawCollateral* (1 - effectiveOutstandingFee) to apply the pro-rata amount to the regular fee.
-        return
-            rawCollateral.mul(
-                FixedPoint.fromUnscaledUint(1).sub(effectiveOutstandingFee)
-            );
     }
 
     // Converts a user-readable collateral value into a raw value that accounts for already-assessed fees. If any fees
