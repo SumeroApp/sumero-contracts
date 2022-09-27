@@ -49,7 +49,7 @@ task("emp-create", "Deploys the EMP (Expiring Multi Party) Contract using UMA's 
             const signer0 = ethers.provider.getSigner(deployer);
             // const emp_creator_instance = ExpiringMultiPartyCreatorEthers__factory.connect(ExpiringMultiPartyCreator.address, signer0);
             const syntheticDecimals = await emp_creator_instance._getSyntheticDecimals(args.collateralAddress);
-            const collateralDecimals = syntheticDecimals;
+            const collateralDecimals = syntheticDecimals; // The EMP Solidity code sets these to be the same on every EMP creation.
             const tokenFactoryAddress = await emp_creator_instance.tokenFactoryAddress();
 
             console.log(colors.blue("\n Synthetic Decimals for USDC: ", syntheticDecimals));
