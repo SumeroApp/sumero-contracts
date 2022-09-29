@@ -78,6 +78,9 @@ contract PricelessPositionManager is Testable, Lockable {
 
     // Unique identifier for DVM price feed ticker.
     bytes32 public priceIdentifier;
+    // Ancillary data to pass to the Optimistic Oracle system when requesting and fetching prices
+    bytes public ancillaryData;
+
     // Time that this contract expires. Should not change post-construction unless an emergency shutdown occurs.
     uint256 public expirationTimestamp;
     // Time that has to elapse for a withdrawal request to be considered passed, if no liquidations occur.
@@ -99,9 +102,6 @@ contract PricelessPositionManager is Testable, Lockable {
     // Instance of FinancialProductLibrary to provide custom price and collateral requirement transformations to extend
     // the functionality of the EMP to support a wider range of financial products.
     FinancialProductLibrary public financialProductLibrary;
-
-    // Ancillary data to pass to the Optimistic Oracle system when requesting and fetching prices
-    bytes public ancillaryData;
 
     /****************************************
      *                EVENTS                *
@@ -224,9 +224,7 @@ contract PricelessPositionManager is Testable, Lockable {
         Testable(_timerAddress)
     {
         require(_expirationTimestamp > getCurrentTime());
-        require(
-            _getIdentifierWhitelist().isIdentifierSupported(_priceIdentifier)
-        );
+        require(_getIdentifierWhitelist().isIdentifierSupported(_priceIdentifier));
 
         expirationTimestamp = _expirationTimestamp;
         withdrawalLiveness = _withdrawalLiveness;
@@ -236,12 +234,10 @@ contract PricelessPositionManager is Testable, Lockable {
         ooReward = _ooReward;
         priceIdentifier = _priceIdentifier;
         ancillaryData = _ancillaryData;
+        finder = FinderInterface(_finderAddress);
 
         // Initialize the financialProductLibrary at the provided address.
-        financialProductLibrary = FinancialProductLibrary(
-            _financialProductLibraryAddress
-        );
-        finder = FinderInterface(_finderAddress);
+        financialProductLibrary = FinancialProductLibrary(_financialProductLibraryAddress);
     }
 
     /****************************************
@@ -395,8 +391,7 @@ contract PricelessPositionManager is Testable, Lockable {
         PositionData storage positionData = _getPositionData(msg.sender);
         require(
             collateralAmount.isGreaterThan(0) &&
-                collateralAmount.isLessThanOrEqual(positionData.collateral
-            )
+            collateralAmount.isLessThanOrEqual(positionData.collateral)
         );
 
         // Make sure the proposed expiration of this request is not post-expiry.
@@ -426,24 +421,20 @@ contract PricelessPositionManager is Testable, Lockable {
         PositionData storage positionData = _getPositionData(msg.sender);
         require(
             positionData.withdrawalRequestPassTimestamp != 0 &&
-                positionData.withdrawalRequestPassTimestamp <= getCurrentTime()
+            positionData.withdrawalRequestPassTimestamp <= getCurrentTime()
         );
 
         // If withdrawal request amount is > position collateral, then withdraw the full collateral amount.
-        // This situation is possible due to fees charged since the withdrawal was originally requested.
-        FixedPoint.Unsigned memory amountToWithdraw = positionData
-            .withdrawalRequestAmount;
-        if (
-            positionData.withdrawalRequestAmount.isGreaterThan(positionData.collateral)
-        ) {
+        FixedPoint.Unsigned memory amountToWithdraw;
+        if (positionData.withdrawalRequestAmount.isGreaterThan(positionData.collateral)) {
             amountToWithdraw = positionData.collateral;
+        }
+        else {
+            amountToWithdraw = positionData.withdrawalRequestAmount;
         }
 
         // Decrement the sponsor's collateral and global collateral amounts.
-        amountWithdrawn = _decrementCollateralBalances(
-            positionData,
-            amountToWithdraw
-        );
+        amountWithdrawn = _decrementCollateralBalances(positionData, amountToWithdraw);
 
         // Reset withdrawal request by setting withdrawal amount and withdrawal timestamp to 0.
         _resetWithdrawalRequest(positionData);
@@ -494,15 +485,10 @@ contract PricelessPositionManager is Testable, Lockable {
             "Insufficient collateral"
         );
 
-        require(
-            positionData.withdrawalRequestPassTimestamp == 0,
-            "Pending withdrawal"
-        );
+        require(positionData.withdrawalRequestPassTimestamp == 0, "Pending withdrawal");
+
         if (positionData.tokensOutstanding.isEqual(0)) {
-            require(
-                numTokens.isGreaterThanOrEqual(minSponsorTokens),
-                "Below minimum sponsor position"
-            );
+            require(numTokens.isGreaterThanOrEqual(minSponsorTokens), "Below minimum sponsor position");
             emit NewSponsor(msg.sender);
         }
 
@@ -510,10 +496,7 @@ contract PricelessPositionManager is Testable, Lockable {
         _incrementCollateralBalances(positionData, collateralAmount);
 
         // Add the number of tokens created to the position's outstanding tokens.
-        positionData.tokensOutstanding = positionData.tokensOutstanding.add(
-            numTokens
-        );
-
+        positionData.tokensOutstanding = positionData.tokensOutstanding.add(numTokens);
         totalTokensOutstanding = totalTokensOutstanding.add(numTokens);
 
         emit PositionCreated(
@@ -548,8 +531,7 @@ contract PricelessPositionManager is Testable, Lockable {
         require(numTokens.isLessThanOrEqual(positionData.tokensOutstanding));
 
         // Decrease the sponsors position tokens size. Ensure it is above the min sponsor size.
-        FixedPoint.Unsigned memory newTokenCount = positionData
-            .tokensOutstanding
+        FixedPoint.Unsigned memory newTokenCount = positionData.tokensOutstanding
             .sub(numTokens);
         require(newTokenCount.isGreaterThanOrEqual(minSponsorTokens));
         positionData.tokensOutstanding = newTokenCount;
@@ -586,9 +568,7 @@ contract PricelessPositionManager is Testable, Lockable {
         PositionData storage positionData = _getPositionData(msg.sender);
         require(!numTokens.isGreaterThan(positionData.tokensOutstanding));
 
-        FixedPoint.Unsigned memory fractionRedeemed = numTokens.div(
-            positionData.tokensOutstanding
-        );
+        FixedPoint.Unsigned memory fractionRedeemed = numTokens.div(positionData.tokensOutstanding);
         FixedPoint.Unsigned memory collateralRedeemed = fractionRedeemed.mul(positionData.collateral);
 
         // If redemption returns all tokens the sponsor has then we can delete their position. Else, downsize.
@@ -596,14 +576,10 @@ contract PricelessPositionManager is Testable, Lockable {
             amountWithdrawn = _deleteSponsorPosition(msg.sender);
         } else {
             // Decrement the sponsor's collateral and global collateral amounts.
-            amountWithdrawn = _decrementCollateralBalances(
-                positionData,
-                collateralRedeemed
-            );
+            amountWithdrawn = _decrementCollateralBalances(positionData,collateralRedeemed);
 
             // Decrease the sponsors position tokens size. Ensure it is above the min sponsor size.
-            FixedPoint.Unsigned memory newTokenCount = positionData
-                .tokensOutstanding
+            FixedPoint.Unsigned memory newTokenCount = positionData.tokensOutstanding
                 .sub(numTokens);
             require(
                 newTokenCount.isGreaterThanOrEqual(minSponsorTokens),
@@ -652,28 +628,22 @@ contract PricelessPositionManager is Testable, Lockable {
         }
 
         // Get caller's tokens balance and calculate amount of underlying entitled to them.
-        FixedPoint.Unsigned memory tokensToRedeem = FixedPoint.Unsigned(
-            tokenCurrency.balanceOf(msg.sender)
-        );
+        FixedPoint.Unsigned memory tokensToRedeem = FixedPoint.Unsigned(tokenCurrency.balanceOf(msg.sender));
+
         FixedPoint.Unsigned memory totalRedeemableCollateral = tokensToRedeem
             .mul(expiryPrice);
 
         // If the caller is a sponsor with outstanding collateral they are also entitled to their excess collateral after their debt.
         PositionData storage positionData = positions[msg.sender];
-        if (
-            positionData.collateral.isGreaterThan(0)
-        ) {
+        if (positionData.collateral.isGreaterThan(0)) {
             // Calculate the underlying entitled to a token sponsor. This is collateral - debt in underlying.
-            FixedPoint.Unsigned memory tokenDebtValueInCollateral = positionData
-                .tokensOutstanding
+            FixedPoint.Unsigned memory tokenDebtValueInCollateral = positionData.tokensOutstanding
                 .mul(expiryPrice);
-            FixedPoint.Unsigned
-                memory positionCollateral = positionData.collateral;
+            FixedPoint.Unsigned memory positionCollateral = positionData.collateral;
 
             // If the debt is greater than the remaining collateral, they cannot redeem anything.
-            FixedPoint.Unsigned
-                memory positionRedeemableCollateral = tokenDebtValueInCollateral
-                    .isLessThan(positionCollateral)
+            FixedPoint.Unsigned memory positionRedeemableCollateral =
+                tokenDebtValueInCollateral.isLessThan(positionCollateral)
                     ? positionCollateral.sub(tokenDebtValueInCollateral)
                     : FixedPoint.Unsigned(0);
 
@@ -731,7 +701,6 @@ contract PricelessPositionManager is Testable, Lockable {
     {
         contractState = ContractState.ExpiredPriceRequested;
 
-        // Final fees do not need to be paid when sending a request to the optimistic oracle.
         _requestOraclePrice_senderPays(expirationTimestamp);
 
         emit ContractExpired(msg.sender);
@@ -814,11 +783,8 @@ contract PricelessPositionManager is Testable, Lockable {
         PositionData storage positionData = _getPositionData(sponsor);
 
         // If the entire position is being removed, delete it instead.
-        if (
-            tokensToRemove.isEqual(positionData.tokensOutstanding) &&
-            positionData.collateral.isEqual(
-                collateralToRemove
-            )
+        if (tokensToRemove.isEqual(positionData.tokensOutstanding) &&
+            positionData.collateral.isEqual(collateralToRemove)
         ) {
             _deleteSponsorPosition(sponsor);
             return;
@@ -854,14 +820,8 @@ contract PricelessPositionManager is Testable, Lockable {
         FixedPoint.Unsigned memory startingGlobalCollateral = totalPositionCollateral;
 
         // Remove the collateral and outstanding from the overall total position.
-        FixedPoint.Unsigned memory remainingCollateral = positionToLiquidate
-            .collateral;
-        totalPositionCollateral = totalPositionCollateral.sub(
-            remainingCollateral
-        );
-        totalTokensOutstanding = totalTokensOutstanding.sub(
-            positionToLiquidate.tokensOutstanding
-        );
+        totalPositionCollateral = totalPositionCollateral.sub(positionToLiquidate.collateral);
+        totalTokensOutstanding = totalTokensOutstanding.sub(positionToLiquidate.tokensOutstanding);
 
         // Reset the sponsors position to have zero outstanding and collateral.
         delete positions[sponsor];
