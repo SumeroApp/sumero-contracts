@@ -86,16 +86,10 @@ contract Liquidatable is PricelessPositionManager {
     }
 
     // This struct is used in the `withdrawLiquidation` method that disperses liquidation and dispute rewards.
-    // `payToX` stores the total collateral to withdraw from the contract to pay X. This value might differ
-    // from `paidToX` due to precision loss between accounting for the `rawCollateral` versus the
-    // fee-adjusted collateral. These variables are stored within a struct to avoid the stack too deep error.
     struct RewardsData {
         FixedPoint.Unsigned payToSponsor;
         FixedPoint.Unsigned payToLiquidator;
         FixedPoint.Unsigned payToDisputer;
-        FixedPoint.Unsigned paidToSponsor;
-        FixedPoint.Unsigned paidToLiquidator;
-        FixedPoint.Unsigned paidToDisputer;
     }
 
     // Liquidations are unique by ID per sponsor
@@ -263,7 +257,7 @@ contract Liquidatable is PricelessPositionManager {
 
         // Starting values for the Position being liquidated. If withdrawal request amount is > position's collateral,
         // then set this to 0, otherwise set it to (startCollateral - withdrawal request amount).
-        FixedPoint.Unsigned memory startCollateral = positionToLiquidate.rawCollateral;
+        FixedPoint.Unsigned memory startCollateral = positionToLiquidate.collateral;
         FixedPoint.Unsigned memory startCollateralNetOfWithdrawal = FixedPoint
             .fromUnscaledUint(0);
         if (
@@ -528,25 +522,20 @@ contract Liquidatable is PricelessPositionManager {
 
             // Transfer rewards and debit collateral
             rawLiquidationCollateral = rawLiquidationCollateral.sub(rewards.payToLiquidator);
-            rewards.paidToLiquidator = rewards.payToLiquidator;
-
             rawLiquidationCollateral = rawLiquidationCollateral.sub(rewards.payToSponsor);
-            rewards.paidToSponsor = rewards.payToSponsor;
-            
             rawLiquidationCollateral = rawLiquidationCollateral.sub(rewards.payToDisputer);
-            rewards.paidToDisputer = rewards.payToDisputer;
 
             collateralCurrency.safeTransfer(
                 liquidation.disputer,
-                rewards.paidToDisputer.rawValue
+                rewards.payToDisputer.rawValue
             );
             collateralCurrency.safeTransfer(
                 liquidation.liquidator,
-                rewards.paidToLiquidator.rawValue
+                rewards.payToLiquidator.rawValue
             );
             collateralCurrency.safeTransfer(
                 liquidation.sponsor,
-                rewards.paidToSponsor.rawValue
+                rewards.payToSponsor.rawValue
             );
 
             // In the case of a failed dispute only the liquidator can withdraw.
@@ -556,11 +545,10 @@ contract Liquidatable is PricelessPositionManager {
 
             // Transfer rewards and debit collateral
             rawLiquidationCollateral = rawLiquidationCollateral.sub(rewards.payToLiquidator);
-            rewards.paidToLiquidator = rewards.payToLiquidator;
 
             collateralCurrency.safeTransfer(
                 liquidation.liquidator,
-                rewards.paidToLiquidator.rawValue
+                rewards.payToLiquidator.rawValue
             );
 
             // If the state is pre-dispute but time has passed liveness then there was no dispute. We represent this
@@ -571,19 +559,18 @@ contract Liquidatable is PricelessPositionManager {
 
             // Transfer rewards and debit collateral
             rawLiquidationCollateral = rawLiquidationCollateral.sub(rewards.payToLiquidator);
-            rewards.paidToLiquidator = rewards.payToLiquidator;
 
             collateralCurrency.safeTransfer(
                 liquidation.liquidator,
-                rewards.paidToLiquidator.rawValue
+                rewards.payToLiquidator.rawValue
             );
         }
 
         emit LiquidationWithdrawn(
             msg.sender,
-            rewards.paidToLiquidator.rawValue,
-            rewards.paidToDisputer.rawValue,
-            rewards.paidToSponsor.rawValue,
+            rewards.payToLiquidator.rawValue,
+            rewards.payToDisputer.rawValue,
+            rewards.payToSponsor.rawValue,
             liquidation.state,
             settlementPrice.rawValue
         );

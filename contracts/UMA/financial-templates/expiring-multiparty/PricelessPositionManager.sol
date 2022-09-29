@@ -51,9 +51,8 @@ contract PricelessPositionManager is Testable, Lockable {
         // Tracks pending withdrawal requests. A withdrawal request is pending if `withdrawalRequestPassTimestamp != 0`.
         uint256 withdrawalRequestPassTimestamp;
         FixedPoint.Unsigned withdrawalRequestAmount;
-        // Raw collateral value. This value should never be accessed directly -- always use _getFeeAdjustedCollateral().
-        // To add or remove collateral, use _addCollateral() and _removeCollateral().
-        FixedPoint.Unsigned rawCollateral;
+        // Collateral value.
+        FixedPoint.Unsigned collateral;
         // Tracks pending transfer position requests. A transfer position request is pending if `transferPositionRequestPassTimestamp != 0`.
         uint256 transferPositionRequestPassTimestamp;
     }
@@ -65,9 +64,8 @@ contract PricelessPositionManager is Testable, Lockable {
     // global collateralization ratio without iterating over all positions.
     FixedPoint.Unsigned public totalTokensOutstanding;
 
-    // Similar to the rawCollateral in PositionData, this value should not be used directly.
-    // _getFeeAdjustedCollateral(), _addCollateral() and _removeCollateral() must be used to access and adjust.
-    FixedPoint.Unsigned public rawTotalPositionCollateral;
+    // Total position collateral.
+    FixedPoint.Unsigned public totalPositionCollateral;
 
     // Synthetic token created by this contract.
     ExpandedIERC20 public tokenCurrency;
@@ -281,7 +279,7 @@ contract PricelessPositionManager is Testable, Lockable {
         noPendingWithdrawal(msg.sender)
         nonReentrant
     {
-        require(positions[newSponsorAddress].rawCollateral
+        require(positions[newSponsorAddress].collateral
             .isEqual(FixedPoint.fromUnscaledUint(0))
         );
         PositionData storage positionData = _getPositionData(msg.sender);
@@ -380,9 +378,6 @@ contract PricelessPositionManager is Testable, Lockable {
         emit Withdrawal(msg.sender, amountWithdrawn.rawValue);
 
         // Move collateral currency from contract to sender.
-        // Note: that we move the amount of collateral that is decreased from rawCollateral (inclusive of fees)
-        // instead of the user requested amount. This eliminates precision loss that could occur
-        // where the user withdraws more collateral than rawCollateral is decremented by.
         collateralCurrency.safeTransfer(msg.sender, amountWithdrawn.rawValue);
     }
 
@@ -400,7 +395,7 @@ contract PricelessPositionManager is Testable, Lockable {
         PositionData storage positionData = _getPositionData(msg.sender);
         require(
             collateralAmount.isGreaterThan(0) &&
-                collateralAmount.isLessThanOrEqual(positionData.rawCollateral
+                collateralAmount.isLessThanOrEqual(positionData.collateral
             )
         );
 
@@ -439,9 +434,9 @@ contract PricelessPositionManager is Testable, Lockable {
         FixedPoint.Unsigned memory amountToWithdraw = positionData
             .withdrawalRequestAmount;
         if (
-            positionData.withdrawalRequestAmount.isGreaterThan(positionData.rawCollateral)
+            positionData.withdrawalRequestAmount.isGreaterThan(positionData.collateral)
         ) {
-            amountToWithdraw = positionData.rawCollateral;
+            amountToWithdraw = positionData.collateral;
         }
 
         // Decrement the sponsor's collateral and global collateral amounts.
@@ -493,7 +488,7 @@ contract PricelessPositionManager is Testable, Lockable {
         // Either the new create ratio or the resultant position CR must be above the current GCR.
         require(
             (_checkCollateralization(
-                positionData.rawCollateral.add(collateralAmount),
+                positionData.collateral.add(collateralAmount),
                 positionData.tokensOutstanding.add(numTokens)
             ) || _checkCollateralization(collateralAmount, numTokens)),
             "Insufficient collateral"
@@ -594,7 +589,7 @@ contract PricelessPositionManager is Testable, Lockable {
         FixedPoint.Unsigned memory fractionRedeemed = numTokens.div(
             positionData.tokensOutstanding
         );
-        FixedPoint.Unsigned memory collateralRedeemed = fractionRedeemed.mul(positionData.rawCollateral);
+        FixedPoint.Unsigned memory collateralRedeemed = fractionRedeemed.mul(positionData.collateral);
 
         // If redemption returns all tokens the sponsor has then we can delete their position. Else, downsize.
         if (positionData.tokensOutstanding.isEqual(numTokens)) {
@@ -666,14 +661,14 @@ contract PricelessPositionManager is Testable, Lockable {
         // If the caller is a sponsor with outstanding collateral they are also entitled to their excess collateral after their debt.
         PositionData storage positionData = positions[msg.sender];
         if (
-            positionData.rawCollateral.isGreaterThan(0)
+            positionData.collateral.isGreaterThan(0)
         ) {
             // Calculate the underlying entitled to a token sponsor. This is collateral - debt in underlying.
             FixedPoint.Unsigned memory tokenDebtValueInCollateral = positionData
                 .tokensOutstanding
                 .mul(expiryPrice);
             FixedPoint.Unsigned
-                memory positionCollateral = positionData.rawCollateral;
+                memory positionCollateral = positionData.collateral;
 
             // If the debt is greater than the remaining collateral, they cannot redeem anything.
             FixedPoint.Unsigned
@@ -695,12 +690,12 @@ contract PricelessPositionManager is Testable, Lockable {
         // Take the min of the remaining collateral and the collateral "owed". If the contract is undercapitalized,
         // the caller will get as much collateral as the contract can pay out.
         FixedPoint.Unsigned memory payout = FixedPoint.min(
-            rawTotalPositionCollateral,
+            totalPositionCollateral,
             totalRedeemableCollateral
         );
 
         // Decrement total contract collateral and outstanding debt.
-        rawTotalPositionCollateral = rawTotalPositionCollateral.sub(payout);
+        totalPositionCollateral = totalPositionCollateral.sub(payout);
         amountWithdrawn = payout;
         totalTokensOutstanding = totalTokensOutstanding.sub(tokensToRedeem);
 
@@ -773,40 +768,6 @@ contract PricelessPositionManager is Testable, Lockable {
     }
 
     /**
-     * @notice Accessor method for a sponsor's collateral.
-     * @dev This is necessary because the struct returned by the positions() method shows
-     * rawCollateral, which isn't a user-readable value.
-     * @dev This method accounts for pending regular fees that have not yet been withdrawn from this contract, for
-     * example if the `lastPaymentTime != currentTime`.
-     * @param sponsor address whose collateral amount is retrieved.
-     * @return collateralAmount amount of collateral within a sponsors position.
-     */
-    function getCollateral(address sponsor)
-        external
-        view
-        nonReentrantView
-        returns (FixedPoint.Unsigned memory)
-    {
-        // Note: do a direct access to avoid the validity check.
-        return positions[sponsor].rawCollateral;
-    }
-
-    /**
-     * @notice Accessor method for the total collateral stored within the PricelessPositionManager.
-     * @return totalCollateral amount of all collateral within the Expiring Multi Party Contract.
-     * @dev This method accounts for pending regular fees that have not yet been withdrawn from this contract, for
-     * example if the `lastPaymentTime != currentTime`.
-     */
-    function totalPositionCollateral()
-        external
-        view
-        nonReentrantView
-        returns (FixedPoint.Unsigned memory)
-    {
-        return rawTotalPositionCollateral;
-    }
-
-    /**
      * @notice Accessor method to compute a transformed price using the finanicalProductLibrary specified at contract
      * deployment. If no library was provided then no modification to the price is done.
      * @param price input price to be transformed.
@@ -855,7 +816,7 @@ contract PricelessPositionManager is Testable, Lockable {
         // If the entire position is being removed, delete it instead.
         if (
             tokensToRemove.isEqual(positionData.tokensOutstanding) &&
-            positionData.rawCollateral.isEqual(
+            positionData.collateral.isEqual(
                 collateralToRemove
             )
         ) {
@@ -892,13 +853,13 @@ contract PricelessPositionManager is Testable, Lockable {
     {
         PositionData storage positionToLiquidate = _getPositionData(sponsor);
 
-        FixedPoint.Unsigned memory startingGlobalCollateral = rawTotalPositionCollateral;
+        FixedPoint.Unsigned memory startingGlobalCollateral = totalPositionCollateral;
 
         // Remove the collateral and outstanding from the overall total position.
-        FixedPoint.Unsigned memory remainingRawCollateral = positionToLiquidate
-            .rawCollateral;
-        rawTotalPositionCollateral = rawTotalPositionCollateral.sub(
-            remainingRawCollateral
+        FixedPoint.Unsigned memory remainingCollateral = positionToLiquidate
+            .collateral;
+        totalPositionCollateral = totalPositionCollateral.sub(
+            remainingCollateral
         );
         totalTokensOutstanding = totalTokensOutstanding.sub(
             positionToLiquidate.tokensOutstanding
@@ -911,7 +872,7 @@ contract PricelessPositionManager is Testable, Lockable {
 
         // Return fee-adjusted amount of collateral deleted from position.
         return
-            startingGlobalCollateral.sub(rawTotalPositionCollateral);
+            startingGlobalCollateral.sub(totalPositionCollateral);
     }
 
     function _getPositionData(address sponsor)
@@ -1023,7 +984,7 @@ contract PricelessPositionManager is Testable, Lockable {
         PositionData storage positionData,
         FixedPoint.Unsigned memory collateralAmount
     ) internal returns (FixedPoint.Unsigned memory) {
-        positionData.rawCollateral = positionData.rawCollateral.add(collateralAmount);
+        positionData.collateral = positionData.collateral.add(collateralAmount);
         return collateralAmount;
     }
 
@@ -1035,7 +996,7 @@ contract PricelessPositionManager is Testable, Lockable {
         PositionData storage positionData,
         FixedPoint.Unsigned memory collateralAmount
     ) internal returns (FixedPoint.Unsigned memory) {
-        positionData.rawCollateral = positionData.rawCollateral.sub(collateralAmount);
+        positionData.collateral = positionData.collateral.sub(collateralAmount);
         return collateralAmount;
     }
 
@@ -1046,7 +1007,7 @@ contract PricelessPositionManager is Testable, Lockable {
         PositionData storage positionData,
         FixedPoint.Unsigned memory collateralAmount
     ) internal returns (FixedPoint.Unsigned memory) {
-        positionData.rawCollateral = positionData.rawCollateral.sub(collateralAmount);
+        positionData.collateral = positionData.collateral.sub(collateralAmount);
         require(_checkPositionCollateralization(positionData), "CR below GCR");
         return collateralAmount;
     }
@@ -1077,7 +1038,7 @@ contract PricelessPositionManager is Testable, Lockable {
 
     function _onlyCollateralizedPosition(address sponsor) internal view {
         require(
-            positions[sponsor].rawCollateral.isGreaterThan(0),
+            positions[sponsor].collateral.isGreaterThan(0),
             "Position has no collateral"
         );
     }
@@ -1103,7 +1064,7 @@ contract PricelessPositionManager is Testable, Lockable {
     {
         return
             _checkCollateralization(
-                positionData.rawCollateral,
+                positionData.collateral,
                 positionData.tokensOutstanding
             );
     }
@@ -1115,7 +1076,7 @@ contract PricelessPositionManager is Testable, Lockable {
         FixedPoint.Unsigned memory numTokens
     ) private view returns (bool) {
         FixedPoint.Unsigned memory global = _getCollateralizationRatio(
-            rawTotalPositionCollateral,
+            totalPositionCollateral,
             totalTokensOutstanding
         );
         FixedPoint.Unsigned memory thisChange = _getCollateralizationRatio(
