@@ -985,6 +985,7 @@ contract PricelessPositionManager is Testable, Lockable {
         FixedPoint.Unsigned memory collateralAmount
     ) internal returns (FixedPoint.Unsigned memory) {
         positionData.collateral = positionData.collateral.add(collateralAmount);
+        totalPositionCollateral = totalPositionCollateral.add(collateralAmount);
         return collateralAmount;
     }
 
@@ -997,6 +998,7 @@ contract PricelessPositionManager is Testable, Lockable {
         FixedPoint.Unsigned memory collateralAmount
     ) internal returns (FixedPoint.Unsigned memory) {
         positionData.collateral = positionData.collateral.sub(collateralAmount);
+        totalPositionCollateral = totalPositionCollateral.sub(collateralAmount);
         return collateralAmount;
     }
 
@@ -1008,6 +1010,7 @@ contract PricelessPositionManager is Testable, Lockable {
         FixedPoint.Unsigned memory collateralAmount
     ) internal returns (FixedPoint.Unsigned memory) {
         positionData.collateral = positionData.collateral.sub(collateralAmount);
+        totalPositionCollateral = totalPositionCollateral.sub(collateralAmount);
         require(_checkPositionCollateralization(positionData), "CR below GCR");
         return collateralAmount;
     }
