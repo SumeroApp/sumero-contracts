@@ -828,8 +828,7 @@ contract PricelessPositionManager is Testable, Lockable {
         _decrementCollateralBalances(positionData, collateralToRemove);
 
         // Ensure that the sponsor will meet the min position size after the reduction.
-        FixedPoint.Unsigned memory newTokenCount = positionData
-            .tokensOutstanding
+        FixedPoint.Unsigned memory newTokenCount = positionData.tokensOutstanding
             .sub(tokensToRemove);
         require(
             newTokenCount.isGreaterThanOrEqual(minSponsorTokens),
@@ -838,8 +837,7 @@ contract PricelessPositionManager is Testable, Lockable {
         positionData.tokensOutstanding = newTokenCount;
 
         // Decrement the position's withdrawal amount.
-        positionData.withdrawalRequestAmount = positionData
-            .withdrawalRequestAmount
+        positionData.withdrawalRequestAmount = positionData.withdrawalRequestAmount
             .sub(withdrawalAmountToRemove);
 
         // Decrement the total outstanding tokens in the overall contract.

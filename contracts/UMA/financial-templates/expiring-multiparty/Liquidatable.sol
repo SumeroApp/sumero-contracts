@@ -50,9 +50,9 @@ contract Liquidatable is PricelessPositionManager {
         // Following variables determined by the position that is being liquidated:
         FixedPoint.Unsigned tokensOutstanding; // Synthetic tokens required to be burned by liquidator to initiate dispute
         FixedPoint.Unsigned lockedCollateral; // Collateral locked by contract and released upon expiry or post-dispute
-        // Amount of collateral being liquidated, which could be different from
-        // lockedCollateral if there were pending withdrawals at the time of liquidation
-        FixedPoint.Unsigned liquidatedCollateral;
+        // Amount of collateral locked in the liquidation if all pending slow withdrawals went through.
+        // This value is used during disputes instead of lockedCollateral.
+        FixedPoint.Unsigned lockedCollateralAfterWithdrawals;
         // Following variable set upon initiation of a dispute:
         address disputer; // Person who is disputing a liquidation
         // Following variable set upon a resolution of a dispute:
@@ -126,7 +126,7 @@ contract Liquidatable is PricelessPositionManager {
         uint256 indexed liquidationId,
         uint256 tokensOutstanding,
         uint256 lockedCollateral,
-        uint256 liquidatedCollateral,
+        uint256 lockedCollateralAfterWithdrawals,
         uint256 liquidationTime
     );
     event LiquidationDisputed(
@@ -295,7 +295,7 @@ contract Liquidatable is PricelessPositionManager {
 
         // These will be populated within the scope below.
         FixedPoint.Unsigned memory lockedCollateral;
-        FixedPoint.Unsigned memory liquidatedCollateral;
+        FixedPoint.Unsigned memory lockedCollateralAfterWithdrawals;
 
         // Scoping to get rid of a stack too deep error.
         {
@@ -306,16 +306,13 @@ contract Liquidatable is PricelessPositionManager {
             // The actual amount of collateral that gets moved to the liquidation.
             lockedCollateral = startCollateral.mul(ratio);
 
-            // For purposes of disputes, it's actually this liquidatedCollateral value that's used. This value is net of
-            // withdrawal requests.
-            liquidatedCollateral = startCollateralNetOfWithdrawal.mul(ratio);
+            // For purposes of disputes, it's actually this lockedCollateralAfterWithdrawals value that's used.
+            lockedCollateralAfterWithdrawals = startCollateralNetOfWithdrawal.mul(ratio);
 
             // Part of the withdrawal request is also removed. Ideally:
-            // liquidatedCollateral + withdrawalAmountToRemove = lockedCollateral.
-            FixedPoint.Unsigned
-                memory withdrawalAmountToRemove = positionToLiquidate
-                    .withdrawalRequestAmount
-                    .mul(ratio);
+            // lockedCollateralAfterWithdrawals + withdrawalAmountToRemove = lockedCollateral.
+            FixedPoint.Unsigned memory withdrawalAmountToRemove = positionToLiquidate.withdrawalRequestAmount
+                .mul(ratio);
             _reduceSponsorPosition(
                 sponsor,
                 tokensLiquidated,
@@ -339,7 +336,7 @@ contract Liquidatable is PricelessPositionManager {
                 liquidationTime: getCurrentTime(),
                 tokensOutstanding: tokensLiquidated,
                 lockedCollateral: lockedCollateral,
-                liquidatedCollateral: liquidatedCollateral,
+                lockedCollateralAfterWithdrawals: lockedCollateralAfterWithdrawals,
                 disputer: address(0),
                 settlementPrice: FixedPoint.fromUnscaledUint(0),
                 finalFee: finalFeeBond
@@ -368,7 +365,7 @@ contract Liquidatable is PricelessPositionManager {
             liquidationId,
             tokensLiquidated.rawValue,
             lockedCollateral.rawValue,
-            liquidatedCollateral.rawValue,
+            lockedCollateralAfterWithdrawals.rawValue,
             getCurrentTime()
         );
 
@@ -626,9 +623,8 @@ contract Liquidatable is PricelessPositionManager {
             .mul(_transformCollateralRequirement(liquidation.settlementPrice));
 
         // If the position has more than the required collateral it is solvent and the dispute is valid(liquidation is invalid)
-        // Note that this check uses the liquidatedCollateral not the lockedCollateral as this considers withdrawals.
-        bool disputeSucceeded = liquidation
-            .liquidatedCollateral
+        // Note that this check uses the lockedCollateralAfterWithdrawals not the lockedCollateral as this considers withdrawals.
+        bool disputeSucceeded = liquidation.lockedCollateralAfterWithdrawals
             .isGreaterThanOrEqual(requiredCollateral);
         liquidation.state = disputeSucceeded
             ? Status.DisputeSucceeded
