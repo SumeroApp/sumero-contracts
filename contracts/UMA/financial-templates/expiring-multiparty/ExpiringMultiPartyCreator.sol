@@ -47,7 +47,6 @@ OracleInterface
 OptimisticOracleInterface
 IdentifierWhitelistInterface
 
-FeePayer
 StoreInterface
 AdministrateeInterface
 FinancialProductLibrary

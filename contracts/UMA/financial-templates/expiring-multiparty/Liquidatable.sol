@@ -263,9 +263,7 @@ contract Liquidatable is PricelessPositionManager {
 
         // Starting values for the Position being liquidated. If withdrawal request amount is > position's collateral,
         // then set this to 0, otherwise set it to (startCollateral - withdrawal request amount).
-        FixedPoint.Unsigned memory startCollateral = _getFeeAdjustedCollateral(
-            positionToLiquidate.rawCollateral
-        );
+        FixedPoint.Unsigned memory startCollateral = positionToLiquidate.rawCollateral;
         FixedPoint.Unsigned memory startCollateralNetOfWithdrawal = FixedPoint
             .fromUnscaledUint(0);
         if (
@@ -335,10 +333,7 @@ contract Liquidatable is PricelessPositionManager {
         }
 
         // Add to the global liquidation collateral count.
-        _addCollateral(
-            rawLiquidationCollateral,
-            lockedCollateral.add(finalFeeBond)
-        );
+        rawLiquidationCollateral = rawLiquidationCollateral.add(lockedCollateral).add(finalFeeBond);
 
         // Construct liquidation object.
         // Note: All dispute-related values are zeroed out until a dispute occurs. liquidationId is the index of the new
@@ -353,9 +348,7 @@ contract Liquidatable is PricelessPositionManager {
                 tokensOutstanding: tokensLiquidated,
                 lockedCollateral: lockedCollateral,
                 liquidatedCollateral: liquidatedCollateral,
-                rawUnitCollateral: _convertToRawCollateral(
-                    FixedPoint.fromUnscaledUint(1)
-                ),
+                rawUnitCollateral: FixedPoint.fromUnscaledUint(1),
                 disputer: address(0),
                 settlementPrice: FixedPoint.fromUnscaledUint(0),
                 finalFee: finalFeeBond
@@ -428,10 +421,8 @@ contract Liquidatable is PricelessPositionManager {
         // Multiply by the unit collateral so the dispute bond is a percentage of the locked collateral after fees.
         FixedPoint.Unsigned memory disputeBondAmount = disputedLiquidation.lockedCollateral
             .mul(disputeBondPercentage)
-            .mul(
-                _getFeeAdjustedCollateral(disputedLiquidation.rawUnitCollateral)
-            );
-        _addCollateral(rawLiquidationCollateral, disputeBondAmount);
+            .mul(disputedLiquidation.rawUnitCollateral);
+        rawLiquidationCollateral = rawLiquidationCollateral.add(disputeBondAmount);
 
         // Request a price from Optimistic Oracle. Liquidation is pending dispute until OO returns a price.
         disputedLiquidation.state = Status.Disputed;
@@ -483,9 +474,7 @@ contract Liquidatable is PricelessPositionManager {
 
         // Calculate rewards as a function of the TRV.
         // Note: all payouts are scaled by the unit collateral value so all payouts are charged the fees pro rata.
-        FixedPoint.Unsigned memory feeAttenuation = _getFeeAdjustedCollateral(
-            liquidation.rawUnitCollateral
-        );
+        FixedPoint.Unsigned memory feeAttenuation = liquidation.rawUnitCollateral;
         FixedPoint.Unsigned memory settlementPrice = liquidation
             .settlementPrice;
         FixedPoint.Unsigned memory tokenRedemptionValue = liquidation
@@ -538,18 +527,14 @@ contract Liquidatable is PricelessPositionManager {
                 .sub(disputerDisputeReward);
 
             // Transfer rewards and debit collateral
-            rewards.paidToLiquidator = _removeCollateral(
-                rawLiquidationCollateral,
-                rewards.payToLiquidator
-            );
-            rewards.paidToSponsor = _removeCollateral(
-                rawLiquidationCollateral,
-                rewards.payToSponsor
-            );
-            rewards.paidToDisputer = _removeCollateral(
-                rawLiquidationCollateral,
-                rewards.payToDisputer
-            );
+            rawLiquidationCollateral = rawLiquidationCollateral.sub(rewards.payToLiquidator);
+            rewards.paidToLiquidator = rewards.payToLiquidator;
+
+            rawLiquidationCollateral = rawLiquidationCollateral.sub(rewards.payToSponsor);
+            rewards.paidToSponsor = rewards.payToSponsor;
+            
+            rawLiquidationCollateral = rawLiquidationCollateral.sub(rewards.payToDisputer);
+            rewards.paidToDisputer = rewards.payToDisputer;
 
             collateralCurrency.safeTransfer(
                 liquidation.disputer,
@@ -567,15 +552,11 @@ contract Liquidatable is PricelessPositionManager {
             // In the case of a failed dispute only the liquidator can withdraw.
         } else if (liquidation.state == Status.DisputeFailed) {
             // Pay LIQUIDATOR: collateral + dispute bond + returned final fee
-            rewards.payToLiquidator = collateral.add(disputeBondAmount).add(
-                finalFee
-            );
+            rewards.payToLiquidator = collateral.add(disputeBondAmount).add(finalFee);
 
             // Transfer rewards and debit collateral
-            rewards.paidToLiquidator = _removeCollateral(
-                rawLiquidationCollateral,
-                rewards.payToLiquidator
-            );
+            rawLiquidationCollateral = rawLiquidationCollateral.sub(rewards.payToLiquidator);
+            rewards.paidToLiquidator = rewards.payToLiquidator;
 
             collateralCurrency.safeTransfer(
                 liquidation.liquidator,
@@ -589,10 +570,8 @@ contract Liquidatable is PricelessPositionManager {
             rewards.payToLiquidator = collateral.add(finalFee);
 
             // Transfer rewards and debit collateral
-            rewards.paidToLiquidator = _removeCollateral(
-                rawLiquidationCollateral,
-                rewards.payToLiquidator
-            );
+            rawLiquidationCollateral = rawLiquidationCollateral.sub(rewards.payToLiquidator);
+            rewards.paidToLiquidator = rewards.payToLiquidator;
 
             collateralCurrency.safeTransfer(
                 liquidation.liquidator,
@@ -696,18 +675,6 @@ contract Liquidatable is PricelessPositionManager {
             liquidationId,
             disputeSucceeded
         );
-    }
-
-    function _pfc()
-        internal
-        view
-        override
-        returns (FixedPoint.Unsigned memory)
-    {
-        return
-            super._pfc().add(
-                _getFeeAdjustedCollateral(rawLiquidationCollateral)
-            );
     }
 
     function _getLiquidationData(address sponsor, uint256 liquidationId)

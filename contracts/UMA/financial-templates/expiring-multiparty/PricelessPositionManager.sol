@@ -12,9 +12,11 @@ import "../../common/interfaces/IERC20Standard.sol";
 
 import "../../oracle/interfaces/OptimisticOracleInterface.sol";
 import "../../oracle/interfaces/IdentifierWhitelistInterface.sol";
-import "../../oracle/implementation/Constants.sol";
 
-import "../common/FeePayer.sol";
+import "../../oracle/implementation/Constants.sol";
+import "../../common/implementation/Testable.sol";
+import "../../common/implementation/Lockable.sol";
+
 import "../common/financial-product-libraries/expiring-multiparty-libraries/FinancialProductLibrary.sol";
 
 /**
@@ -23,7 +25,7 @@ import "../common/financial-product-libraries/expiring-multiparty-libraries/Fina
  * on a price feed. On construction, deploys a new ERC20, managed by this contract, that is the synthetic token.
  */
 
-contract PricelessPositionManager is FeePayer {
+contract PricelessPositionManager is Testable, Lockable {
     using SafeMath for uint256;
     using FixedPoint for FixedPoint.Unsigned;
     using SafeERC20 for IERC20;
@@ -69,6 +71,12 @@ contract PricelessPositionManager is FeePayer {
 
     // Synthetic token created by this contract.
     ExpandedIERC20 public tokenCurrency;
+
+    // The collateral currency used to back the positions in this contract.
+    IERC20 public collateralCurrency;
+
+    // Finder contract used to look up addresses for UMA system contracts.
+    FinderInterface public finder;
 
     // Unique identifier for DVM price feed ticker.
     bytes32 public priceIdentifier;
@@ -214,8 +222,8 @@ contract PricelessPositionManager is FeePayer {
         address _financialProductLibraryAddress,
         bytes memory _ancillaryData
     )
-        FeePayer(_collateralAddress, _finderAddress, _timerAddress)
         nonReentrant()
+        Testable(_timerAddress)
     {
         require(_expirationTimestamp > getCurrentTime());
         require(
@@ -225,6 +233,7 @@ contract PricelessPositionManager is FeePayer {
         expirationTimestamp = _expirationTimestamp;
         withdrawalLiveness = _withdrawalLiveness;
         tokenCurrency = ExpandedIERC20(_tokenAddress);
+        collateralCurrency = IERC20(_collateralAddress);
         minSponsorTokens = _minSponsorTokens;
         ooReward = _ooReward;
         priceIdentifier = _priceIdentifier;
@@ -234,6 +243,7 @@ contract PricelessPositionManager is FeePayer {
         financialProductLibrary = FinancialProductLibrary(
             _financialProductLibraryAddress
         );
+        finder = FinderInterface(_finderAddress);
     }
 
     /****************************************
@@ -271,10 +281,8 @@ contract PricelessPositionManager is FeePayer {
         noPendingWithdrawal(msg.sender)
         nonReentrant
     {
-        require(
-            _getFeeAdjustedCollateral(
-                positions[newSponsorAddress].rawCollateral
-            ).isEqual(FixedPoint.fromUnscaledUint(0))
+        require(positions[newSponsorAddress].rawCollateral
+            .isEqual(FixedPoint.fromUnscaledUint(0))
         );
         PositionData storage positionData = _getPositionData(msg.sender);
         require(
@@ -392,9 +400,8 @@ contract PricelessPositionManager is FeePayer {
         PositionData storage positionData = _getPositionData(msg.sender);
         require(
             collateralAmount.isGreaterThan(0) &&
-                collateralAmount.isLessThanOrEqual(
-                    _getFeeAdjustedCollateral(positionData.rawCollateral)
-                )
+                collateralAmount.isLessThanOrEqual(positionData.rawCollateral
+            )
         );
 
         // Make sure the proposed expiration of this request is not post-expiry.
@@ -432,13 +439,9 @@ contract PricelessPositionManager is FeePayer {
         FixedPoint.Unsigned memory amountToWithdraw = positionData
             .withdrawalRequestAmount;
         if (
-            positionData.withdrawalRequestAmount.isGreaterThan(
-                _getFeeAdjustedCollateral(positionData.rawCollateral)
-            )
+            positionData.withdrawalRequestAmount.isGreaterThan(positionData.rawCollateral)
         ) {
-            amountToWithdraw = _getFeeAdjustedCollateral(
-                positionData.rawCollateral
-            );
+            amountToWithdraw = positionData.rawCollateral;
         }
 
         // Decrement the sponsor's collateral and global collateral amounts.
@@ -490,9 +493,7 @@ contract PricelessPositionManager is FeePayer {
         // Either the new create ratio or the resultant position CR must be above the current GCR.
         require(
             (_checkCollateralization(
-                _getFeeAdjustedCollateral(positionData.rawCollateral).add(
-                    collateralAmount
-                ),
+                positionData.rawCollateral.add(collateralAmount),
                 positionData.tokensOutstanding.add(numTokens)
             ) || _checkCollateralization(collateralAmount, numTokens)),
             "Insufficient collateral"
@@ -593,9 +594,7 @@ contract PricelessPositionManager is FeePayer {
         FixedPoint.Unsigned memory fractionRedeemed = numTokens.div(
             positionData.tokensOutstanding
         );
-        FixedPoint.Unsigned memory collateralRedeemed = fractionRedeemed.mul(
-            _getFeeAdjustedCollateral(positionData.rawCollateral)
-        );
+        FixedPoint.Unsigned memory collateralRedeemed = fractionRedeemed.mul(positionData.rawCollateral);
 
         // If redemption returns all tokens the sponsor has then we can delete their position. Else, downsize.
         if (positionData.tokensOutstanding.isEqual(numTokens)) {
@@ -667,18 +666,14 @@ contract PricelessPositionManager is FeePayer {
         // If the caller is a sponsor with outstanding collateral they are also entitled to their excess collateral after their debt.
         PositionData storage positionData = positions[msg.sender];
         if (
-            _getFeeAdjustedCollateral(positionData.rawCollateral).isGreaterThan(
-                0
-            )
+            positionData.rawCollateral.isGreaterThan(0)
         ) {
             // Calculate the underlying entitled to a token sponsor. This is collateral - debt in underlying.
             FixedPoint.Unsigned memory tokenDebtValueInCollateral = positionData
                 .tokensOutstanding
                 .mul(expiryPrice);
             FixedPoint.Unsigned
-                memory positionCollateral = _getFeeAdjustedCollateral(
-                    positionData.rawCollateral
-                );
+                memory positionCollateral = positionData.rawCollateral;
 
             // If the debt is greater than the remaining collateral, they cannot redeem anything.
             FixedPoint.Unsigned
@@ -700,12 +695,13 @@ contract PricelessPositionManager is FeePayer {
         // Take the min of the remaining collateral and the collateral "owed". If the contract is undercapitalized,
         // the caller will get as much collateral as the contract can pay out.
         FixedPoint.Unsigned memory payout = FixedPoint.min(
-            _getFeeAdjustedCollateral(rawTotalPositionCollateral),
+            rawTotalPositionCollateral,
             totalRedeemableCollateral
         );
 
         // Decrement total contract collateral and outstanding debt.
-        amountWithdrawn = _removeCollateral(rawTotalPositionCollateral, payout);
+        rawTotalPositionCollateral = rawTotalPositionCollateral.sub(payout);
+        amountWithdrawn = payout;
         totalTokensOutstanding = totalTokensOutstanding.sub(tokensToRedeem);
 
         emit SettleExpiredPosition(
@@ -741,7 +737,7 @@ contract PricelessPositionManager is FeePayer {
         contractState = ContractState.ExpiredPriceRequested;
 
         // Final fees do not need to be paid when sending a request to the optimistic oracle.
-        _requestOraclePrice_sponsorsPay(expirationTimestamp);
+        _requestOraclePrice_senderPays(expirationTimestamp);
 
         emit ContractExpired(msg.sender);
     }
@@ -756,7 +752,6 @@ contract PricelessPositionManager is FeePayer {
      */
     function emergencyShutdown()
         external
-        override
         onlyPreExpiration
         onlyOpenState
         nonReentrant
@@ -768,23 +763,13 @@ contract PricelessPositionManager is FeePayer {
         // Price requested at this time stamp. `settleExpired` can now withdraw at this timestamp.
         uint256 oldExpirationTimestamp = expirationTimestamp;
         expirationTimestamp = getCurrentTime();
-        _requestOraclePrice_sponsorsPay(expirationTimestamp);
+        _requestOraclePrice_senderPays(expirationTimestamp);
 
         emit EmergencyShutdown(
             msg.sender,
             oldExpirationTimestamp,
             expirationTimestamp
         );
-    }
-
-    /**
-     * @notice Theoretically supposed to pay fees and move money between margin accounts to make sure they
-     * reflect the NAV of the contract. However, this functionality doesn't apply to this contract.
-     * @dev This is supposed to be implemented by any contract that inherits `AdministrateeInterface` and callable
-     * only by the Governor contract. This method is therefore minimally implemented in this contract and does nothing.
-     */
-    function remargin() external override onlyPreExpiration nonReentrant {
-        return;
     }
 
     /**
@@ -803,7 +788,7 @@ contract PricelessPositionManager is FeePayer {
         returns (FixedPoint.Unsigned memory)
     {
         // Note: do a direct access to avoid the validity check.
-        return _getFeeAdjustedCollateral(positions[sponsor].rawCollateral);
+        return positions[sponsor].rawCollateral;
     }
 
     /**
@@ -818,7 +803,7 @@ contract PricelessPositionManager is FeePayer {
         nonReentrantView
         returns (FixedPoint.Unsigned memory)
     {
-        return _getFeeAdjustedCollateral(rawTotalPositionCollateral);
+        return rawTotalPositionCollateral;
     }
 
     /**
@@ -870,7 +855,7 @@ contract PricelessPositionManager is FeePayer {
         // If the entire position is being removed, delete it instead.
         if (
             tokensToRemove.isEqual(positionData.tokensOutstanding) &&
-            _getFeeAdjustedCollateral(positionData.rawCollateral).isEqual(
+            positionData.rawCollateral.isEqual(
                 collateralToRemove
             )
         ) {
@@ -907,10 +892,7 @@ contract PricelessPositionManager is FeePayer {
     {
         PositionData storage positionToLiquidate = _getPositionData(sponsor);
 
-        FixedPoint.Unsigned
-            memory startingGlobalCollateral = _getFeeAdjustedCollateral(
-                rawTotalPositionCollateral
-            );
+        FixedPoint.Unsigned memory startingGlobalCollateral = rawTotalPositionCollateral;
 
         // Remove the collateral and outstanding from the overall total position.
         FixedPoint.Unsigned memory remainingRawCollateral = positionToLiquidate
@@ -929,19 +911,7 @@ contract PricelessPositionManager is FeePayer {
 
         // Return fee-adjusted amount of collateral deleted from position.
         return
-            startingGlobalCollateral.sub(
-                _getFeeAdjustedCollateral(rawTotalPositionCollateral)
-            );
-    }
-
-    function _pfc()
-        internal
-        view
-        virtual
-        override
-        returns (FixedPoint.Unsigned memory)
-    {
-        return _getFeeAdjustedCollateral(rawTotalPositionCollateral);
+            startingGlobalCollateral.sub(rawTotalPositionCollateral);
     }
 
     function _getPositionData(address sponsor)
@@ -988,27 +958,6 @@ contract PricelessPositionManager is FeePayer {
             finder.getImplementationAddress(
                 OracleInterfaces.FinancialContractsAdmin
             );
-    }
-
-    // Requests a price for transformed `priceIdentifier` at `requestedTime` from the Oracle, socializing the cost of the OO proposer reward to sponsors.
-    function _requestOraclePrice_sponsorsPay(uint256 requestedTime) internal {
-        OptimisticOracleInterface optimisticOracle = _getOptimisticOracle();
-
-        // Increase token allowance to enable the optimistic oracle reward transfer.
-        collateralCurrency.safeIncreaseAllowance(
-            address(optimisticOracle),
-            ooReward.rawValue
-        );
-        optimisticOracle.requestPrice(
-            _transformPriceIdentifier(requestedTime),
-            requestedTime,
-            ancillaryData,
-            collateralCurrency,
-            ooReward.rawValue
-        );
-
-        // Apply haircut to all sponsors by decrementing the cumlativeFeeMultiplier by the amount lost from the final fee.
-        _adjustCumulativeFeeMultiplier(ooReward, _pfc());
     }
 
     // Requests a price for transformed `priceIdentifier` at `requestedTime` from the Oracle, charging the caller for the OO proposer reward.
@@ -1074,8 +1023,8 @@ contract PricelessPositionManager is FeePayer {
         PositionData storage positionData,
         FixedPoint.Unsigned memory collateralAmount
     ) internal returns (FixedPoint.Unsigned memory) {
-        _addCollateral(positionData.rawCollateral, collateralAmount);
-        return _addCollateral(rawTotalPositionCollateral, collateralAmount);
+        positionData.rawCollateral = positionData.rawCollateral.add(collateralAmount);
+        return collateralAmount;
     }
 
     // Ensure individual and global consistency when decrementing collateral balances. Returns the change to the
@@ -1086,8 +1035,8 @@ contract PricelessPositionManager is FeePayer {
         PositionData storage positionData,
         FixedPoint.Unsigned memory collateralAmount
     ) internal returns (FixedPoint.Unsigned memory) {
-        _removeCollateral(positionData.rawCollateral, collateralAmount);
-        return _removeCollateral(rawTotalPositionCollateral, collateralAmount);
+        positionData.rawCollateral = positionData.rawCollateral.sub(collateralAmount);
+        return collateralAmount;
     }
 
     // Ensure individual and global consistency when decrementing collateral balances. Returns the change to the position.
@@ -1097,9 +1046,9 @@ contract PricelessPositionManager is FeePayer {
         PositionData storage positionData,
         FixedPoint.Unsigned memory collateralAmount
     ) internal returns (FixedPoint.Unsigned memory) {
-        _removeCollateral(positionData.rawCollateral, collateralAmount);
+        positionData.rawCollateral = positionData.rawCollateral.sub(collateralAmount);
         require(_checkPositionCollateralization(positionData), "CR below GCR");
-        return _removeCollateral(rawTotalPositionCollateral, collateralAmount);
+        return collateralAmount;
     }
 
     // These internal functions are supposed to act identically to modifiers, but re-used modifiers
@@ -1128,8 +1077,7 @@ contract PricelessPositionManager is FeePayer {
 
     function _onlyCollateralizedPosition(address sponsor) internal view {
         require(
-            _getFeeAdjustedCollateral(positions[sponsor].rawCollateral)
-                .isGreaterThan(0),
+            positions[sponsor].rawCollateral.isGreaterThan(0),
             "Position has no collateral"
         );
     }
@@ -1155,7 +1103,7 @@ contract PricelessPositionManager is FeePayer {
     {
         return
             _checkCollateralization(
-                _getFeeAdjustedCollateral(positionData.rawCollateral),
+                positionData.rawCollateral,
                 positionData.tokensOutstanding
             );
     }
@@ -1167,7 +1115,7 @@ contract PricelessPositionManager is FeePayer {
         FixedPoint.Unsigned memory numTokens
     ) private view returns (bool) {
         FixedPoint.Unsigned memory global = _getCollateralizationRatio(
-            _getFeeAdjustedCollateral(rawTotalPositionCollateral),
+            rawTotalPositionCollateral,
             totalTokensOutstanding
         );
         FixedPoint.Unsigned memory thisChange = _getCollateralizationRatio(
