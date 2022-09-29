@@ -117,10 +117,10 @@ contract Liquidatable is PricelessPositionManager {
     // Percent of a Liquidation/Position's lockedCollateral to be deposited by a potential disputer
     // Represented as a multiplier, for example 1.5e18 = "150%" and 0.05e18 = "5%"
     FixedPoint.Unsigned public disputeBondPercentage;
-    // Percent of oraclePrice paid to sponsor in the Disputed state (i.e. following a successful dispute)
+    // Percent of liquidated collateral paid to sponsor in the Disputed state (i.e. following a successful dispute)
     // Represented as a multiplier, see above.
     FixedPoint.Unsigned public sponsorDisputeRewardPercentage;
-    // Percent of oraclePrice paid to disputer in the Disputed state (i.e. following a successful dispute)
+    // Percent of liquidated collateral paid to disputer in the Disputed state (i.e. following a successful dispute)
     // Represented as a multiplier, see above.
     FixedPoint.Unsigned public disputerDisputeRewardPercentage;
 
@@ -291,7 +291,7 @@ contract Liquidatable is PricelessPositionManager {
                 ),
                 "CR is more than max liq. price"
             );
-            // minCollateralPerToken >= startCollateralNetOfWithdrawal / startTokens.
+            // minCollateralPerToken <= startCollateralNetOfWithdrawal / startTokens.
             require(
                 minCollateralPerToken.mul(startTokens).isLessThanOrEqual(
                     startCollateralNetOfWithdrawal
@@ -372,14 +372,10 @@ contract Liquidatable is PricelessPositionManager {
         FixedPoint.Unsigned memory griefingThreshold = minSponsorTokens;
         if (
             positionToLiquidate.withdrawalRequestPassTimestamp > 0 && // The position is undergoing a slow withdrawal.
-            positionToLiquidate.withdrawalRequestPassTimestamp >
-            getCurrentTime() && // The slow withdrawal has not yet expired.
+            positionToLiquidate.withdrawalRequestPassTimestamp > getCurrentTime() && // The slow withdrawal has not yet expired.
             tokensLiquidated.isGreaterThanOrEqual(griefingThreshold) // The liquidated token count is above a "griefing threshold".
         ) {
-            positionToLiquidate
-                .withdrawalRequestPassTimestamp = getCurrentTime().add(
-                withdrawalLiveness
-            );
+            positionToLiquidate.withdrawalRequestPassTimestamp = getCurrentTime().add(withdrawalLiveness);
         }
 
         emit LiquidationCreated(
@@ -430,8 +426,7 @@ contract Liquidatable is PricelessPositionManager {
         );
 
         // Multiply by the unit collateral so the dispute bond is a percentage of the locked collateral after fees.
-        FixedPoint.Unsigned memory disputeBondAmount = disputedLiquidation
-            .lockedCollateral
+        FixedPoint.Unsigned memory disputeBondAmount = disputedLiquidation.lockedCollateral
             .mul(disputeBondPercentage)
             .mul(
                 _getFeeAdjustedCollateral(disputedLiquidation.rawUnitCollateral)
