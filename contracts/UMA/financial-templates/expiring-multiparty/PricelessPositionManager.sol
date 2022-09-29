@@ -870,9 +870,8 @@ contract PricelessPositionManager is Testable, Lockable {
 
         emit EndedSponsorPosition(sponsor);
 
-        // Return fee-adjusted amount of collateral deleted from position.
-        return
-            startingGlobalCollateral.sub(totalPositionCollateral);
+        // Return amount of collateral deleted from position.
+        return startingGlobalCollateral.sub(totalPositionCollateral);
     }
 
     function _getPositionData(address sponsor)

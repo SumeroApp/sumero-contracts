@@ -53,8 +53,6 @@ contract Liquidatable is PricelessPositionManager {
         // Amount of collateral being liquidated, which could be different from
         // lockedCollateral if there were pending withdrawals at the time of liquidation
         FixedPoint.Unsigned liquidatedCollateral;
-        // Unit value (starts at 1) that is used to track the fees per unit of collateral over the course of the liquidation.
-        FixedPoint.Unsigned rawUnitCollateral;
         // Following variable set upon initiation of a dispute:
         address disputer; // Person who is disputing a liquidation
         // Following variable set upon a resolution of a dispute:
@@ -342,7 +340,6 @@ contract Liquidatable is PricelessPositionManager {
                 tokensOutstanding: tokensLiquidated,
                 lockedCollateral: lockedCollateral,
                 liquidatedCollateral: liquidatedCollateral,
-                rawUnitCollateral: FixedPoint.fromUnscaledUint(1),
                 disputer: address(0),
                 settlementPrice: FixedPoint.fromUnscaledUint(0),
                 finalFee: finalFeeBond
@@ -414,8 +411,7 @@ contract Liquidatable is PricelessPositionManager {
 
         // Multiply by the unit collateral so the dispute bond is a percentage of the locked collateral after fees.
         FixedPoint.Unsigned memory disputeBondAmount = disputedLiquidation.lockedCollateral
-            .mul(disputeBondPercentage)
-            .mul(disputedLiquidation.rawUnitCollateral);
+            .mul(disputeBondPercentage);
         rawLiquidationCollateral = rawLiquidationCollateral.add(disputeBondAmount);
 
         // Request a price from Optimistic Oracle. Liquidation is pending dispute until OO returns a price.
@@ -467,30 +463,14 @@ contract Liquidatable is PricelessPositionManager {
         _settle(liquidationId, sponsor);
 
         // Calculate rewards as a function of the TRV.
-        // Note: all payouts are scaled by the unit collateral value so all payouts are charged the fees pro rata.
-        FixedPoint.Unsigned memory feeAttenuation = liquidation.rawUnitCollateral;
-        FixedPoint.Unsigned memory settlementPrice = liquidation
-            .settlementPrice;
-        FixedPoint.Unsigned memory tokenRedemptionValue = liquidation
-            .tokensOutstanding
-            .mul(settlementPrice)
-            .mul(feeAttenuation);
-        FixedPoint.Unsigned memory collateral = liquidation
-            .lockedCollateral
-            .mul(feeAttenuation);
-        FixedPoint.Unsigned
-            memory disputerDisputeReward = disputerDisputeRewardPercentage.mul(
-                tokenRedemptionValue
-            );
-        FixedPoint.Unsigned
-            memory sponsorDisputeReward = sponsorDisputeRewardPercentage.mul(
-                tokenRedemptionValue
-            );
-        FixedPoint.Unsigned memory disputeBondAmount = collateral.mul(
-            disputeBondPercentage
-        );
-        FixedPoint.Unsigned memory finalFee = liquidation.finalFee.mul(
-            feeAttenuation
+        FixedPoint.Unsigned memory tokenRedemptionValue = liquidation.tokensOutstanding
+            .mul(liquidation.settlementPrice);
+        FixedPoint.Unsigned memory disputerDisputeReward = disputerDisputeRewardPercentage
+            .mul(tokenRedemptionValue);
+        FixedPoint.Unsigned memory sponsorDisputeReward = sponsorDisputeRewardPercentage
+            .mul(tokenRedemptionValue);
+        FixedPoint.Unsigned memory disputeBondAmount = liquidation.lockedCollateral
+            .mul(disputeBondPercentage
         );
 
         // There are three main outcome states: either the dispute succeeded, failed or was not updated.
@@ -505,11 +485,11 @@ contract Liquidatable is PricelessPositionManager {
             // Pay DISPUTER: disputer reward + dispute bond + returned final fee
             rewards.payToDisputer = disputerDisputeReward
                 .add(disputeBondAmount)
-                .add(finalFee);
+                .add(liquidation.finalFee);
 
             // Pay SPONSOR: remaining collateral (collateral - TRV) + sponsor reward
             rewards.payToSponsor = sponsorDisputeReward.add(
-                collateral.sub(tokenRedemptionValue)
+                liquidation.lockedCollateral.sub(tokenRedemptionValue)
             );
 
             // Pay LIQUIDATOR: TRV - dispute reward - sponsor reward
@@ -541,7 +521,7 @@ contract Liquidatable is PricelessPositionManager {
             // In the case of a failed dispute only the liquidator can withdraw.
         } else if (liquidation.state == Status.DisputeFailed) {
             // Pay LIQUIDATOR: collateral + dispute bond + returned final fee
-            rewards.payToLiquidator = collateral.add(disputeBondAmount).add(finalFee);
+            rewards.payToLiquidator = liquidation.lockedCollateral.add(disputeBondAmount).add(liquidation.finalFee);
 
             // Transfer rewards and debit collateral
             rawLiquidationCollateral = rawLiquidationCollateral.sub(rewards.payToLiquidator);
@@ -555,7 +535,7 @@ contract Liquidatable is PricelessPositionManager {
             // state as a dispute failed and the liquidator can withdraw.
         } else if (liquidation.state == Status.NotDisputed) {
             // Pay LIQUIDATOR: collateral + returned final fee
-            rewards.payToLiquidator = collateral.add(finalFee);
+            rewards.payToLiquidator = liquidation.lockedCollateral.add(liquidation.finalFee);
 
             // Transfer rewards and debit collateral
             rawLiquidationCollateral = rawLiquidationCollateral.sub(rewards.payToLiquidator);
@@ -572,7 +552,7 @@ contract Liquidatable is PricelessPositionManager {
             rewards.payToDisputer.rawValue,
             rewards.payToSponsor.rawValue,
             liquidation.state,
-            settlementPrice.rawValue
+            liquidation.settlementPrice.rawValue
         );
 
         // Free up space after collateral is withdrawn by removing the liquidation object from the array.
