@@ -57,7 +57,6 @@ contract Liquidatable is PricelessPositionManager {
         address disputer; // Person who is disputing a liquidation
         // Following variable set upon a resolution of a dispute:
         FixedPoint.Unsigned settlementPrice; // Final price as determined by an Oracle following a dispute
-        FixedPoint.Unsigned finalFee;
     }
 
     // Define the contract's constructor parameters as a struct to enable more variables to be specified.
@@ -223,7 +222,6 @@ contract Liquidatable is PricelessPositionManager {
      * @param deadline abort the liquidation if the transaction is mined after this timestamp.
      * @return liquidationId ID of the newly created liquidation.
      * @return tokensLiquidated amount of synthetic tokens removed and liquidated from the `sponsor`'s position.
-     * @return finalFeeBond amount of collateral to be posted by liquidator and returned if not disputed successfully.
      */
     function createLiquidation(
         address sponsor,
@@ -237,8 +235,7 @@ contract Liquidatable is PricelessPositionManager {
         nonReentrant
         returns (
             uint256 liquidationId,
-            FixedPoint.Unsigned memory tokensLiquidated,
-            FixedPoint.Unsigned memory finalFeeBond
+            FixedPoint.Unsigned memory tokensLiquidated
         )
     {
         // Check that this transaction was mined pre-deadline.
@@ -290,9 +287,6 @@ contract Liquidatable is PricelessPositionManager {
             );
         }
 
-        // Compute final fee at time of liquidation.
-        finalFeeBond = ooReward;
-
         // These will be populated within the scope below.
         FixedPoint.Unsigned memory lockedCollateral;
         FixedPoint.Unsigned memory lockedCollateralAfterWithdrawals;
@@ -322,7 +316,7 @@ contract Liquidatable is PricelessPositionManager {
         }
 
         // Add to the global liquidation collateral count.
-        rawLiquidationCollateral = rawLiquidationCollateral.add(lockedCollateral).add(finalFeeBond);
+        rawLiquidationCollateral = rawLiquidationCollateral.add(lockedCollateral).add(ooReward);
 
         // Construct liquidation object.
         // Note: All dispute-related values are zeroed out until a dispute occurs. liquidationId is the index of the new
@@ -338,8 +332,7 @@ contract Liquidatable is PricelessPositionManager {
                 lockedCollateral: lockedCollateral,
                 lockedCollateralAfterWithdrawals: lockedCollateralAfterWithdrawals,
                 disputer: address(0),
-                settlementPrice: FixedPoint.fromUnscaledUint(0),
-                finalFee: finalFeeBond
+                settlementPrice: FixedPoint.fromUnscaledUint(0)
             })
         );
 
@@ -377,23 +370,23 @@ contract Liquidatable is PricelessPositionManager {
         );
         tokenCurrency.burn(tokensLiquidated.rawValue);
 
-        // Pull final fee from liquidator.
+        // Pull ooReward from liquidator.
         collateralCurrency.safeTransferFrom(
             msg.sender,
             address(this),
-            finalFeeBond.rawValue
+            ooReward.rawValue
         );
     }
 
     /**
      * @notice Disputes a liquidation, if the caller has enough collateral to post a dispute bond
-     * and pay a fixed final fee charged on each price request.
+     * and pay a fixed ooReward charged on each price request.
      * @dev Can only dispute a liquidation before the liquidation expires and if there are no other pending disputes.
      * This contract must be approved to spend at least the dispute bond amount of `collateralCurrency`. This dispute
      * bond amount is calculated from `disputeBondPercentage` times the collateral in the liquidation.
      * @param liquidationId of the disputed liquidation.
      * @param sponsor the address of the sponsor whose liquidation is being disputed.
-     * @return totalPaid amount of collateral charged to disputer (i.e. final fee bond + dispute bond).
+     * @return totalPaid amount of collateral charged to disputer (i.e. ooReward bond + dispute bond).
      */
     function dispute(uint256 liquidationId, address sponsor)
         external
@@ -425,7 +418,7 @@ contract Liquidatable is PricelessPositionManager {
             liquidationId,
             disputeBondAmount.rawValue
         );
-        totalPaid = disputeBondAmount.add(disputedLiquidation.finalFee);
+        totalPaid = disputeBondAmount.add(ooReward);
 
         // Transfer the dispute bond amount from the caller to this contract.
         collateralCurrency.safeTransferFrom(
@@ -479,10 +472,10 @@ contract Liquidatable is PricelessPositionManager {
         if (liquidation.state == Status.DisputeSucceeded) {
             // If the dispute is successful then all three users should receive rewards:
 
-            // Pay DISPUTER: disputer reward + dispute bond + returned final fee
+            // Pay DISPUTER: disputer reward + dispute bond + returned ooReward
             rewards.payToDisputer = disputerDisputeReward
                 .add(disputeBondAmount)
-                .add(liquidation.finalFee);
+                .add(ooReward);
 
             // Pay SPONSOR: remaining collateral (collateral - TRV) + sponsor reward
             rewards.payToSponsor = sponsorDisputeReward.add(
@@ -517,8 +510,8 @@ contract Liquidatable is PricelessPositionManager {
 
             // In the case of a failed dispute only the liquidator can withdraw.
         } else if (liquidation.state == Status.DisputeFailed) {
-            // Pay LIQUIDATOR: collateral + dispute bond + returned final fee
-            rewards.payToLiquidator = liquidation.lockedCollateral.add(disputeBondAmount).add(liquidation.finalFee);
+            // Pay LIQUIDATOR: collateral + dispute bond + returned ooReward
+            rewards.payToLiquidator = liquidation.lockedCollateral.add(disputeBondAmount).add(ooReward);
 
             // Transfer rewards and debit collateral
             rawLiquidationCollateral = rawLiquidationCollateral.sub(rewards.payToLiquidator);
@@ -531,8 +524,8 @@ contract Liquidatable is PricelessPositionManager {
             // If the state is pre-dispute but time has passed liveness then there was no dispute. We represent this
             // state as a dispute failed and the liquidator can withdraw.
         } else if (liquidation.state == Status.NotDisputed) {
-            // Pay LIQUIDATOR: collateral + returned final fee
-            rewards.payToLiquidator = liquidation.lockedCollateral.add(liquidation.finalFee);
+            // Pay LIQUIDATOR: collateral + returned ooReward
+            rewards.payToLiquidator = liquidation.lockedCollateral.add(ooReward);
 
             // Transfer rewards and debit collateral
             rawLiquidationCollateral = rawLiquidationCollateral.sub(rewards.payToLiquidator);
