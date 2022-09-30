@@ -220,8 +220,8 @@ contract PricelessPositionManager is Testable, Lockable {
         address _financialProductLibraryAddress,
         bytes memory _ancillaryData
     )
-        nonReentrant()
         Testable(_timerAddress)
+        nonReentrant()
     {
         require(_expirationTimestamp > getCurrentTime());
         require(_getIdentifierWhitelist().isIdentifierSupported(_priceIdentifier));
