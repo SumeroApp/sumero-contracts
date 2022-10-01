@@ -223,6 +223,8 @@ contract PricelessPositionManager is Testable, Lockable {
         Testable(_timerAddress)
         nonReentrant()
     {
+        finder = FinderInterface(_finderAddress);
+        
         require(_expirationTimestamp > getCurrentTime());
         require(_getIdentifierWhitelist().isIdentifierSupported(_priceIdentifier));
 
@@ -234,7 +236,6 @@ contract PricelessPositionManager is Testable, Lockable {
         ooReward = _ooReward;
         priceIdentifier = _priceIdentifier;
         ancillaryData = _ancillaryData;
-        finder = FinderInterface(_finderAddress);
 
         // Initialize the financialProductLibrary at the provided address.
         financialProductLibrary = FinancialProductLibrary(_financialProductLibraryAddress);
