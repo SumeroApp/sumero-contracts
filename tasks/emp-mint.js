@@ -31,7 +31,7 @@ task("emp-mint", "Mint the EMP")
     .addParam("collateralAmount", "The number of collateral tokens to collateralize the position with")
     .addParam("additionalCollateralRatio", "Additional collateral ratio (e.g. 0.15)")
     .setAction(
-        async (args, deployments) => {
+        async (args, hre) => {
             const { expect } = require('chai');
             const { deployer } = await getNamedAccounts();
             const { ethers } = require("hardhat")
@@ -127,7 +127,7 @@ task("emp-mint", "Mint the EMP")
             try {
                 mintEmpTx = await empInstance.create(collateralAmountObject, numTokensObject)
                 await mintEmpTx.wait()
-                txUrl = getTxUrl(deployments.getNetworkName(), mintEmpTx.hash)
+                txUrl = getTxUrl(hre.deployments.getNetworkName(), mintEmpTx.hash)
                 console.log("\nTransaction Receipt: \n", mintEmpTx)
                 if (txUrl != null) {
                     console.log(colors.yellow("\n", txUrl));

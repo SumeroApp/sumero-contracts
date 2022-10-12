@@ -16,7 +16,7 @@ task("add-liquidity", "Adds liquidity to the pool.")
     .addParam("amount2", "Token 2 Amount (in eth)")
     .addParam("address2", "Token 2 Address")
     .setAction(
-        async (args, deployments) => {
+        async (args, hre) => {
             const { deployer } = await getNamedAccounts();
             const { getTxUrl } = require('../utils/helper');
 
@@ -63,7 +63,7 @@ task("add-liquidity", "Adds liquidity to the pool.")
                 console.log(colors.blue("\nLiquidity Added to: " + args.token1 + " - " + args.token2 + " pair"));
                 // Print transaction details
                 console.log("\nTransaction Receipt: \n", tx)
-                const txUrl = getTxUrl(deployments.getNetworkName(), tx.hash);
+                const txUrl = getTxUrl(hre.deployments.getNetworkName(), tx.hash);
                 if (txUrl != null) {
                     console.log(txUrl);
                 }

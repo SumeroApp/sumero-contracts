@@ -5,7 +5,7 @@ task("erc20-approve", "Approves ERC20 tokens to the given account")
     .addParam("spender", "The account's address") // Router parameter
     .addParam("amount", "The amount to be approved")
     .setAction(
-        async (args, deployments, network) => {
+        async (args, hre) => {
             const { expect } = require('chai');
             const { deployer } = await hre.getNamedAccounts();
             const { getTxUrl } = require('../utils/helper');
@@ -34,7 +34,7 @@ task("erc20-approve", "Approves ERC20 tokens to the given account")
             console.log(tokenName + " Approved");
 
             console.log("\nTransaction Receipt: \n", tx)
-            const txUrl = getTxUrl(deployments.getNetworkName(), tx.hash);
+            const txUrl = getTxUrl(hre.deployments.getNetworkName(), tx.hash);
             if (txUrl != null) {
                 console.log(txUrl);
             }
