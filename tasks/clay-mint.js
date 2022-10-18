@@ -3,7 +3,7 @@ task("clay-mint", "Mints clay token to the given address")
     .addParam("account", "The account's address")
     .addParam("amount", "The amount to be minted")
     .setAction(
-        async (args, deployments) => {
+        async (args, hre) => {
             const { expect } = require('chai');
             const { deployer } = await hre.getNamedAccounts();
             const clayToken = await ethers.getContract("ClayToken", deployer);
@@ -19,7 +19,7 @@ task("clay-mint", "Mints clay token to the given address")
             expect(afterBalance.sub(beforeBalance)).eq(ethers.utils.parseUnits(amount, 'ether'));
 
             console.log("\nTransaction Receipt: \n", tx);
-            const txUrl = getTxUrl(deployments.getNetworkName(), tx.hash);
+            const txUrl = getTxUrl(hre.deployments.getNetworkName(), tx.hash);
             if (txUrl != null) {
                 console.log(txUrl);
             }

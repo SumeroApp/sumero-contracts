@@ -5,7 +5,7 @@ task("add-asset", "Adds assets to Asset Manager")
     .addParam("type", "Asset Type: emp,swap-pair or staking-reward")
     .addParam("address", "The address of the asset")
     .setAction(
-        async (args, deployments) => {
+        async (args, hre) => {
             const { expect } = require('chai');
             const { deployer } = await hre.getNamedAccounts();
             const { getTxUrl } = require('../utils/helper');
@@ -23,7 +23,7 @@ task("add-asset", "Adds assets to Asset Manager")
                     expect((await assetManager.idToVerifiedEmps(totalEMP)).addr).eq(ethers.utils.getAddress(args.address))
                     console.log(colors.blue("Emp successfully added!" + "Total EMP: " + totalEMP))
                     console.log("\nTransaction Receipt: \n", tx)
-                    txUrl = getTxUrl(deployments.getNetworkName(), tx.hash);
+                    txUrl = getTxUrl(hre.deployments.getNetworkName(), tx.hash);
                 } catch (error) {
                     console.log(colors.red("\n Adding EMP failed: ....."));
                     console.log(error);
@@ -38,7 +38,7 @@ task("add-asset", "Adds assets to Asset Manager")
                     expect((await assetManager.idToVerifiedSwapPairs(totalSwapPair)).addr).eq(ethers.utils.getAddress(args.address))
                     console.log(colors.blue("Swap pair successfully added!" + "Total swap pair: " + totalSwapPair))
                     console.log("\nTransaction Receipt: \n", tx)
-                    txUrl = getTxUrl(deployments.getNetworkName(), tx.hash);
+                    txUrl = getTxUrl(hre.deployments.getNetworkName(), tx.hash);
                 } catch (error) {
                     console.log(colors.red("\n Adding swap pair failed: ....."));
                     console.log(error)
@@ -54,7 +54,7 @@ task("add-asset", "Adds assets to Asset Manager")
                     console.log(colors.blue("Staking rewards successfully added!" + "Total staking reward: " + totalStakingReward))
 
                     console.log("\nTransaction Receipt: \n", tx)
-                    txUrl = getTxUrl(deployments.getNetworkName(), tx.hash);
+                    txUrl = getTxUrl(hre.deployments.getNetworkName(), tx.hash);
                 }
                 catch (error) {
                     console.log(colors.red("\n Adding staking reward failed: ....."));

@@ -3,7 +3,7 @@ task("create-lp", "Creates liquidity pools in Uniswap")
     .addParam("token1", "Address of the first token")
     .addParam("token2", "Address of the second token")
     .setAction(
-        async (args, deployments) => {
+        async (args, hre) => {
             const { expect } = require('chai');
             const { deployer } = await hre.getNamedAccounts();
             const { getTxUrl, getAddressUrl } = require('../utils/helper');
@@ -28,10 +28,10 @@ task("create-lp", "Creates liquidity pools in Uniswap")
                     pairAddress = await factory.getPair(args.token1, args.token2);
                     expect(pairAddress).to.equal(PAIR, "Pair address from router not matching with what's there in factory");
 
-                    const pairUrl = getAddressUrl(deployments.getNetworkName(), pairAddress);
+                    const pairUrl = getAddressUrl(hre.deployments.getNetworkName(), pairAddress);
                     console.log("\nTransaction Receipt: \n", tx)
 
-                    const txUrl = getTxUrl(deployments.getNetworkName(), tx.hash);
+                    const txUrl = getTxUrl(hre.deployments.getNetworkName(), tx.hash);
                     if (txUrl != null) {
                         console.log(txUrl)
                         console.log(pairUrl)
@@ -39,7 +39,7 @@ task("create-lp", "Creates liquidity pools in Uniswap")
                 }
                 else {
                     console.log(args.token1 + " - " + args.token2 + " Pair already exists! ")
-                    const pairUrl = getAddressUrl(deployments.getNetworkName(), pairAddress)
+                    const pairUrl = getAddressUrl(hre.deployments.getNetworkName(), pairAddress)
                     console.log(pairUrl)
                 }
             } catch (error) {
