@@ -21,6 +21,7 @@ const func = async function (hre) {
         Timer = { address: "0x0000000000000000000000000000000000000000" };
     }
 
+    // skipIfAlreadyDeployed is true, make it false if you want to force a re-deployment of EMPLib
     const EMPLib = await deploy("ExpiringMultiPartyLib", { from: deployer, log: true, skipIfAlreadyDeployed: true });
 
     await deploy("ExpiringMultiPartyCreator", {
