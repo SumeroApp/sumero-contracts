@@ -20,6 +20,7 @@ require("./tasks/emp-create");
 require("./tasks/emp-mint");
 require("./tasks/emp-expire");
 require("./tasks/emp-settle");
+require("./tasks/emp-request-withdrawal");
 require("./tasks/add-impl-to-finder");
 require("./tasks/create-lp");
 require("./tasks/setup-finder");
