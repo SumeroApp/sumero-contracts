@@ -37,12 +37,13 @@
     "chai": "^4.3.6",
     "chai-as-promised": "^7.1.1",
     "colors": "^1.4.0",
-    "dotenv": "^16.0.0",
+    "dotenv": "^16.0.3",
     "ethereum-waffle": "^3.4.0",
     "ethers": "^5.5.4",
     "ganache": "^7.0.2",
     "hardhat": "^2.9.1",
     "hardhat-deploy": "^0.10.5",
+    "hardhat-gas-reporter": "^1.0.9",
     "prettier": "^2.6.2",
     "prettier-plugin-solidity": "^1.0.0-beta.19"
   }
