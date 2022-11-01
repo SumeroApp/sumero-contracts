@@ -3,7 +3,7 @@ task("clay-approve", "Approves clay token to given account")
     .addParam("spender", "The account's address")
     .addParam("amount", "The amount to be approved")
     .setAction(
-        async (args, deployments) => {
+        async (args, hre) => {
             const { expect } = require('chai');
             const { deployer } = await hre.getNamedAccounts();
             const { getTxUrl } = require('../utils/helper');
@@ -24,7 +24,7 @@ task("clay-approve", "Approves clay token to given account")
             console.log("\nCLAY Approved");
 
             console.log("\nTransaction Receipt: \n", tx)
-            const txUrl = getTxUrl(deployments.getNetworkName(), tx.hash);
+            const txUrl = getTxUrl(hre.deployments.getNetworkName(), tx.hash);
             if (txUrl != null) {
                 console.log(txUrl);
             }

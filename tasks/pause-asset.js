@@ -7,7 +7,7 @@ task("pause-asset", "Pauses assets on asset manager")
     .addParam("type", "Asset Type: emp,swap-pair or staking-reward")
     .addParam("id", "Asset id")
     .setAction(
-        async (args, deployments) => {
+        async (args, hre) => {
             const { expect } = require('chai');
             const { deployer } = await hre.getNamedAccounts();
             const { getTxUrl } = require('../utils/helper');
@@ -25,7 +25,7 @@ task("pause-asset", "Pauses assets on asset manager")
                     expect((await assetManager.idToVerifiedEmps(args.id)).status).eq(1)
                     console.log("Emp successfully paused!")
                     console.log("\nTransaction Receipt: \n", tx)
-                    txUrl = getTxUrl(deployments.getNetworkName(), tx.hash);
+                    txUrl = getTxUrl(hre.deployments.getNetworkName(), tx.hash);
                 } catch (error) {
                     console.log(error)
                 }
@@ -39,7 +39,7 @@ task("pause-asset", "Pauses assets on asset manager")
                     expect((await assetManager.idToVerifiedSwapPairs(args.id)).status).eq(1)
                     console.log("Swap pair successfully paused!")
                     console.log("\nTransaction Receipt: \n", tx)
-                    txUrl = getTxUrl(deployments.getNetworkName(), tx.hash);
+                    txUrl = getTxUrl(hre.deployments.getNetworkName(), tx.hash);
                 } catch (error) {
                     console.log(error)
                 }
@@ -53,7 +53,7 @@ task("pause-asset", "Pauses assets on asset manager")
                     expect((await assetManager.idToVerifiedStakingRewards(args.id)).status).eq(1)
                     console.log("Staking rewards successfully paused!")
                     console.log("\nTransaction Receipt: \n", tx)
-                    txUrl = getTxUrl(deployments.getNetworkName(), tx.hash);
+                    txUrl = getTxUrl(hre.deployments.getNetworkName(), tx.hash);
                 } catch (error) {
                     console.log(error)
                 }

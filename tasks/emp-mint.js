@@ -25,13 +25,13 @@
  *      - globalCR => formatEther(rawGCR)/price     
  *      - position CR Ratio => collateralRequirement + 15%
  * */
-// npx hardhat emp-mint --emp-address <address> --collateral-amount <collateral-amount> --additional-collateral-ratio <additional collateral ratio (e.g. 0.15 => 15%)>
+// npx hardhat emp-mint --network <network-name> --emp-address <address> --collateral-amount <collateral-amount> --additional-collateral-ratio <additional collateral ratio (e.g. 0.15 => 15%)>
 task("emp-mint", "Mint the EMP")
     .addParam("empAddress", "Deployed EMP contract address")
     .addParam("collateralAmount", "The number of collateral tokens to collateralize the position with")
     .addParam("additionalCollateralRatio", "Additional collateral ratio (e.g. 0.15)")
     .setAction(
-        async (args, deployments) => {
+        async (args, hre) => {
             const { expect } = require('chai');
             const { deployer } = await getNamedAccounts();
             const { ethers } = require("hardhat")
@@ -47,15 +47,28 @@ task("emp-mint", "Mint the EMP")
             const signer0 = ethers.provider.getSigner(deployer);
 
             //---- Get EMP Contract--------------------
-            const { ExpiringMultiPartyEthers__factory } = require('@uma/contracts-node');
-            const empInstance = ExpiringMultiPartyEthers__factory.connect(args.empAddress, signer0);
+            const EMP = await hre.ethers.getContractFactory("contracts/UMA/financial-templates/expiring-multiparty/ExpiringMultiParty.sol:ExpiringMultiParty");
+            const empInstance = await EMP.attach(args.empAddress);
 
             //----- Fetch Price-------------------------
             const fetchUrl = "http://18.219.111.187/prices.json"
             let price = "";
             try {
-                const priceId = await empInstance.priceIdentifier();
-                const loweredUmaIdentitifer = (ethers.utils.parseBytes32String(priceId)).toLowerCase();
+                const hexlifiedPriceIdentifier = await empInstance.priceIdentifier();
+                const hexlifiedAncillaryData = await empInstance.ancillaryData();
+                let priceIdentifier = unhexlify(hexlifiedPriceIdentifier);
+
+                if (priceIdentifier == "NUMERICAL") {
+                    let maybePriceIdentifier = tryDecodeAncillaryDataSynthId(hexlifiedAncillaryData);
+                    if (!maybePriceIdentifier) {
+                        return undefined;
+                    }
+                    else {
+                        priceIdentifier = maybePriceIdentifier;
+                    }
+                }
+
+                const loweredUmaIdentitifer = priceIdentifier.toLowerCase();
                 const loweredIdentifier = priceIdentifierConversions[loweredUmaIdentitifer] || loweredUmaIdentitifer;
 
                 console.log("Fetching Price from Feed: ");
@@ -83,15 +96,14 @@ task("emp-mint", "Mint the EMP")
             console.log("Collateral Decimals -> " + syntheticDecimals);
 
             const minSponsorToken = ethers.utils.formatUnits(await empInstance.minSponsorTokens(), syntheticDecimals);
-            const totalPositionCollateral = ethers.BigNumber.from(await empInstance.rawTotalPositionCollateral());
+            const totalPositionCollateral = ethers.BigNumber.from(await empInstance.totalPositionCollateral());
             const totalTokensOutstanding = ethers.BigNumber.from(await empInstance.totalTokensOutstanding());
-            const cumulativeFeeMultiplier = ethers.BigNumber.from(await empInstance.cumulativeFeeMultiplier());
 
             const collateralRequirement = await empInstance.collateralRequirement();
             const additionalCollateralRatio = ethers.utils.parseUnits(args.additionalCollateralRatio, "ether");
             const positionCrRatio = ethers.BigNumber.from(collateralRequirement).add(additionalCollateralRatio);
 
-            const rawGCR = totalTokensOutstanding.isZero() ? ethers.BigNumber.from(0) : totalPositionCollateral.mul(cumulativeFeeMultiplier).div(totalTokensOutstanding);
+            const rawGCR = totalTokensOutstanding.isZero() ? ethers.BigNumber.from(0) : totalPositionCollateral.mul(ethers.utils.parseEther("1")).div(totalTokensOutstanding);
             const globalCR = (ethers.utils.formatUnits(rawGCR, 18)) / price;
             const actualCR = Math.max(Number(globalCR), Number(ethers.utils.formatEther(positionCrRatio)));
 
@@ -99,7 +111,6 @@ task("emp-mint", "Mint the EMP")
             console.log("Minimum Synthetic to be minted -> " + minSponsorToken);
             console.log("Total Position Collateral -> " + ethers.utils.formatUnits(totalPositionCollateral, syntheticDecimals));
             console.log("Total Outstanding Tokens -> " + ethers.utils.formatUnits(totalTokensOutstanding, syntheticDecimals));
-            console.log("Cumulative Fee Multiplier -> " + ethers.utils.formatEther(cumulativeFeeMultiplier));
 
             console.log("\nCollateralization Ratio: ");
             console.log("collateral Ratio -> " + ethers.utils.formatEther(collateralRequirement));
@@ -127,7 +138,7 @@ task("emp-mint", "Mint the EMP")
             try {
                 mintEmpTx = await empInstance.create(collateralAmountObject, numTokensObject)
                 await mintEmpTx.wait()
-                txUrl = getTxUrl(deployments.getNetworkName(), mintEmpTx.hash)
+                txUrl = getTxUrl(hre.deployments.getNetworkName(), mintEmpTx.hash)
                 console.log("\nTransaction Receipt: \n", mintEmpTx)
                 if (txUrl != null) {
                     console.log(colors.yellow("\n", txUrl));
@@ -138,5 +149,32 @@ task("emp-mint", "Mint the EMP")
             }
         }
     );
+
+function unhexlify(hexlified) {
+    const unhexed = ethers.utils.toUtf8String(hexlified);
+    const unpadded = unhexed.replace(/\0.*$/, "");
+    return unpadded;
+    // const hexed = ethers.utils.hexlify(ethers.utils.toUtf8Bytes(priceIdentifier));
+    // return hexed.padEnd(66, '0');
+}
+
+function tryDecodeAncillaryDataSynthId(hexlifiedAncillaryData) {
+    try {
+        let ancillaryData = unhexlify(hexlifiedAncillaryData);
+        // synthID: "DXY", q:....
+        let isolatedAndStripped = ancillaryData.split(',')[0].replace(/\s+/g, '');
+        if (isolatedAndStripped.substring(0, 8) != "synthID:") {
+            throw "ancillaryData does not start with 'synthID:'";
+        }
+        let quoted = isolatedAndStripped.substring(8);
+        let parsedIdentifier = JSON.parse(quoted);
+        console.log('decoded ancillaryData synthID to ' + parsedIdentifier);
+        return parsedIdentifier;
+    }
+    catch (e) {
+        console.log('Encountered NUMERICAL, but error decoding priceIdentifier from ancillaryData:', e);
+        return undefined;
+    }
+}
 
 module.exports = {};
