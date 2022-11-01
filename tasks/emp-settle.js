@@ -1,4 +1,4 @@
-// npx hardhat settle-emp --emp-address <address> --synthAddress <address> --network <network-name>
+// npx hardhat emp-settle --emp-address <address> --synthAddress <address> --network <network-name>
 
 task("emp-settle", "Settles emps")
     .addParam("empAddress", "Address of EMP contract")

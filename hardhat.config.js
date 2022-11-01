@@ -23,6 +23,7 @@ require("./tasks/emp-settle");
 require("./tasks/add-impl-to-finder");
 require("./tasks/create-lp");
 require("./tasks/setup-finder");
+require("hardhat-gas-reporter");
 
 const solcVersion = "0.8.0";
 
@@ -126,5 +127,12 @@ module.exports = {
     : undefined,
   etherscan: {
     apiKey: process.env.ETHERSCAN_API_KEY
-  }
+  },
+  gasReporter: {
+    enabled: true,
+    currency: "ETH",
+    coinmarketcap: process.env.COINMARKETCAP_API_KEY,
+    outputFile: "gas-report.txt",
+    noColors: true,
+  },
 };

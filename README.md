@@ -36,31 +36,18 @@ pnpm install
 
 When running commands below, make sure to enable the right version of node via `nvm use v16.14.0`.
 
-## Things to Know Before Deploying Sumero
+## Deploying Sumero Contracts
 
-1. While deploying UniswapV2, change the init code hash in UniswapV2Library.sol according to the network and deployment.
-    - Call the pairCodeHash() function in the factory after deployment to get the init code hash.
-    - It uses type(UniswapV2Pair).creationCode to calculate the hash.
+Document on How to Deploy Sumero? - https://globalaccesslabs.quip.com/WfKjATOLADOw/Deployment-Guide-Smart-Contracts
 
-Read more about creationCode / initcode / bytecode in solidity / eth.
+Things to keep in mind:
+Currently optimizer is set to 20 runs, which makes the deployment go through (it's a cheaper deploy for us), but users would have to pay more for when interacting with the contract (expensive for them).
 
-2. USD Coin has a decimal place of 6. Other ERC20 tokens usually have 18 decimal places.
-
-3. Uniswap Error UniswapV2: INSUFFICIENT_OUTPUT_AMOUNT. The liquidity maintained by pools is incorrect. // TODO
-
-## Deployment
-
-UMA's EMPC (ExpiringMultiPartyCreator)
-
-1. Deploy using script deploy_empc which is dependent on Finder.sol, TokenFactory.sol and Timer.sol (Timer is zero_address for live network)
-
-2. Deployment of EMPCLib was failing due to Out of gas errors and max code size exceeded.
-
-3. Reducing the optimizer runs (to 200) made the deployment go through, but users would have to pay more for using the contracts.
+    This means it is a trade-off parameter between code size (deploy cost) and code execution cost (cost after deployment). A “runs” parameter of “1” will produce short but expensive code. In contrast, a larger “runs” parameter will produce longer but more gas efficient code.
 
 ## Hardhat
 
-1.  hardhat.config.js is the main configuration file
+1. hardhat.config.js is the main configuration file
 
 2. This command runs the hardhat network on *localhost*, compiles the contracts and runs the deployment scripts in the deploy folder using *hardhat-deploy* plugin.
 
@@ -89,6 +76,10 @@ UMA's EMPC (ExpiringMultiPartyCreator)
 
         npx hardhat deploy --network kovan --tags ClayBonds
 
+6. Test the contracts and store the gas report in [gas-report.txt](./gas-report.txt)
+
+        npx hardhat test
+
 7. Fork details ->
     Variable HARDHAT_FORK in .env manages the forking details. If it's an empty string, hardhat network does not add any forking details to HRE. Otherwise it adds the forking network details at hre.config.networks.hardhat.forking . e.g. HARDHAT_FORK="kovan". running npx hardhat node would fork the "kovan" network and run locally, along with adding the forking details.
 
@@ -106,47 +97,13 @@ UMA's EMPC (ExpiringMultiPartyCreator)
     APPROVED_SWAP_PAIRs='[]'
     APPROVED_STAKING_REWARDs='[]'
     ETHERSCAN_API_KEY='9K49VNXGEATGF9MYU57MGAEEV952MEAYCD'
+    COINMARKETCAP_API_KEY="SAMPLE-KEY"
 
 NOTE: Deployment scripts are to be used for deployment to Networks like Kovan, Ropsten, Mainnet etc. Make sure HARDHAT_FORK is pointing to correct network before deployment. Tests folder to be used for local testing before deployment.
 
-## Kovan Deployment Details
-----
+## Deployment Details
 
-    old_kovan: {
-        deployer: "0x8D9656505A20C9562488bfa6EA0d1eF6B12966d7",
-        CLAY_TOKEN: "0x64C597aBf737Ec2551dfbd3c492dA7da1Bf06a98",
-        UNISWAP_FACTORY: "0xc88D40380C75231862776C61f67a77030A64946e",
-        UNISWAP_ROUTER: "0xF502CBB71AB6C41E5B93640d4fF2f6945490C7a0",
-        WETH: "0xd0A1E359811322d97991E03f863a0C30C2cF029C",
-        USDC: "0xc2569dd7d0fd715b054fbf16e75b001e5c0c1115",
-        USDC_CLAY_PAIR: "0x3Be8FaEc0E14f705Bbb0B3a453a7298a0B7DF4b8",
-        UMA_EMP: "0xb94a77000651c3cb9cdf2c34f465e2260e8eeb77",
-        CLAY_BONDS: "0x40c5e2b5854565c9411AEA13c16D41B3E83396f0"
-    }
-
-    kovan: {
-        deployer: "0x8D9656505A20C9562488bfa6EA0d1eF6B12966d7",
-        CLAY_TOKEN: "0xE0544883f42Dc1812528234ea8B2b7687d8FA38A",
-        UNISWAP_FACTORY: "0xc88D40380C75231862776C61f67a77030A64946e",
-        UNISWAP_ROUTER: "0xF502CBB71AB6C41E5B93640d4fF2f6945490C7a0",
-        WETH: "0xd0A1E359811322d97991E03f863a0C30C2cF029C",
-        USDC: "0xb7a4F3E9097C08dA09517b5aB877F7a917224ede",
-        ASSET_MANAGER: "0x06F2026d87F09344dF3F868C0b27dD6620fcFD16",
-        UMA_EMP_CREATOR: "0x9a689BfD9f3a963b20d5ba4Ed7ed0b7bE16CfCcB",
-        CLAY_BONDS: "0xc26eE6e643ae7554aeeF5bCff3e66798674c9FfF",
-    }
-
-    ASSET_MANAGER_ASSETS
-
-    EMPs
-    0x5405053DEa9e2A0e7F265D085C9a4A34C4E969a1
-    0xf074dd25A248a7D329BaB6DDf37D8d588989078c
-
-    SwapPairs
-    0x995b62fC9681db170e5312229acF7250F91DF719
-
-    StakingRewards
-    0x7A16395c9566B4678B8f166bEcC2AbCae41f3DbC
+You'll find all deployment details on quip [here](https://globalaccesslabs.quip.com/IXnROEyJUmOC/Deployment-Details)
 
 ## Verify Contracts on Etherscan
 
@@ -199,43 +156,15 @@ UMA provides us with following:
 
 We use `Expiring Multi Party Creator (EMPC) Contract` to create derivates i.e. `Expiring Multi Party (EMP) Contract` . These synths are also known as swaps since they are usually between 2 parties for a given currency and price. They expire at a certain time.
 
-Steps to mint new synths: 
+Look at this doc on how to create new synths - https://globalaccesslabs.quip.com/XpQcA36SBxoe/Creating-a-Novel-Synthetic-Asset-using-the-NUMERICAL-identifier
 
-1. Deploy a new EMP contract with parameters to launch a `synth` using EMPC contract.
-    - Call function creatExpiringMultiParty() on EMPC
+How to deploy EMPC and EMP contracts? - https://globalaccesslabs.quip.com/WfKjATOLADOw/Deployment-Guide-Smart-Contracts#temp:C:OAQf38e5c0e0ff941b0b240e49c8
 
-    - Can call creatExpiringMultiParty() using either
-        -  [community builder](syntheticbuilder.xyz)
-        -  [launch-emp](https://github.com/UMAprotocol/launch-emp) repo (NOT WORKING!?)
-        - Using our own hardhat script (TODO) 
-
-    - Important Parameters
-        - An approved collateral token (e.g. kovan USDC, mainnet WETH)
-        - An approved price identifier (e.g. ethVIX/USDC). Therse are approved via UIMPs UMA Improvement Proposals
-        - Minimum Collateral Amount
-
-    - EMP contract is deployed along with a SyntheticToken Contract 
-        - This is your actual synth, but is managed via EMP
-        - Get SyntheticToken address from event `CreatedExpiringMultiParty` in transaction logs of EMPC's creatExpiringMultiParty()
-
-
-2. Once an EMP contract has been deployed. Initial tokens can be minted by using the `create()` function on EMP contract. (https://docs.umaproject.org/build-walkthrough/minting-etherscan#checking-your-position)
-    - Before calling create() function
-        - Approve collateral for EMP contract
-        - Calculate GCR (Global Collateralization Ratio) for 1st time minting
-            - GCR = total Collateral / total tokens
-            - GCR = (rawTotalPositionCollateral * cumulativeFeeMultiplier) / totalTokensOutstanding
-        - calculate minimum no. of tokens (i.e. minSponorTokens)
-        - calculate minimum no. of collateral (i.e. numOfTokensToMint * GCR = amountOfCollateral)
-    - TODO: The create function mints synthetic tokens for a given amount of collateral!?? But need to understand the significance of GCR, Collateral, minSponsorTokens
-
-
-Anyone can dispute a transaction on UMA's DVM. The DVM looks at historical prices of oracle that is disputed, and a voting mechanism decides if the dispute is correct or incorrect. That's why UMA calls it an optimistic oracle.
-
-Expiring Synthetic Tokens - https://docs.umaproject.org/synthetic-tokens/expiring-synthetic-tokens
-
-node index.js --gasprice 50 --mnemonic "acquire ship bacon pumpkin jazz poverty junk leader bean frown merry artist" --priceFeedIdentifier USDETH --collateralAddress "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2" --expirationTimestamp "1650026236" --syntheticName "TEST Dollar [WETH Apr 2022]" --syntheticSymbol "TST-ETH-APR22" --minSponsorTokens "100"
-
+EMP Tasks:
+1. [emp-create.js](./tasks/emp-create.js) - Deploys a new EMP contract
+2. [emp-mint.js](./tasks/emp-mint.js) - Mints (opens a new sponsor position) for a given EMP
+3. [emp-expire.js](./tasks/emp-expire.js) - Expires an EMP
+4. [emp-settle.js](./tasks/emp-settle.js) - Settle's expired EMP
 
 ## Asset Manager
 
