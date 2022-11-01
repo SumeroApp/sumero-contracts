@@ -76,7 +76,7 @@ Currently optimizer is set to 20 runs, which makes the deployment go through (it
 
         npx hardhat deploy --network kovan --tags ClayBonds
 
-6. Test the contracts and stores the gas report in [gas-report.txt](./gas-report.txt)
+6. Test the contracts and store the gas report in [gas-report.txt](./gas-report.txt)
 
         npx hardhat test
 
