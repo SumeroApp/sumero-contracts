@@ -1,4 +1,4 @@
-// npx hardhat emp-request-withdrawal --emp-address <address> --collateral-amount <collateral-amount> --network <network-name?
+// npx hardhat emp-request-withdrawal --emp-address <address> --collateral-amount <collateral-amount> --network <network-name>
 task("emp-request-withdrawal", "Requests withdrawal")
     .addParam("empAddress", "Deployed EMP contract address")
     .addParam("collateralAmount", "The number of collateral tokens to collateralize the position with")
@@ -67,7 +67,7 @@ task("emp-request-withdrawal", "Requests withdrawal")
             console.log("Expiration Timestamp -> " + expirationTimestamp);
             console.log("Collateral Ratio -> " + ethers.utils.formatEther(collateralRequirement));
             console.log("Withdrawal Liveness -> ", withdrawalLiveness.toNumber())
-            console.log("Total Position Collateral ->", totalPositionCollateral.rawValue)
+            console.log("Total Position Collateral ->", ethers.utils.formatEther(collateralReqtotalPositionCollateral.rawValue))
             console.log("Collateral Currency -> " + collateralCurrency);
             console.log("Collateral Decimals -> " + syntheticDecimals);
             console.log("Collateral Deposited -> " + collateralDeposited)
@@ -97,7 +97,7 @@ task("emp-request-withdrawal", "Requests withdrawal")
 
             console.log(colors.blue("\n Requesting Witdrawal: ....."));
             try {
-                const requestWithdrawalTx = await empInstance.requestWithdrawal(collateralAmountObject);
+                // const requestWithdrawalTx = await empInstance.requestWithdrawal(collateralAmountObject);
                 const receipt = await requestWithdrawalTx.wait();
                 console.log("\nTransaction Receipt: \n", receipt)
 

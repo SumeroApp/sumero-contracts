@@ -1,4 +1,6 @@
 const hre = require("hardhat");
+const { ethers } = require("hardhat");
+const fetch = require('node-fetch');
 
 // Network Helpers
 function isLocalNetwork() {
@@ -79,6 +81,73 @@ function getAddressUrl(network, url) {
     return null;
 }
 
+// Price Identifier Helper
+function unhexlify(hexlified) {
+    const unhexed = ethers.utils.toUtf8String(hexlified);
+    const unpadded = unhexed.replace(/\0.*$/, "");
+    return unpadded;
+    // const hexed = ethers.utils.hexlify(ethers.utils.toUtf8Bytes(priceIdentifier));
+    // return hexed.padEnd(66, '0');
+}
+
+function tryDecodeAncillaryDataSynthId(hexlifiedAncillaryData) {
+    try {
+        let ancillaryData = unhexlify(hexlifiedAncillaryData);
+        // synthID: "DXY", q:....
+        let isolatedAndStripped = ancillaryData.split(',')[0].replace(/\s+/g, '');
+        if (isolatedAndStripped.substring(0, 8) != "synthID:") {
+            throw "ancillaryData does not start with 'synthID:'";
+        }
+        let quoted = isolatedAndStripped.substring(8);
+        let parsedIdentifier = JSON.parse(quoted);
+        console.log('decoded ancillaryData synthID to ' + parsedIdentifier);
+        return parsedIdentifier;
+    }
+    catch (e) {
+        console.log('Encountered NUMERICAL, but error decoding priceIdentifier from ancillaryData:', e);
+        return undefined;
+    }
+}
+
+function getConvertedPriceIdentifier(hexlifiedPriceIdentifier, hexlifiedAncillaryData) {
+    const priceIdentifierConversions = { // maps Uma price identifiers to the price server's identifiers. Only needed if they don't already match.
+        'btc/usd': 'btcusd'
+    }
+    let priceIdentifier = unhexlify(hexlifiedPriceIdentifier);
+
+    if (priceIdentifier == "NUMERICAL") {
+        let maybePriceIdentifier = tryDecodeAncillaryDataSynthId(hexlifiedAncillaryData);
+        if (!maybePriceIdentifier) {
+            return undefined;
+        }
+        else {
+            priceIdentifier = maybePriceIdentifier;
+        }
+    }
+
+    const loweredUmaIdentitifer = priceIdentifier.toLowerCase();
+    return priceIdentifierConversions[loweredUmaIdentitifer] || loweredUmaIdentitifer;
+}
+
+async function getPriceFromIdentifier(hexlifiedPriceIdentifier, hexlifiedAncillaryData) {
+    let price = "";
+    const fetchUrl = "http://18.219.111.187/prices.json";
+    const loweredIdentifier = getConvertedPriceIdentifier(hexlifiedPriceIdentifier, hexlifiedAncillaryData);
+
+    console.log("Fetching Price from Feed: ");
+
+    const responseData = await fetch(fetchUrl)
+        .then((response) => {
+            return response.json();
+        });
+
+    price = responseData[loweredIdentifier];
+    if (!price || price === "") throw "Fetch Price Feed Empty";
+
+    console.log(loweredIdentifier + ": " + price);
+    return price;
+}
+
 module.exports = {
     isLocalNetwork,
     isForkedNetwork,
@@ -88,5 +157,6 @@ module.exports = {
     getWethAddressOrThrow,
     getUsdcOrThrow,
     isZeroAddress,
-    getAddressUrl
+    getAddressUrl,
+    getPriceFromIdentifier
 }
