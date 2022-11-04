@@ -79,12 +79,14 @@ contract ClayBonds is ERC20("zClay Token", "zCLAY"), Ownable {
         view
         returns (uint256 daysLeftToMaturationDate)
     {
-        if (maturationDate < block.timestamp) {
+        uint256 _maturationDate = maturationDate;
+        uint256 _blockTimestamp = block.timestamp;
+        if (_maturationDate < _blockTimestamp) {
             return 0; // just return 0 instead of dealing with negatives
         }
         // calculate days remaining till maturation day
         daysLeftToMaturationDate =
-            (maturationDate - block.timestamp) /
+            (_maturationDate - _blockTimestamp) /
             (1 days);
     }
 
@@ -95,7 +97,8 @@ contract ClayBonds is ERC20("zClay Token", "zCLAY"), Ownable {
     {
         // Total Percentage Reward => dailyYieldPercent * daysLeftToMaturationDate
         // adding 1 here to consider interest for the current ongoing day
-        rewardPercent = dailyYieldPercent * (daysLeftToMaturationDate + 1);
+        uint256 _dailyYieldPercent = dailyYieldPercent;
+        rewardPercent = _dailyYieldPercent * (daysLeftToMaturationDate + 1);
     }
 
     function getReward(uint256 _amount, uint256 _rewardPercent)
@@ -139,10 +142,11 @@ contract ClayBonds is ERC20("zClay Token", "zCLAY"), Ownable {
         require(success, "ClayBonds: TRANSFER_FAILED");
         _mint(msg.sender, bondAmount);
 
-        totalBondDeposits = totalBondDeposits + bondAmount;
+        uint256 _totalBondDeposits = totalBondDeposits + bondAmount;
+        uint256 _maximumBondRewards = maximumBondRewards;
 
         require(
-            totalBondDeposits < maximumBondRewards,
+            _totalBondDeposits < _maximumBondRewards,
             "ClayBonds: MAX_BOND_REWARD_POOL_REACHED"
         );
 
