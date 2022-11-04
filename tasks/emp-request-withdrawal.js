@@ -50,10 +50,6 @@ task("emp-request-withdrawal", "Requests withdrawal")
             const updatedCollateral = collateralDeposited - withdrawAmount;
             const calculatedPositionCR = (updatedCollateral / tokenOutstanding) / price;
 
-            console.log(tokenOutstanding);
-            console.log(collateralDeposited);
-            console.log(totalPositionCollateral);
-
             console.log("\nEMP Withdrawal Details: ");
             console.log("\n");
             console.log("Current Time -> " + currentTime);
@@ -73,7 +69,7 @@ task("emp-request-withdrawal", "Requests withdrawal")
             console.log("Future Collateral: " + ethers.utils.formatUnits(updatedCollateral, syntheticDecimals))
             console.log("Future Calculated Position CR -> " + calculatedPositionCR)
 
-            if (calculatedPositionCR < collateralRequirement) {
+            if (calculatedPositionCR < ethers.utils.formatEther(collateralRequirement)) {
                 console.log("Calculated CR can't be less than the position CR");
                 console.log("Position CR " + ethers.utils.formatEther(collateralRequirement) + "  Calculated position cr: " + calculatedPositionCR)
 
@@ -93,7 +89,7 @@ task("emp-request-withdrawal", "Requests withdrawal")
 
             console.log(colors.blue("\n Requesting Witdrawal: ....."));
             try {
-                // const requestWithdrawalTx = await empInstance.requestWithdrawal(collateralAmountObject);
+                const requestWithdrawalTx = await empInstance.requestWithdrawal(collateralAmountObject);
                 const receipt = await requestWithdrawalTx.wait();
                 console.log("\nTransaction Receipt: \n", receipt)
 
