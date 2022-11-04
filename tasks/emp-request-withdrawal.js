@@ -2,40 +2,28 @@
 task("emp-request-withdrawal", "Requests withdrawal")
     .addParam("empAddress", "Deployed EMP contract address")
     .addParam("collateralAmount", "The number of collateral tokens to collateralize the position with")
-    .addParam("priceFeed", "Price feed of EMP")
     .setAction(
         async (args, hre) => {
-            const { expect } = require('chai');
             const { deployer } = await getNamedAccounts();
             const { ethers } = require("hardhat")
-            const { getTxUrl } = require('../utils/helper');
-            const fetch = require('node-fetch');
+            const helper = require('../utils/helper');
             const colors = require('colors');
 
             //---- Get Ethers Signer-------------------
             const signer0 = ethers.provider.getSigner(deployer);
 
             //---- Get EMP Contract--------------------
-            const { ExpiringMultiPartyEthers__factory } = require('@uma/contracts-node');
-            const empInstance = ExpiringMultiPartyEthers__factory.connect(args.empAddress, signer0);
+            const EMP = await hre.ethers.getContractFactory("contracts/UMA/financial-templates/expiring-multiparty/ExpiringMultiParty.sol:ExpiringMultiParty");
+            const empInstance = await EMP.attach(args.empAddress);
 
             //----- Fetch Price-------------------------
-            const fetchUrl = "http://18.219.111.187/prices.json"
-
-            let price = "";
+            let price = ""
             try {
-
-                console.log("Fetching Price from Feed: ");
-
-                const responseData = await fetch(fetchUrl)
-                    .then((response) => {
-                        return response.json();
-                    });
-
-                price = responseData[args.priceFeed];
-                if (!price || price === "") throw "Fetch Price Feed Empty";
-                console.log(args.priceFeed + ": " + price)
-            } catch (error) {
+                const hexlifiedPriceIdentifier = await empInstance.priceIdentifier();
+                const hexlifiedAncillaryData = await empInstance.ancillaryData();
+                price = await helper.getPriceFromIdentifier(hexlifiedPriceIdentifier, hexlifiedAncillaryData);
+            }
+            catch (error) {
                 console.log(colors.red("\n Fetch Price Feed Error. Mint EMP Task Failed: ....."));
                 console.log(error);
                 return;
@@ -47,37 +35,45 @@ task("emp-request-withdrawal", "Requests withdrawal")
             const syntheticDecimals = await empInstance._getSyntheticDecimals(collateralCurrency);
             const collateralRequirement = ethers.BigNumber.from(await empInstance.collateralRequirement());
             const positions = await empInstance.positions(deployer);
-            const tokenOutstanding = positions.tokensOutstanding;
-            const collateralDeposited = positions[3]
-            const cumulativeFeeMultiplier = ethers.BigNumber.from("1000000000000000000");
+            const tokenOutstanding = positions.tokensOutstanding[0];
+            const collateralDeposited = positions.collateral[0];
             const withdrawalLiveness = await empInstance.withdrawalLiveness();
             const currentTime = Math.floor(Date.now() / 1000);
             const expirationTimestamp = await empInstance.expirationTimestamp();
             const totalPositionCollateral = await empInstance.totalPositionCollateral();
 
             const totalTokensOutstanding = ethers.BigNumber.from(await empInstance.totalTokensOutstanding());
-            const rawGCR = totalTokensOutstanding.isZero() ? ethers.BigNumber.from(0) : (totalPositionCollateral.rawValue).mul(cumulativeFeeMultiplier).div(totalTokensOutstanding);
+            const rawGCR = totalTokensOutstanding.isZero() ? ethers.BigNumber.from(0) : totalPositionCollateral.mul(ethers.utils.parseEther("1")).div(totalTokensOutstanding);
             const globalCR = (ethers.utils.formatUnits(rawGCR, 18)) / price;
-            const withdrawAmount = (args.collateralAmount) * (10 ** 6)
+            const withdrawAmount = ethers.utils.parseUnits(args.collateralAmount.toString(), syntheticDecimals);
 
             const updatedCollateral = collateralDeposited - withdrawAmount;
             const calculatedPositionCR = (updatedCollateral / tokenOutstanding) / price;
 
+            console.log(tokenOutstanding);
+            console.log(collateralDeposited);
+            console.log(totalPositionCollateral);
+
+            console.log("\nEMP Withdrawal Details: ");
+            console.log("\n");
             console.log("Current Time -> " + currentTime);
             console.log("Expiration Timestamp -> " + expirationTimestamp);
-            console.log("Collateral Ratio -> " + ethers.utils.formatEther(collateralRequirement));
-            console.log("Withdrawal Liveness -> ", withdrawalLiveness.toNumber())
-            console.log("Total Position Collateral ->", ethers.utils.formatEther(collateralReqtotalPositionCollateral.rawValue))
+            console.log("Liquidation Collateral Ratio -> " + ethers.utils.formatEther(collateralRequirement));
+            console.log("Withdrawal Liveness -> ", withdrawalLiveness.toNumber());
+            console.log("\n");
             console.log("Collateral Currency -> " + collateralCurrency);
-            console.log("Collateral Decimals -> " + syntheticDecimals);
-            console.log("Collateral Deposited -> " + collateralDeposited)
-            console.log("Withdraw Amount -> " + args.collateralAmount)
-            console.log("Updated Collateral: " + updatedCollateral)
-            console.log("Token Outstanding -> " + tokenOutstanding)
-            console.log("Global CR(GCR) -> " + globalCR);
-            console.log("Calculated  Position CR -> " + calculatedPositionCR)
+            console.log("Withdraw Amount -> " + ethers.utils.formatUnits(withdrawAmount, syntheticDecimals));
+            console.log("Total Position Collateral -> " + ethers.utils.formatUnits(totalPositionCollateral, syntheticDecimals));
+            console.log("User Deposited Collateral -> " + ethers.utils.formatUnits(collateralDeposited, syntheticDecimals));
+            console.log("Token Outstanding -> " + ethers.utils.formatUnits(tokenOutstanding, syntheticDecimals))
+            console.log("Global CR (GCR) -> " + globalCR);
 
-            if (calculatedPositionCR < ethers.utils.formatEther(collateralRequirement)) {
+
+            console.log("\nDetails if withdrawal goes through: ");
+            console.log("Future Collateral: " + ethers.utils.formatUnits(updatedCollateral, syntheticDecimals))
+            console.log("Future Calculated Position CR -> " + calculatedPositionCR)
+
+            if (calculatedPositionCR < collateralRequirement) {
                 console.log("Calculated CR can't be less than the position CR");
                 console.log("Position CR " + ethers.utils.formatEther(collateralRequirement) + "  Calculated position cr: " + calculatedPositionCR)
 
@@ -101,7 +97,7 @@ task("emp-request-withdrawal", "Requests withdrawal")
                 const receipt = await requestWithdrawalTx.wait();
                 console.log("\nTransaction Receipt: \n", receipt)
 
-                const txUrl = getTxUrl(deployments.getNetworkName(), requestWithdrawalTx.hash);
+                const txUrl = helper.getTxUrl(deployments.getNetworkName(), requestWithdrawalTx.hash);
                 if (txUrl != null) {
                     console.log(txUrl);
                 }
