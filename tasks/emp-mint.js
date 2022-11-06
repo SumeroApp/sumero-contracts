@@ -34,14 +34,9 @@ task("emp-mint", "Mint the EMP")
         async (args, hre) => {
             const { expect } = require('chai');
             const { deployer } = await getNamedAccounts();
-            const { ethers } = require("hardhat")
-            const { getTxUrl } = require('../utils/helper');
-            const fetch = require('node-fetch');
+            const { ethers } = require("hardhat");
+            const helper = require('../utils/helper');
             const colors = require('colors');
-
-            const priceIdentifierConversions = { // maps Uma price identifiers to the price server's identifiers. Only needed if they don't already match.
-                'btc/usd': 'btcusd'
-            }
 
             //---- Get Ethers Signer-------------------
             const signer0 = ethers.provider.getSigner(deployer);
@@ -51,37 +46,13 @@ task("emp-mint", "Mint the EMP")
             const empInstance = await EMP.attach(args.empAddress);
 
             //----- Fetch Price-------------------------
-            const fetchUrl = "http://18.219.111.187/prices.json"
-            let price = "";
+            let price = ""
             try {
                 const hexlifiedPriceIdentifier = await empInstance.priceIdentifier();
                 const hexlifiedAncillaryData = await empInstance.ancillaryData();
-                let priceIdentifier = unhexlify(hexlifiedPriceIdentifier);
-
-                if (priceIdentifier == "NUMERICAL") {
-                    let maybePriceIdentifier = tryDecodeAncillaryDataSynthId(hexlifiedAncillaryData);
-                    if (!maybePriceIdentifier) {
-                        return undefined;
-                    }
-                    else {
-                        priceIdentifier = maybePriceIdentifier;
-                    }
-                }
-
-                const loweredUmaIdentitifer = priceIdentifier.toLowerCase();
-                const loweredIdentifier = priceIdentifierConversions[loweredUmaIdentitifer] || loweredUmaIdentitifer;
-
-                console.log("Fetching Price from Feed: ");
-
-                const responseData = await fetch(fetchUrl)
-                    .then((response) => {
-                        return response.json();
-                    });
-
-                price = responseData[loweredIdentifier];
-                if (!price || price === "") throw "Fetch Price Feed Empty";
-                console.log(loweredIdentifier + ": " + price)
-            } catch (error) {
+                price = await helper.getPriceFromIdentifier(hexlifiedPriceIdentifier, hexlifiedAncillaryData);
+            }
+            catch (error) {
                 console.log(colors.red("\n Fetch Price Feed Error. Mint EMP Task Failed: ....."));
                 console.log(error);
                 return;
@@ -133,12 +104,12 @@ task("emp-mint", "Mint the EMP")
             // await usdcInstance.allocateTo(deployer, ethers.utils.parseUnits(collateralAmount.toString(), syntheticDecimals))
             // await usdcInstance.approve(empAddress, ethers.utils.parseUnits(collateralAmount.toString(), syntheticDecimals)) 
 
-            let mintEmpTx
-            let txUrl
+            let mintEmpTx;
+            let txUrl;
             try {
                 mintEmpTx = await empInstance.create(collateralAmountObject, numTokensObject)
                 await mintEmpTx.wait()
-                txUrl = getTxUrl(hre.deployments.getNetworkName(), mintEmpTx.hash)
+                txUrl = helper.getTxUrl(hre.deployments.getNetworkName(), mintEmpTx.hash)
                 console.log("\nTransaction Receipt: \n", mintEmpTx)
                 if (txUrl != null) {
                     console.log(colors.yellow("\n", txUrl));
@@ -149,32 +120,5 @@ task("emp-mint", "Mint the EMP")
             }
         }
     );
-
-function unhexlify(hexlified) {
-    const unhexed = ethers.utils.toUtf8String(hexlified);
-    const unpadded = unhexed.replace(/\0.*$/, "");
-    return unpadded;
-    // const hexed = ethers.utils.hexlify(ethers.utils.toUtf8Bytes(priceIdentifier));
-    // return hexed.padEnd(66, '0');
-}
-
-function tryDecodeAncillaryDataSynthId(hexlifiedAncillaryData) {
-    try {
-        let ancillaryData = unhexlify(hexlifiedAncillaryData);
-        // synthID: "DXY", q:....
-        let isolatedAndStripped = ancillaryData.split(',')[0].replace(/\s+/g, '');
-        if (isolatedAndStripped.substring(0, 8) != "synthID:") {
-            throw "ancillaryData does not start with 'synthID:'";
-        }
-        let quoted = isolatedAndStripped.substring(8);
-        let parsedIdentifier = JSON.parse(quoted);
-        console.log('decoded ancillaryData synthID to ' + parsedIdentifier);
-        return parsedIdentifier;
-    }
-    catch (e) {
-        console.log('Encountered NUMERICAL, but error decoding priceIdentifier from ancillaryData:', e);
-        return undefined;
-    }
-}
 
 module.exports = {};
