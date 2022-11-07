@@ -60,9 +60,14 @@ module.exports = {
       accounts: accounts('goerli'),
       chainId: 5,
     },
+    'truffle-dashboard': {
+      live: true,
+      url: "http://localhost:24012/rpc"
+    }
   }),
   solidity: {
     compilers: [
+      // For Uniswap contracts
       {
         version: "0.6.12",
         settings: {
@@ -73,32 +78,32 @@ module.exports = {
         },
       },
       {
-        version: "0.8.0",
+        version: "0.8.16",
         settings: {
           optimizer: {
             enabled: true,
-            runs: 20,
+            runs: 200,
           }
         },
       },
-      {
-        version: "0.8.1",
-        settings: {
-          optimizer: {
-            enabled: true,
-            runs: 20,
-          }
-        },
-      },
-      {
-        version: "0.8.9",
-        settings: {
-          optimizer: {
-            enabled: true,
-            runs: 20,
-          }
-        },
-      }
+      // {
+      //   version: "0.8.1",
+      //   settings: {
+      //     optimizer: {
+      //       enabled: true,
+      //       runs: 20,
+      //     }
+      //   },
+      // },
+      // {
+      //   version: "0.8.9",
+      //   settings: {
+      //     optimizer: {
+      //       enabled: true,
+      //       runs: 20,
+      //     }
+      //   },
+      // }
     ],
     // overrides: {
     //   "contracts/UMA/financial-templates/expiring-multiparty/ExpiringMultiPartyLib.sol": {
