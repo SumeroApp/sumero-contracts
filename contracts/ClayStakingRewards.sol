@@ -57,13 +57,14 @@ contract ClayStakingRewards is Ownable, ReentrancyGuard, Pausable {
     }
 
     function rewardPerToken() public view returns (uint256) {
-        if (_totalSupply == 0) {
+        uint256 memoryTotalSupply = _totalSupply;
+        if (memoryTotalSupply == 0) {
             return rewardPerTokenStored;
         }
         return
             rewardPerTokenStored +
             ((rewardRate * (block.timestamp - lastUpdateTime) * 1e18) /
-                _totalSupply);
+                memoryTotalSupply);
     }
 
     function earned(address _account) public view returns (uint256) {
@@ -78,9 +79,10 @@ contract ClayStakingRewards is Ownable, ReentrancyGuard, Pausable {
     modifier updateReward(address _account) {
         rewardPerTokenStored = rewardPerToken();
         lastUpdateTime = block.timestamp;
+        uint256 _rewardPerTokenStored = rewardPerTokenStored;
 
         rewards[_account] = earned(_account);
-        userRewardPerTokenPaid[_account] = rewardPerTokenStored;
+        userRewardPerTokenPaid[_account] = _rewardPerTokenStored;
         _;
     }
 
