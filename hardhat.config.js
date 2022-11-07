@@ -37,7 +37,11 @@ const LARGE_CONTRACT_COMPILER_SETTINGS = {
  */
 module.exports = {
   defaultNetwork: "hardhat",
-  networks: addForkConfiguration({
+  // truffle dashboard doesn't work properly with Fork Configuration
+  // commenting for now
+  // networks: addForkConfiguration({
+  // }),
+  networks: {
     localhost: {
       live: false,
       tags: ["local"],
@@ -60,11 +64,10 @@ module.exports = {
       accounts: accounts('goerli'),
       chainId: 5,
     },
-    'truffle-dashboard': {
-      live: true,
+    'dashboard': {
       url: "http://localhost:24012/rpc"
     }
-  }),
+  },
   solidity: {
     compilers: [
       // For Uniswap contracts
