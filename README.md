@@ -82,7 +82,7 @@ Currently optimizer is set to 20 runs, which makes the deployment go through (it
 
         npx hardhat test
 
-6. Runs truffle dashboard. Opens a web page at http://localhost:24012 which allows us to Sign Transactions via Metamask
+7. Runs truffle dashboard. Opens a web page at http://localhost:24012 which allows us to Sign Transactions via Metamask
 
         truffle dashboard
 
