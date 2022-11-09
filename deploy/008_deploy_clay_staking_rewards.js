@@ -10,7 +10,7 @@ const func = async function (hre) {
 
     const ClayToken = await deployments.get("ClayToken");
 
-    let sumeroLpToken = { address: "0x126B0551e931958CBC2A42Adc554708630A166aB" };
+    let sumeroLpToken = { address: "0x0b0127317E2B2A90D0a6C53651e6749C44f8BeFe" };
     // hardcode above address to point to correct LP token address
     if (!sumeroLpToken.address) throw new Error("Need the LP token address");
 

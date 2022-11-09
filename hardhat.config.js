@@ -65,7 +65,9 @@ module.exports = {
       chainId: 5,
     },
     'dashboard': {
-      url: "http://localhost:24012/rpc"
+      url: "http://localhost:24012/rpc",
+      timeout: 400000,
+      live: true
     }
   },
   solidity: {
