@@ -8,7 +8,7 @@ const func = async function (hre) {
 
     const { deployer } = await getNamedAccounts();
 
-    await deploy("ClayToken", { from: deployer, log: true, skipIfAlreadyDeployed: false });
+    await deploy("ClayToken", { from: deployer, log: true, skipIfAlreadyDeployed: true });
 };
 module.exports = func;
 func.tags = ["ClayToken"];
