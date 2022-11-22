@@ -38,7 +38,11 @@ const LARGE_CONTRACT_COMPILER_SETTINGS = {
  */
 module.exports = {
   defaultNetwork: "hardhat",
-  networks: addForkConfiguration({
+  // truffle dashboard doesn't work properly with Fork Configuration
+  // commenting for now
+  // networks: addForkConfiguration({
+  // }),
+  networks: {
     localhost: {
       live: false,
       tags: ["local"],
@@ -61,9 +65,15 @@ module.exports = {
       accounts: accounts('goerli'),
       chainId: 5,
     },
-  }),
+    'dashboard': {
+      url: "http://localhost:24012/rpc",
+      timeout: 400000,
+      live: true
+    }
+  },
   solidity: {
     compilers: [
+      // For Uniswap contracts
       {
         version: "0.6.12",
         settings: {
@@ -74,32 +84,32 @@ module.exports = {
         },
       },
       {
-        version: "0.8.0",
+        version: "0.8.16",
         settings: {
           optimizer: {
             enabled: true,
-            runs: 20,
+            runs: 200,
           }
         },
       },
-      {
-        version: "0.8.1",
-        settings: {
-          optimizer: {
-            enabled: true,
-            runs: 20,
-          }
-        },
-      },
-      {
-        version: "0.8.9",
-        settings: {
-          optimizer: {
-            enabled: true,
-            runs: 20,
-          }
-        },
-      }
+      // {
+      //   version: "0.8.1",
+      //   settings: {
+      //     optimizer: {
+      //       enabled: true,
+      //       runs: 20,
+      //     }
+      //   },
+      // },
+      // {
+      //   version: "0.8.9",
+      //   settings: {
+      //     optimizer: {
+      //       enabled: true,
+      //       runs: 20,
+      //     }
+      //   },
+      // }
     ],
     // overrides: {
     //   "contracts/UMA/financial-templates/expiring-multiparty/ExpiringMultiPartyLib.sol": {

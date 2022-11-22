@@ -86,7 +86,6 @@ describe("Clay Bonds Contract", function () {
         const maturationDate = await clayBonds.maturationDate()
         const maximumBondRewards = await clayBonds.maximumBondRewards()
         const apy_percent = await clayBonds.APY_PERCENT()
-        const bonus_apy_percent = await clayBonds.BONUS_APY_PERCENT()
 
         console.log("\nDeposit Start Date: " + depositStartDate)
         console.log("Deposit Close Date: " + depositCloseDate)
@@ -95,14 +94,13 @@ describe("Clay Bonds Contract", function () {
         console.log("Maturation Date: " + maturationDate)
 
 
-        //DailyYieldPercent = (APY_PERCENT.add(BONUS_APY_PERCENT)).mul(1 ether).div(365); 
         let multiplier = ethers.BigNumber.from("1000000000000000000")
-        let dailyYield = multiplier.mul(apy_percent.add(bonus_apy_percent)).div(365)
+        let dailyYield = multiplier.mul(apy_percent).div(365)
 
-        // 1 week in seconds: 604800
-        expect(maturationDate.sub(depositStartDate)).to.be.eq(604800)
-        // 1 year in seconds: 31536000
-        expect(depositCloseDate.sub(depositStartDate)).to.be.eq(604800)
+        // 32 days in seconds: 2764800
+        expect(maturationDate.sub(depositStartDate)).to.be.eq(2764800)
+        // 30 days in seconds: 2592000 
+        expect(depositCloseDate.sub(depositStartDate)).to.be.eq(2592000)
         expect(dailyYield).to.be.eq(dailyYieldPercent)
     });
     it("Issues zCLAY bonds ", async () => {

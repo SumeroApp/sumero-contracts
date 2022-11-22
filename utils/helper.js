@@ -49,7 +49,7 @@ async function iterateAssets(numOfAssets, mappingName, contract) {
 function getWethAddressOrThrow(network) {
     if (network.name === 'kovan') {
         return "0xd0A1E359811322d97991E03f863a0C30C2cF029C";
-    } else if (network.name === "goerli") {
+    } else if (network.name === "goerli" || network.name === "dashboard") {
         return "0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6";
     }
     else {

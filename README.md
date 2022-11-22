@@ -34,6 +34,8 @@ npm install -g pnpm@6.31.0
 pnpm install
 ```
 
+6. Install truffle globally - https://trufflesuite.com/docs/truffle/how-to/install/
+
 When running commands below, make sure to enable the right version of node via `nvm use v16.14.0`.
 
 ## Deploying Sumero Contracts
@@ -80,7 +82,11 @@ Currently optimizer is set to 20 runs, which makes the deployment go through (it
 
         npx hardhat test
 
-7. Fork details ->
+7. Runs truffle dashboard. Opens a web page at http://localhost:24012 which allows us to Sign Transactions via Metamask
+
+        truffle dashboard
+
+8. Fork details ->
     Variable HARDHAT_FORK in .env manages the forking details. If it's an empty string, hardhat network does not add any forking details to HRE. Otherwise it adds the forking network details at hre.config.networks.hardhat.forking . e.g. HARDHAT_FORK="kovan". running npx hardhat node would fork the "kovan" network and run locally, along with adding the forking details.
 
     HARDHAT_FORK, ETH_NODE_URI_*networkname* and MNEMONIC_*networkname* need to be added for each forked network
