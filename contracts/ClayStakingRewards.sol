@@ -34,6 +34,9 @@ contract ClayStakingRewards is Ownable, ReentrancyGuard, Pausable {
     uint256 public rewardRate = 10 gwei;
     uint256 public lastUpdateTime;
     uint256 public rewardPerTokenStored;
+    uint256 public expiry; // Contract lifetime.
+    uint256 public maxReward; // Max reward that this contract will emit during it's lifetime.
+    uint256 public rewardsEmitted;
 
     mapping(address => uint256) public userRewardPerTokenPaid;
     mapping(address => uint256) public rewards;
@@ -41,9 +44,17 @@ contract ClayStakingRewards is Ownable, ReentrancyGuard, Pausable {
     uint256 private _totalSupply;
     mapping(address => uint256) private _balances;
 
-    constructor(address _stakedToken, address _clayToken) {
+    constructor(
+        address _stakedToken,
+        address _clayToken,
+        uint256 _expiry,
+        uint256 _maxReward
+    ) {
         stakingToken = IERC20(_stakedToken);
         clayToken = IClayToken(_clayToken);
+        expiry = _expiry;
+        maxReward = _maxReward;
+        rewardRate = _maxReward / (_expiry - block.timestamp);
     }
 
     /* ========== VIEWS ========== */
@@ -59,6 +70,12 @@ contract ClayStakingRewards is Ownable, ReentrancyGuard, Pausable {
     function rewardPerToken() public view returns (uint256) {
         if (_totalSupply == 0) {
             return rewardPerTokenStored;
+        }
+        if (expiry < block.timestamp) {
+            return
+                rewardPerTokenStored +
+                ((rewardRate * (expiry - lastUpdateTime) * 1e18) /
+                    _totalSupply);
         }
         return
             rewardPerTokenStored +
@@ -77,7 +94,11 @@ contract ClayStakingRewards is Ownable, ReentrancyGuard, Pausable {
 
     modifier updateReward(address _account) {
         rewardPerTokenStored = rewardPerToken();
-        lastUpdateTime = block.timestamp;
+        if (block.timestamp > expiry) {
+            lastUpdateTime = block.timestamp;
+        } else {
+            lastUpdateTime = block.timestamp;
+        }
 
         rewards[_account] = earned(_account);
         userRewardPerTokenPaid[_account] = rewardPerTokenStored;
@@ -86,12 +107,13 @@ contract ClayStakingRewards is Ownable, ReentrancyGuard, Pausable {
 
     /* ========== MUTATIVE FUNCTIONS ========== */
 
-    function stake(uint256 _amount)
-        external
-        nonReentrant
-        whenNotPaused
-        updateReward(msg.sender)
-    {
+    function stake(
+        uint256 _amount
+    ) external nonReentrant whenNotPaused updateReward(msg.sender) {
+        require(
+            expiry > block.timestamp,
+            "ClayStakingRewards: STAKING_PERIOD_OVER"
+        );
         require(_amount > 0, "ClayStakingRewards: AMOUNT_IS_ZERO");
         _totalSupply += _amount;
         _balances[msg.sender] += _amount;
@@ -104,11 +126,9 @@ contract ClayStakingRewards is Ownable, ReentrancyGuard, Pausable {
         emit Staked(msg.sender, _amount);
     }
 
-    function withdraw(uint256 _amount)
-        public
-        nonReentrant
-        updateReward(msg.sender)
-    {
+    function withdraw(
+        uint256 _amount
+    ) public nonReentrant updateReward(msg.sender) {
         require(_amount > 0, "ClayStakingRewards: AMOUNT_IS_ZERO");
         require(
             _amount <= _balances[msg.sender],
@@ -129,6 +149,7 @@ contract ClayStakingRewards is Ownable, ReentrancyGuard, Pausable {
 
     function getReward() public nonReentrant updateReward(msg.sender) {
         uint256 reward = rewards[msg.sender];
+        rewardsEmitted += reward;
         rewards[msg.sender] = 0;
         // Sumero Owner needs to grant MINTER_ROLE for CLAY to StakingRewards
         clayToken.mint(msg.sender, reward);

@@ -2,7 +2,9 @@
 
 const { expect } = require("chai")
 const { ethers } = require("hardhat")
+const { BigNumber } = ethers
 const hre = require("hardhat")
+const { getEpochFromDate } = require("../utils/helper")
 
 async function increaseTime(amount) {
     await hre.network.provider.send("evm_increaseTime", [amount])
@@ -45,8 +47,11 @@ describe("Staking Rewards Contract", function () {
         console.log("Staking Token contract deployed at: " + LpTokenAddress)
 
         // Deploy Staking Contract
+        const now = new Date()
+        const expiry = getEpochFromDate(new Date(now.setMonth(now.getMonth() + 2)))
+        const maxReward = BigNumber.from(10).pow(28);
         const StakingRewards = await hre.ethers.getContractFactory('ClayStakingRewards')
-        stakingRewards = await StakingRewards.deploy(LpTokenAddress, TokenAddress)
+        stakingRewards = await StakingRewards.deploy(LpTokenAddress, TokenAddress, expiry, maxReward)
         StakingRewardsAddress = stakingRewards.address
         await stakingRewards.deployed()
         console.log("Staking Rewards contract deployed at: " + StakingRewardsAddress)
