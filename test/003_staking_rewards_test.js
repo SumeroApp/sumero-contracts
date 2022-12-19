@@ -48,13 +48,17 @@ describe("Staking Rewards Contract", function () {
 
         // Deploy Staking Contract
         const now = new Date()
-        const expiry = getEpochFromDate(new Date(now.setMonth(now.getMonth() + 2)))
-        const maxReward = BigNumber.from(10).pow(28);
+        const expiry = getEpochFromDate(new Date(now.getTime() + 5184000000))
+        const maxReward = BigNumber.from(10).pow(20);
         const StakingRewards = await hre.ethers.getContractFactory('ClayStakingRewards')
         stakingRewards = await StakingRewards.deploy(LpTokenAddress, TokenAddress, expiry, maxReward)
         StakingRewardsAddress = stakingRewards.address
         await stakingRewards.deployed()
         console.log("Staking Rewards contract deployed at: " + StakingRewardsAddress)
+        console.log(`
+        Reward rate: ${(await stakingRewards.rewardRate())}
+        expiry: ${new Date((await stakingRewards.expiry()) * 1000 )}
+        `);
 
     });
 
