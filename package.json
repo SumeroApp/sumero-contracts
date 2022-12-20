@@ -4,7 +4,7 @@
   "description": "This project contains the smart contracts and related deployment scripts.",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "hardhat test",
     "preinstall": "npx only-allow pnpm",
     "ganache": "ganache -p 8545 -m 'program sorry leaf injury pyramid twin smoke deer robot emotion tunnel bid' -e 100000000 -l 67000000",
     "clean": "rm -rf ./artifcats && rm -rf ./cache",
