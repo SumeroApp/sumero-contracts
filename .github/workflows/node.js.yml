@@ -3,8 +3,10 @@
 
 name: "Hardhat Unit Tests"
 on:
-  - push
-  - pull_request
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
 
 jobs:
   cache-and-install:
