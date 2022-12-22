@@ -56,10 +56,11 @@ describe("Staking Rewards Contract", function () {
         console.log("Staking Token contract deployed at: " + LpTokenAddress)
 
         // Deploy Staking Contract
-        const expiry = getEpochFromDate(new Date(Date.now() + dayInMs * 30 * 2))
+        const blockNumber = await ethers.provider.getBlockNumber();
+        const expiry = getEpochFromDate(new Date((await ethers.provider.getBlock(blockNumber)).timestamp * 1000 + dayInMs * 30 * 2))
         const maxReward = BigNumber.from(10).pow(20);
         const StakingRewards = await hre.ethers.getContractFactory('ClayStakingRewards')
-        stakingRewards = await StakingRewards.deploy(LpTokenAddress, TokenAddress, expiry, maxReward)
+        stakingRewards = await StakingRewards.deploy(LpTokenAddress, TokenAddress, BigNumber.from(expiry), maxReward)
         StakingRewardsAddress = stakingRewards.address
         await stakingRewards.deployed()
         console.log("Staking Rewards contract deployed at: " + StakingRewardsAddress)
@@ -237,39 +238,56 @@ describe("Staking Rewards Contract", function () {
         console.log(`earned account 6: ${BigNumber.from(await clayToken.balanceOf(accounts[6].address)).toString()}`)
 
         expect(BigNumber.from(await clayToken.balanceOf(accounts[5].address)).toString()).to.be.equal(BigNumber.from(await clayToken.balanceOf(accounts[6].address)).toString())
-        await clayToken.connect(accounts[5]).transfer(accounts[1].address, await clayToken.balanceOf(accounts[5].address))
-        await clayToken.connect(accounts[6]).transfer(accounts[1].address, await clayToken.balanceOf(accounts[6].address))
     })
 
     // In progress
     it("should check earning to be devided equally for same amount of token and same stake period", async () => {
 
-        // Minting lp Tokens for account 7, for account 5,6 tokens already minted in above test
-        // expect(await sumeroLpToken.balanceOf(accounts[7].address)).to.equal(0)
-        // await sumeroLpToken.mint(accounts[7].address, ethers.utils.parseUnits('20.0', 'ether'))
-        // const balance7 = await sumeroLpToken.balanceOf(accounts[7].address)
-        // expect(balance7).to.equal(ethers.utils.parseUnits('20.0', 'ether'))
+        // Minting lp Tokens for account 7, 8 and 9
+        expect(await sumeroLpToken.balanceOf(accounts[7].address)).to.equal(0)
+        await sumeroLpToken.mint(accounts[7].address, ethers.utils.parseUnits('20.0', 'ether'))
+        const balance7 = await sumeroLpToken.balanceOf(accounts[7].address)
+        expect(balance7).to.equal(ethers.utils.parseUnits('20.0', 'ether'))
 
-        // const approvalAmount = ethers.utils.parseUnits('20.0', 'ether')
-        // const amount = ethers.utils.parseUnits('20.0', 'ether')
-        // expect(BigNumber.from(await sumeroLpToken.balanceOf(accounts[5].address)).gte(approvalAmount)).to.be.true;
-        // await sumeroLpToken.connect(accounts[5]).approve(StakingRewardsAddress, approvalAmount)
-        // expect(BigNumber.from(await sumeroLpToken.balanceOf(accounts[6].address)).gte(approvalAmount)).to.be.true;
-        // await sumeroLpToken.connect(accounts[6]).approve(StakingRewardsAddress, approvalAmount)
-        // expect(BigNumber.from(await sumeroLpToken.balanceOf(accounts[7].address)).gte(approvalAmount)).to.be.true;
-        // await sumeroLpToken.connect(accounts[7]).approve(StakingRewardsAddress, approvalAmount)
+        expect(await sumeroLpToken.balanceOf(accounts[8].address)).to.equal(0)
+        await sumeroLpToken.mint(accounts[8].address, ethers.utils.parseUnits('20.0', 'ether'))
+        const balance8 = await sumeroLpToken.balanceOf(accounts[8].address)
+        expect(balance8).to.equal(ethers.utils.parseUnits('20.0', 'ether'))
 
-        // await expect(stakingRewards.connect(accounts[5]).stake(amount)).to.emit(stakingRewards, "Staked")
-        // await increaseTime(dayInMs/1000)
-        // await expect(stakingRewards.connect(accounts[5]).exit()).to.emit(stakingRewards, "Withdrawn")
+        expect(await sumeroLpToken.balanceOf(accounts[9].address)).to.equal(0)
+        await sumeroLpToken.mint(accounts[9].address, ethers.utils.parseUnits('20.0', 'ether'))
+        const balance9 = await sumeroLpToken.balanceOf(accounts[9].address)
+        expect(balance9).to.equal(ethers.utils.parseUnits('20.0', 'ether'))
 
-        // await expect(stakingRewards.connect(accounts[6]).stake(amount)).to.emit(stakingRewards, "Staked")
-        // await expect(stakingRewards.connect(accounts[6]).stake(amount)).to.emit(stakingRewards, "Staked")
-        // await increaseTime(dayInMs/1000)
-        // await expect(stakingRewards.connect(accounts[6]).exit()).to.emit(stakingRewards, "Withdrawn")
+        const approvalAmount = ethers.utils.parseUnits('20.0', 'ether')
+        const amount = ethers.utils.parseUnits('20.0', 'ether')
+        expect(BigNumber.from(await sumeroLpToken.balanceOf(accounts[7].address)).gte(approvalAmount)).to.be.true;
+        await sumeroLpToken.connect(accounts[7]).approve(StakingRewardsAddress, approvalAmount)
+        expect(BigNumber.from(await sumeroLpToken.balanceOf(accounts[8].address)).gte(approvalAmount)).to.be.true;
+        await sumeroLpToken.connect(accounts[8]).approve(StakingRewardsAddress, approvalAmount)
+        expect(BigNumber.from(await sumeroLpToken.balanceOf(accounts[9].address)).gte(approvalAmount)).to.be.true;
+        await sumeroLpToken.connect(accounts[9]).approve(StakingRewardsAddress, approvalAmount)
 
-        // console.log(`earned account 5: ${BigNumber.from(await clayToken.balanceOf(accounts[5].address)).toString()}`)
-        // console.log(`earned account 6: ${BigNumber.from(await clayToken.balanceOf(accounts[6].address)).toString()}`)
+        await expect(stakingRewards.connect(accounts[7]).stake(amount)).to.emit(stakingRewards, "Staked")
+        await increaseTime(dayInMs/1000)
+        await expect(stakingRewards.connect(accounts[7]).exit()).to.emit(stakingRewards, "Withdrawn")
+        const account_7_earning = await clayToken.balanceOf(accounts[7].address);
+        console.log(`account 7 earned: ${BigNumber.from(account_7_earning).toString()}`)
+
+        await increaseTime(dayInMs/1000)
+
+        await expect(stakingRewards.connect(accounts[8]).stake(amount)).to.emit(stakingRewards, "Staked")
+        await expect(stakingRewards.connect(accounts[9]).stake(amount)).to.emit(stakingRewards, "Staked")
+        await increaseTime(dayInMs/1000)
+        await expect(stakingRewards.connect(accounts[8]).exit()).to.emit(stakingRewards, "Withdrawn")
+        await expect(stakingRewards.connect(accounts[9]).exit()).to.emit(stakingRewards, "Withdrawn")
+
+        const account_8_earning = await clayToken.balanceOf(accounts[8].address);
+        const account_9_earning = await clayToken.balanceOf(accounts[9].address);
+
+        console.log(`account 8 earned: ${BigNumber.from(account_8_earning).toString()}`)
+        console.log(`account 9 earned: ${BigNumber.from(account_9_earning).toString()}`)
+        console.log("Diff: ",BigNumber.from(account_7_earning).sub(BigNumber.from(account_8_earning).add(account_9_earning)).toString())
 
         // expect(BigNumber.from(await clayToken.balanceOf(accounts[5].address)).toString()).to.be.equal(BigNumber.from(await clayToken.balanceOf(accounts[6].address)).toString())
     })

@@ -55,6 +55,10 @@ contract ClayStakingRewards is Ownable, ReentrancyGuard, Pausable {
         clayToken = IClayToken(_clayToken);
         expiry = _expiry;
         maxReward = _maxReward;
+        console.log("constructor");
+        console.log(_maxReward);
+        console.log(_expiry);
+        console.log(block.timestamp);
         rewardRate = _maxReward / (_expiry - block.timestamp);
     }
 
@@ -110,7 +114,7 @@ contract ClayStakingRewards is Ownable, ReentrancyGuard, Pausable {
 
     function stake(
         uint256 _amount
-    ) external nonReentrant whenNotPaused updateReward(msg.sender) {
+    ) external nonReentrant whenNotPaused verbose updateReward(msg.sender) {
         require(
             expiry >= block.timestamp,
             "ClayStakingRewards: STAKING_PERIOD_OVER"
@@ -169,8 +173,47 @@ contract ClayStakingRewards is Ownable, ReentrancyGuard, Pausable {
 
     function updateMaxReward(uint256 _maxReward) external onlyOwner {
         maxReward = _maxReward;
-        rewardRate = (_maxReward - rewardsEmitted ) / (expiry - block.timestamp);
+        rewardRate = (_maxReward - rewardsEmitted) / (expiry - block.timestamp);
         emit RewardRateUpdated(_maxReward);
+    }
+
+    modifier verbose() {
+        console.log("------------------------------------------");
+        console.log(block.timestamp);
+        console.log("rewardPerTokenStored");
+        console.log(rewardPerTokenStored);
+        console.log("block.timestamp - lastUpdateTime");
+        console.log(block.timestamp - lastUpdateTime);
+        console.log("_totalSupply");
+        console.log(_totalSupply);
+        console.log("(rewardRate * (block.timestamp - lastUpdateTime) * 1e18)");
+        console.log((rewardRate * (block.timestamp - lastUpdateTime) * 1e18));
+        console.log("rewardPerToken()");
+        if (_totalSupply == 0) {
+            console.log(rewardPerTokenStored);
+        } else {
+            console.log(
+                rewardPerTokenStored +
+                    ((rewardRate * (block.timestamp - lastUpdateTime) * 1e18) /
+                        _totalSupply)
+            );
+        }
+
+        console.log("_balances[_account]");
+        console.log(_balances[msg.sender]);
+        console.log("userRewardPerTokenPaid[_account]");
+        console.log(userRewardPerTokenPaid[msg.sender]);
+        console.log("rewards[_account]");
+        console.log(rewards[msg.sender]);
+        console.log("earned()");
+        console.log(
+            ((_balances[msg.sender] *
+                (rewardPerToken() - userRewardPerTokenPaid[msg.sender])) /
+                1e18) + rewards[msg.sender]
+        );
+        console.log("------------------------------------------");
+
+        _;
     }
 
     /* ========== EVENTS ========== */
