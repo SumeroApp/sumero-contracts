@@ -3,7 +3,7 @@ const { node_url, accounts, addForkConfiguration } = require('./utils/network');
 require("@nomiclabs/hardhat-waffle");
 require("@nomiclabs/hardhat-ethers");
 require("@nomiclabs/hardhat-etherscan");
-require("hardhat-deploy");
+// require("hardhat-deploy");
 require("./tasks/clay-balance");
 require("./tasks/clay-mint");
 require("./tasks/clay-approve");

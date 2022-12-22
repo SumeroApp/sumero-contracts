@@ -6,6 +6,7 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./interfaces/IClayToken.sol";
+import "hardhat/console.sol";
 
 /**
     User can stake Sumero LP Tokens (received by providing liquidity to a Liquidity Pool on Sumero) to earn CLAY rewards.
@@ -71,7 +72,7 @@ contract ClayStakingRewards is Ownable, ReentrancyGuard, Pausable {
         if (_totalSupply == 0) {
             return rewardPerTokenStored;
         }
-        if (expiry < block.timestamp) {
+        if (expiry <= block.timestamp) {
             return
                 rewardPerTokenStored +
                 ((rewardRate * (expiry - lastUpdateTime) * 1e18) /
@@ -94,8 +95,8 @@ contract ClayStakingRewards is Ownable, ReentrancyGuard, Pausable {
 
     modifier updateReward(address _account) {
         rewardPerTokenStored = rewardPerToken();
-        if (block.timestamp > expiry) {
-            lastUpdateTime = block.timestamp;
+        if (block.timestamp >= expiry) {
+            lastUpdateTime = expiry;
         } else {
             lastUpdateTime = block.timestamp;
         }
@@ -111,7 +112,7 @@ contract ClayStakingRewards is Ownable, ReentrancyGuard, Pausable {
         uint256 _amount
     ) external nonReentrant whenNotPaused updateReward(msg.sender) {
         require(
-            expiry > block.timestamp,
+            expiry >= block.timestamp,
             "ClayStakingRewards: STAKING_PERIOD_OVER"
         );
         require(_amount > 0, "ClayStakingRewards: AMOUNT_IS_ZERO");
@@ -149,8 +150,8 @@ contract ClayStakingRewards is Ownable, ReentrancyGuard, Pausable {
 
     function getReward() public nonReentrant updateReward(msg.sender) {
         uint256 reward = rewards[msg.sender];
-        rewardsEmitted += reward;
         rewards[msg.sender] = 0;
+        rewardsEmitted += reward;
         // Sumero Owner needs to grant MINTER_ROLE for CLAY to StakingRewards
         clayToken.mint(msg.sender, reward);
         emit RewardPaid(msg.sender, reward);
@@ -166,9 +167,10 @@ contract ClayStakingRewards is Ownable, ReentrancyGuard, Pausable {
         _unpause();
     }
 
-    function updateRewardRate(uint256 _rewardRate) external onlyOwner {
-        rewardRate = _rewardRate;
-        emit RewardRateUpdated(_rewardRate);
+    function updateMaxReward(uint256 _maxReward) external onlyOwner {
+        maxReward = _maxReward;
+        rewardRate = (_maxReward - rewardsEmitted ) / (expiry - block.timestamp);
+        emit RewardRateUpdated(_maxReward);
     }
 
     /* ========== EVENTS ========== */
