@@ -72,8 +72,8 @@ contract ClayStakingRewards is Ownable, ReentrancyGuard, Pausable {
         return block.timestamp < periodFinish ? block.timestamp : periodFinish;
     }
 
-    // Gives the rewards calulcation till the block.timestamp
-    // If the protocoll has L(t) tokens staked at time t, then this function returns rewards from time t to block.timestamp
+    // Gives the rewards calculation till the block.timestamp
+    // If the protocol has L(t) tokens staked at time t, then this function returns rewards from time t to block.timestamp
     // i.e, Rwards generated from the time where first ever staking happened in this contract, till now.
     function rewardPerToken() public view returns (uint256) {
         if (_totalSupply == 0) {
