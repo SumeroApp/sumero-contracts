@@ -26,6 +26,7 @@ const multiplier = BigNumber.from(10).pow(18);
 // let timestamps = [];
 const dayInMs = 60 * 60 * 24 * 1000;
 const dayInS = 60 * 60 * 24;
+const HOUR = 60 * 60
 
 const wait = (seconds) => new Promise((resolve) => {
     setTimeout(() => { resolve() }, seconds * 1000)
@@ -294,7 +295,6 @@ describe("Staking Rewards Contract", function () {
         expect(BigNumber.from(await clayToken.balanceOf(accounts[5].address)).toString()).to.be.equal(BigNumber.from(await clayToken.balanceOf(accounts[6].address)).toString())
     })
 
-    // In progress
     it("should check earning to be devided equally for same amount of token and same stake period", async () => {
 
         // Minting lp Tokens for account 7, 8 and 9
@@ -328,87 +328,116 @@ describe("Staking Rewards Contract", function () {
         // this blocks data is going to be used to evaluate the test further down the line
         let tx = stakingRewards.connect(accounts[7]).stake(amount)
         await expect(tx).to.emit(stakingRewards, "Staked")
-        let reward_amount_where_user_not_staked_or_reward_given = await stakingRewards.rewardPerToken()
+        let reward_amount_where_user7_not_staked_or_reward_given = await stakingRewards.rewardPerToken()
         // let reward_amount_where_user_not_staked_or_reward_given = await stakingRewards.userRewardPerTokenPaid(accounts[7].address)
-
         const timestamp_on_stake_acc7 = await getTxTimestamp(tx);
    
         // increasing evm time by 1 day
-        await time.setNextBlockTimestamp(timestamp_on_stake_acc7 + dayInS);
+        await time.setNextBlockTimestamp(timestamp_on_stake_acc7 + 2 * dayInS);
 
         
         const account_7_prev_earning = await clayToken.balanceOf(accounts[7].address);
         tx = stakingRewards.connect(accounts[7]).exit();
-        // const timestamp_on_unstake_acc7 = await getTxTimestamp(tx);
+        const timestamp_on_unstake_acc7 = await getTxTimestamp(tx);
         await expect(tx).to.emit(stakingRewards, "Withdrawn")
         let overall_rewards_generated = await stakingRewards.rewardPerToken()
 
         const account_7_earning = await clayToken.balanceOf(accounts[7].address);
-        const acc_7_expected_reward = BigNumber.from(amount).mul(BigNumber.from(overall_rewards_generated).sub(reward_amount_where_user_not_staked_or_reward_given)).div(multiplier)
+        const acc_7_expected_reward = BigNumber.from(amount).mul(BigNumber.from(overall_rewards_generated).sub(reward_amount_where_user7_not_staked_or_reward_given)).div(multiplier)
 
         
         console.log(`
         Account 7
-        amount: ${amount}
-        rewardRate: ${rewardRate}
-        expected: ${acc_7_expected_reward}
+        amount:                    ${amount}
+        staked:                    ${timestamp_on_stake_acc7}
+        unstaked:                  ${timestamp_on_unstake_acc7}
+        stake duration:            ${ timestamp_on_unstake_acc7 - timestamp_on_stake_acc7 }
+        rewardRate:                ${rewardRate}
+        expected:                  ${acc_7_expected_reward}
         overall_rewards_generated: ${overall_rewards_generated}
-        earned:   ${BigNumber.from(account_7_earning).sub(account_7_prev_earning)}
-        error:   ${BigNumber.from(acc_7_expected_reward).sub(BigNumber.from(account_7_earning))}
+        earned:                    ${BigNumber.from(account_7_earning).sub(account_7_prev_earning)}
+        error:                     ${BigNumber.from(acc_7_expected_reward).sub(BigNumber.from(account_7_earning))}
         `)
         expect(acc_7_expected_reward).to.be.equal(BigNumber.from(account_7_earning).toString())
         //---------------------------------------------------------------------------------------------------------------------------
 
-        // increasing evm time by 2 day
+        // increasing evm time by 2 day has no effect on rewards for each account
         // await time.setNextBlockTimestamp(timestamp_on_unstake_acc7 + 2 * dayInS);
 
-        // tx = stakingRewards.connect(accounts[8]).stake(amount);
-        // const timestamp_on_stake_acc8 = await getTxTimestamp(tx)
-        // await expect(tx).to.emit(stakingRewards, "Staked")
-
-        // await time.setNextBlockTimestamp(timestamp_on_stake_acc8 + 1);
-        // tx = stakingRewards.connect(accounts[9]).stake(amount);
-        // const timestamp_on_stake_acc9 = await getTxTimestamp(tx)
-        // await expect(tx).to.emit(stakingRewards, "Staked")
-
-        // await time.setNextBlockTimestamp(timestamp_on_stake_acc8 + dayInS);
-
-        // tx = stakingRewards.connect(accounts[8]).exit()
-        // const timestamp_on_unstake_acc8 = await getTxTimestamp(tx)
-        // await expect(tx).to.emit(stakingRewards, "Withdrawn")
-
-        // await time.setNextBlockTimestamp(timestamp_on_stake_acc9 + dayInS);
-        // overall_rewards_generated = await stakingRewards.rewardPerToken()
-        // const account_8_earning = await clayToken.balanceOf(accounts[8].address);
-
-        // tx = stakingRewards.connect(accounts[9]).exit();
-        // const timestamp_on_unstake_acc9 = await getTxTimestamp(tx);
-        // await expect(tx).to.emit(stakingRewards, "Withdrawn")
-        // overall_rewards_generated = await stakingRewards.rewardPerToken()
+        tx = stakingRewards.connect(accounts[8]).stake(amount)
+        await expect(tx).to.emit(stakingRewards, "Staked")
+        const reward_amount_where_user8_not_staked_or_reward_given = await stakingRewards.rewardPerToken()
+        const timestamp_on_stake_acc8 = await getTxTimestamp(tx)
         
 
-        
-        // const account_9_earning = await clayToken.balanceOf(accounts[9].address);
+        await time.setNextBlockTimestamp(timestamp_on_stake_acc8 + dayInS);
+        // this statement denotes that after user8 had staked, user9 came after 1 day and staked their tokens
+        tx = stakingRewards.connect(accounts[9]).stake(amount);
+        const timestamp_on_stake_acc9 = await getTxTimestamp(tx)
+        await expect(tx).to.emit(stakingRewards, "Staked")
+        const reward_amount_where_user9_not_staked_or_reward_given = await stakingRewards.rewardPerToken()
 
-        // console.log(`
-        // Account 8
-        // amount: ${amount.toString()}
-        // staked: ${timestamp_on_stake_acc8}
-        // unstaked: ${timestamp_on_unstake_acc8}
-        // totalTime: ${timestamp_on_unstake_acc8 - timestamp_on_stake_acc8}
-        // earned: ${BigNumber.from(account_8_earning).toString()}
-        // `)
-        // console.log(`
-        // Account 9
-        // amount: ${amount.toString()}
-        // staked: ${timestamp_on_stake_acc9}
-        // unstaked: ${timestamp_on_unstake_acc9}
-        // totalTime: ${timestamp_on_unstake_acc9 - timestamp_on_stake_acc9}
-        // earned: ${BigNumber.from(account_9_earning).toString()}
-        // earned acc7 - (acc8 + acc9):, ${BigNumber.from(account_7_earning).sub(BigNumber.from(account_8_earning).add(account_9_earning)).toString()}
-        // `)
+        await time.setNextBlockTimestamp(timestamp_on_stake_acc9 + 1 * HOUR);
+        // After 1 hour user9 is going to stake their tokens, user9 will rewards only for that duration 
+        // and will be proportional to their staking value and total staked tokens
 
-        // expect(BigNumber.from(await clayToken.balanceOf(accounts[5].address)).toString()).to.be.equal(BigNumber.from(await clayToken.balanceOf(accounts[6].address)).toString())
+        // overall_rewards_generated = await stakingRewards.rewardPerToken()
+        tx = stakingRewards.connect(accounts[9]).exit();
+        const timestamp_on_unstake_acc9 = await getTxTimestamp(tx);
+        await expect(tx).to.emit(stakingRewards, "Withdrawn")
+        const overall_rewards_generated9 = await stakingRewards.rewardPerToken()
+        overall_rewards_generated = await stakingRewards.rewardPerToken()
+
+        // After 2 days user8 is going to unstake and get their reward but b/w this time user9 had also staked their token for 1 hr and got their rewards
+        // Now user8's rewards will get affected due to that.
+        await time.setNextBlockTimestamp(timestamp_on_stake_acc8 + 2 * dayInS);
+
+
+        // const account_8_prev_earning = await clayToken.balanceOf(accounts[8].address);
+        tx = stakingRewards.connect(accounts[8]).exit();
+        const timestamp_on_unstake_acc8 = await getTxTimestamp(tx);
+        await expect(tx).to.emit(stakingRewards, "Withdrawn")
+        const overall_rewards_generated8 = await stakingRewards.rewardPerToken()
+
+        const account_8_earning = await clayToken.balanceOf(accounts[8].address);
+        const account_9_earning = await clayToken.balanceOf(accounts[9].address);
+
+
+        const acc_9_expected_reward = BigNumber.from(amount)
+                                            .mul(
+                                                BigNumber.from(overall_rewards_generated9)
+                                                    .sub(reward_amount_where_user9_not_staked_or_reward_given)
+                                            ).div(multiplier)
+
+        const acc_8_expected_reward = BigNumber.from(amount)
+                                        .mul(
+                                            BigNumber.from(overall_rewards_generated8)
+                                                    .sub(reward_amount_where_user8_not_staked_or_reward_given)
+                                        ).div(multiplier)
+
+        console.log(`
+        Account 8
+        amount:   ${amount}
+        staked:   ${timestamp_on_stake_acc8}
+        unstaked: ${timestamp_on_unstake_acc8}
+        totalTime:${timestamp_on_unstake_acc8 - timestamp_on_stake_acc8}
+        earned:   ${account_8_earning}
+        expected: ${acc_8_expected_reward}
+        error:    ${BigNumber.from(account_8_earning).sub(acc_8_expected_reward)}
+        `)
+
+        console.log(`
+        Account 9
+        amount:     ${amount}
+        staked:     ${timestamp_on_stake_acc9}
+        unstaked:   ${timestamp_on_unstake_acc9}
+        totalTime:  ${timestamp_on_unstake_acc9 - timestamp_on_stake_acc9}
+        earned:     ${account_9_earning}
+        expected:   ${acc_9_expected_reward}
+        err 7-(8+9):${BigNumber.from(account_7_earning).sub(BigNumber.from(acc_8_expected_reward).add(acc_9_expected_reward))}
+        `)
+
+        expect(BigNumber.from(account_7_earning).toString()).to.be.equal(BigNumber.from(account_8_earning).add(account_9_earning).toString())
     })
 
 

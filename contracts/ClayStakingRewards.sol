@@ -68,7 +68,7 @@ contract ClayStakingRewards is Ownable, ReentrancyGuard, Pausable {
         return _balances[account];
     }
 
-    function lastTimeRewardApplicable() public view returns (uint256) {
+    function lastRewardTimeApplicable() public view returns (uint256) {
         return block.timestamp < periodFinish ? block.timestamp : periodFinish;
     }
 
@@ -81,8 +81,9 @@ contract ClayStakingRewards is Ownable, ReentrancyGuard, Pausable {
         }
         return
             rewardPerTokenStored +
-            ((rewardRate * (lastTimeRewardApplicable() - lastUpdateTime) * 1e18) /
-                _totalSupply);
+            ((rewardRate *
+                (lastRewardTimeApplicable() - lastUpdateTime) *
+                1e18) / _totalSupply);
     }
 
     function earned(address _account) public view returns (uint256) {
@@ -96,7 +97,7 @@ contract ClayStakingRewards is Ownable, ReentrancyGuard, Pausable {
 
     modifier updateReward(address _account) {
         rewardPerTokenStored = rewardPerToken();
-        lastUpdateTime = lastTimeRewardApplicable();
+        lastUpdateTime = lastRewardTimeApplicable();
         rewards[_account] = earned(_account);
         userRewardPerTokenPaid[_account] = rewardPerTokenStored;
         _;
@@ -155,13 +156,12 @@ contract ClayStakingRewards is Ownable, ReentrancyGuard, Pausable {
 
     function getReward() public nonReentrant updateReward(msg.sender) {
         uint256 reward = rewards[msg.sender];
-        if (reward > 0) {
-            rewards[msg.sender] = 0;
-            rewardsPaidSoFar += reward;
-            // Sumero Owner needs to grant MINTER_ROLE for CLAY to StakingRewards
-            clayToken.mint(msg.sender, reward);
-            emit RewardPaid(msg.sender, reward);
-        }
+        require(reward > 0, "ClayStakingRewards: NO_REWARDS");
+        rewards[msg.sender] = 0;
+        rewardsPaidSoFar += reward;
+        // Sumero Owner needs to grant MINTER_ROLE for CLAY to StakingRewards
+        clayToken.mint(msg.sender, reward);
+        emit RewardPaid(msg.sender, reward);
     }
 
     /* ========== RESTRICTED FUNCTIONS ========== */
