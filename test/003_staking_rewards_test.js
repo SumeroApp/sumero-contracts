@@ -2,13 +2,73 @@
 
 const { expect } = require("chai")
 const { ethers } = require("hardhat")
+const { time } = require("@nomicfoundation/hardhat-network-helpers");
 const { BigNumber, constants } = ethers
 const hre = require("hardhat")
 const { getEpochFromDate } = require("../utils/helper")
 
+let clayToken;
+let sumeroLpToken;
+let stakingRewards;
+let accounts;
+let TokenAddress;
+let LpTokenAddress;
+let StakingRewardsAddress;
+let rewardRate = BigNumber.from(0);
+// let totalStakedSupply = BigNumber.from(0);
+const multiplier = BigNumber.from(10).pow(18);
+// let totalStakedSupplyAtTimestamp = {
+//     "0": "0"
+// }
+// let userStakedBalaceAtTimestamp = {
+//     "0": { "0x": "0" }
+// }
+// let timestamps = [];
+const dayInMs = 60 * 60 * 24 * 1000;
+const dayInS = 60 * 60 * 24;
+
 const wait = (seconds) => new Promise((resolve) => {
     setTimeout(() => { resolve() }, seconds * 1000)
 })
+
+// const setUserStakedBalaceAtTimestamp = (timestamp, address, amount) => {
+//     const temp = {}
+//     temp[address] = String(amount)
+//     userStakedBalaceAtTimestamp[timestamp] = temp
+// }
+
+const getTxTimestamp = tx => new Promise((resolve) => {
+    tx.then(async tx => resolve((await ethers.provider.getBlock(tx.blockNumber)).timestamp))
+})
+
+// const calculateUserRewards = (account) => {
+//     let userReward = BigNumber.from(0);
+//     for (let i = 0; i < timestamps.length; i++) {
+//         const t = timestamps[i]
+        
+//         if (timestamps[i + 1]) {
+//             userReward = userReward.add(
+//                 rewardRate
+//                 .mul(BigNumber.from(timestamps[i + 1] - t - 1))
+//                 .mul(userStakedBalaceAtTimestamp[t][String(account)])
+//                     .div(BigNumber.from(totalStakedSupplyAtTimestamp[t]))
+//             )
+//         } else {
+//             userReward = userReward.add(
+//                 rewardRate.mul(userStakedBalaceAtTimestamp[t][String(account)])
+//                     .div(BigNumber.from(totalStakedSupplyAtTimestamp[t]))
+//             )
+//         }
+//         console.log({
+//             time: t,
+//             "l(u, t): ": userStakedBalaceAtTimestamp[t][String(account)],
+//             "L(t): ": totalStakedSupplyAtTimestamp[t],
+//             rewardRate: rewardRate.toString(),
+//             userRewardNow: userReward.toString()
+//         })
+//     }
+//     return userReward
+// }
 
 async function increaseTime(amount) {
     await hre.network.provider.request({
@@ -19,18 +79,11 @@ async function increaseTime(amount) {
     console.log("EVM time " + amount + " milliseconds increased!")
 }
 
-let clayToken;
-let sumeroLpToken;
-let stakingRewards;
-let accounts;
-let TokenAddress;
-let LpTokenAddress;
-let StakingRewardsAddress;
-const dayInMs = 60 * 60 * 24 * 1000;
 
 describe("Staking Rewards Contract", function () {
     before('deploy contracts', async function () {
-
+        // userStakedBalaceAtTimestamp = {}
+        // totalStakedSupplyAtTimestamp = {}
         accounts = await ethers.getSigners()
 
         console.log(
@@ -49,7 +102,7 @@ describe("Staking Rewards Contract", function () {
         console.log("Clay Token contract deployed at: " + TokenAddress)
 
         // Deploy Sumero LP Token Contract
-        const SumeroLpToken = await hre.ethers.getContractFactory('contracts/test/SumeroLpToken.sol:SumeroLpToken')
+        const SumeroLpToken = await hre.ethers.getContractFactory('SumeroLpToken')
         sumeroLpToken = await SumeroLpToken.deploy()
         await sumeroLpToken.deployed()
         LpTokenAddress = sumeroLpToken.address
@@ -64,9 +117,10 @@ describe("Staking Rewards Contract", function () {
         StakingRewardsAddress = stakingRewards.address
         await stakingRewards.deployed()
         console.log("Staking Rewards contract deployed at: " + StakingRewardsAddress)
+        rewardRate = BigNumber.from(await stakingRewards.rewardRate());
         console.log(`
-        Reward rate: ${(await stakingRewards.rewardRate())}
-        expiry: ${new Date((await stakingRewards.expiry()) * 1000)}
+        Reward rate: ${(rewardRate.toString())}
+        expiry: ${new Date((await stakingRewards.periodFinish()) * 1000)}
         `);
 
     });
@@ -80,7 +134,7 @@ describe("Staking Rewards Contract", function () {
 
     it('Can update max reward', async function () {
         await expect(stakingRewards.connect(accounts[2]).updateMaxReward(BigNumber.from(10).pow(21))).to.be.reverted
-        await expect(stakingRewards.updateMaxReward(BigNumber.from(10).pow(21))).to.emit(stakingRewards, "RewardRateUpdated").withArgs(BigNumber.from(10).pow(21))
+        await expect(stakingRewards.updateMaxReward(BigNumber.from(10).pow(21))).to.emit(stakingRewards, "RewardRateUpdated")
         expect(await stakingRewards.maxReward()).to.eq(BigNumber.from(10).pow(21))
     });
 
@@ -112,7 +166,7 @@ describe("Staking Rewards Contract", function () {
         const totalSupply = await stakingRewards.totalSupply()
         let multiplier = ethers.BigNumber.from("10").pow(BigNumber.from(18))
         //rewardPerTokenStored + ((rewardRate * (block.timestamp - lastUpdateTime) * 1e18) / _totalSupply);
-        let updatedRewardPerToken = ethers.BigNumber.from(rewardRate.mul(timestamp - lastUpdateTime).mul(multiplier).div(totalSupply))
+        let updatedRewardPerToken = ethers.BigNumber.from(BigNumber.from(rewardRate).mul(timestamp - lastUpdateTime).mul(multiplier).div(totalSupply))
         expect(await stakingRewards.rewardPerToken()).to.be.eq(updatedRewardPerToken)
     });
     // todo: Withdraw partial amount
@@ -177,7 +231,7 @@ describe("Staking Rewards Contract", function () {
         await stakingRewards.unpause()
 
     });
-    // //todo: get user reward without calling withdraw function
+    // // //todo: get user reward without calling withdraw function
     it('can exit', async function () {
 
         // Mint LP Tokens to Account 3
@@ -227,11 +281,11 @@ describe("Staking Rewards Contract", function () {
         await sumeroLpToken.connect(accounts[6]).approve(StakingRewardsAddress, approvalAmount)
 
         await expect(stakingRewards.connect(accounts[5]).stake(amount)).to.emit(stakingRewards, "Staked")
-        await increaseTime(dayInMs/1000)
+        await increaseTime(dayInMs / 1000)
         await expect(stakingRewards.connect(accounts[5]).exit()).to.emit(stakingRewards, "Withdrawn")
 
         await expect(stakingRewards.connect(accounts[6]).stake(amount)).to.emit(stakingRewards, "Staked")
-        await increaseTime(dayInMs/1000)
+        await increaseTime(dayInMs / 1000)
         await expect(stakingRewards.connect(accounts[6]).exit()).to.emit(stakingRewards, "Withdrawn")
 
         console.log(`earned account 5: ${BigNumber.from(await clayToken.balanceOf(accounts[5].address)).toString()}`)
@@ -244,6 +298,8 @@ describe("Staking Rewards Contract", function () {
     it("should check earning to be devided equally for same amount of token and same stake period", async () => {
 
         // Minting lp Tokens for account 7, 8 and 9
+        console.log(`totalSupply now: ${BigNumber.from(await stakingRewards.totalSupply()).toString()}`)
+        console.log(`rewardPerTokenStored: ${BigNumber.from(await stakingRewards.rewardPerTokenStored()).toString()}`)
         expect(await sumeroLpToken.balanceOf(accounts[7].address)).to.equal(0)
         await sumeroLpToken.mint(accounts[7].address, ethers.utils.parseUnits('20.0', 'ether'))
         const balance7 = await sumeroLpToken.balanceOf(accounts[7].address)
@@ -268,33 +324,96 @@ describe("Staking Rewards Contract", function () {
         expect(BigNumber.from(await sumeroLpToken.balanceOf(accounts[9].address)).gte(approvalAmount)).to.be.true;
         await sumeroLpToken.connect(accounts[9]).approve(StakingRewardsAddress, approvalAmount)
 
-        await expect(stakingRewards.connect(accounts[7]).stake(amount)).to.emit(stakingRewards, "Staked")
-        await increaseTime(dayInMs/1000)
-        await expect(stakingRewards.connect(accounts[7]).exit()).to.emit(stakingRewards, "Withdrawn")
+        //--------------------below contains the staking rewards calculation for an account staking for 1 day ------------------
+        // this blocks data is going to be used to evaluate the test further down the line
+        let tx = stakingRewards.connect(accounts[7]).stake(amount)
+        await expect(tx).to.emit(stakingRewards, "Staked")
+        let reward_amount_where_user_not_staked_or_reward_given = await stakingRewards.rewardPerToken()
+        // let reward_amount_where_user_not_staked_or_reward_given = await stakingRewards.userRewardPerTokenPaid(accounts[7].address)
+
+        const timestamp_on_stake_acc7 = await getTxTimestamp(tx);
+   
+        // increasing evm time by 1 day
+        await time.setNextBlockTimestamp(timestamp_on_stake_acc7 + dayInS);
+
+        
+        const account_7_prev_earning = await clayToken.balanceOf(accounts[7].address);
+        tx = stakingRewards.connect(accounts[7]).exit();
+        // const timestamp_on_unstake_acc7 = await getTxTimestamp(tx);
+        await expect(tx).to.emit(stakingRewards, "Withdrawn")
+        let overall_rewards_generated = await stakingRewards.rewardPerToken()
+
         const account_7_earning = await clayToken.balanceOf(accounts[7].address);
-        console.log(`account 7 earned: ${BigNumber.from(account_7_earning).toString()}`)
+        const acc_7_expected_reward = BigNumber.from(amount).mul(BigNumber.from(overall_rewards_generated).sub(reward_amount_where_user_not_staked_or_reward_given)).div(multiplier)
 
-        await increaseTime(dayInMs/1000)
+        
+        console.log(`
+        Account 7
+        amount: ${amount}
+        rewardRate: ${rewardRate}
+        expected: ${acc_7_expected_reward}
+        overall_rewards_generated: ${overall_rewards_generated}
+        earned:   ${BigNumber.from(account_7_earning).sub(account_7_prev_earning)}
+        error:   ${BigNumber.from(acc_7_expected_reward).sub(BigNumber.from(account_7_earning))}
+        `)
+        expect(acc_7_expected_reward).to.be.equal(BigNumber.from(account_7_earning).toString())
+        //---------------------------------------------------------------------------------------------------------------------------
 
-        await expect(stakingRewards.connect(accounts[8]).stake(amount)).to.emit(stakingRewards, "Staked")
-        await expect(stakingRewards.connect(accounts[9]).stake(amount)).to.emit(stakingRewards, "Staked")
-        await increaseTime(dayInMs/1000)
-        await expect(stakingRewards.connect(accounts[8]).exit()).to.emit(stakingRewards, "Withdrawn")
-        await expect(stakingRewards.connect(accounts[9]).exit()).to.emit(stakingRewards, "Withdrawn")
+        // increasing evm time by 2 day
+        // await time.setNextBlockTimestamp(timestamp_on_unstake_acc7 + 2 * dayInS);
 
-        const account_8_earning = await clayToken.balanceOf(accounts[8].address);
-        const account_9_earning = await clayToken.balanceOf(accounts[9].address);
+        // tx = stakingRewards.connect(accounts[8]).stake(amount);
+        // const timestamp_on_stake_acc8 = await getTxTimestamp(tx)
+        // await expect(tx).to.emit(stakingRewards, "Staked")
 
-        console.log(`account 8 earned: ${BigNumber.from(account_8_earning).toString()}`)
-        console.log(`account 9 earned: ${BigNumber.from(account_9_earning).toString()}`)
-        console.log("Diff: ",BigNumber.from(account_7_earning).sub(BigNumber.from(account_8_earning).add(account_9_earning)).toString())
+        // await time.setNextBlockTimestamp(timestamp_on_stake_acc8 + 1);
+        // tx = stakingRewards.connect(accounts[9]).stake(amount);
+        // const timestamp_on_stake_acc9 = await getTxTimestamp(tx)
+        // await expect(tx).to.emit(stakingRewards, "Staked")
+
+        // await time.setNextBlockTimestamp(timestamp_on_stake_acc8 + dayInS);
+
+        // tx = stakingRewards.connect(accounts[8]).exit()
+        // const timestamp_on_unstake_acc8 = await getTxTimestamp(tx)
+        // await expect(tx).to.emit(stakingRewards, "Withdrawn")
+
+        // await time.setNextBlockTimestamp(timestamp_on_stake_acc9 + dayInS);
+        // overall_rewards_generated = await stakingRewards.rewardPerToken()
+        // const account_8_earning = await clayToken.balanceOf(accounts[8].address);
+
+        // tx = stakingRewards.connect(accounts[9]).exit();
+        // const timestamp_on_unstake_acc9 = await getTxTimestamp(tx);
+        // await expect(tx).to.emit(stakingRewards, "Withdrawn")
+        // overall_rewards_generated = await stakingRewards.rewardPerToken()
+        
+
+        
+        // const account_9_earning = await clayToken.balanceOf(accounts[9].address);
+
+        // console.log(`
+        // Account 8
+        // amount: ${amount.toString()}
+        // staked: ${timestamp_on_stake_acc8}
+        // unstaked: ${timestamp_on_unstake_acc8}
+        // totalTime: ${timestamp_on_unstake_acc8 - timestamp_on_stake_acc8}
+        // earned: ${BigNumber.from(account_8_earning).toString()}
+        // `)
+        // console.log(`
+        // Account 9
+        // amount: ${amount.toString()}
+        // staked: ${timestamp_on_stake_acc9}
+        // unstaked: ${timestamp_on_unstake_acc9}
+        // totalTime: ${timestamp_on_unstake_acc9 - timestamp_on_stake_acc9}
+        // earned: ${BigNumber.from(account_9_earning).toString()}
+        // earned acc7 - (acc8 + acc9):, ${BigNumber.from(account_7_earning).sub(BigNumber.from(account_8_earning).add(account_9_earning)).toString()}
+        // `)
 
         // expect(BigNumber.from(await clayToken.balanceOf(accounts[5].address)).toString()).to.be.equal(BigNumber.from(await clayToken.balanceOf(accounts[6].address)).toString())
     })
 
 
 
-    it("should fail to stake after staking period is over", async ()=>{
+    it("should fail to stake after staking period is over", async () => {
 
         expect(await sumeroLpToken.balanceOf(accounts[4].address)).to.equal(0)
         await sumeroLpToken.mint(accounts[4].address, ethers.utils.parseUnits('100.0', 'ether'))
