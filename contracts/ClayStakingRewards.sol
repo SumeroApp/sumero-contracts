@@ -72,6 +72,22 @@ contract ClayStakingRewards is Ownable, ReentrancyGuard, Pausable {
         return block.timestamp < periodFinish ? block.timestamp : periodFinish;
     }
 
+    function apy(address _account) external view returns (uint256) {
+        if (block.timestamp > periodFinish) return 0;
+        if (_balances[_account] == 0) return 0;
+
+        // uint256 totalRewardsPerYear = rewardRate * 365 days;
+        uint256 totalLpDepositedByUser = _balances[_account];
+        uint256 rewardPerTokenYear = rewardPerTokenStored +
+            ((rewardRate *
+                (block.timestamp + 365 days - lastUpdateTime) *
+                1e18) / _totalSupply);
+        uint256 userToEarnInYear = ((_balances[_account] *
+                (rewardPerTokenYear - userRewardPerTokenPaid[_account])) / 1e18);
+        return userToEarnInYear * 100 * 100 / totalLpDepositedByUser;
+        // Multiplied by 100 to maintain precision 
+    }
+
     // Gives the rewards calculation till the block.timestamp
     // If the protocol has L(t) tokens staked at time t, then this function returns rewards from time t to block.timestamp
     // i.e, Rewards generated from the time where first ever staking happened in this contract, till now.
