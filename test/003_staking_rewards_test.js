@@ -14,58 +14,19 @@ let accounts;
 let TokenAddress;
 let LpTokenAddress;
 let StakingRewardsAddress;
+let totalLpStaked = BigNumber.from(0);
 let rewardRate = BigNumber.from(0);
-// let totalStakedSupply = BigNumber.from(0);
 const multiplier = BigNumber.from(10).pow(18);
-// let totalStakedSupplyAtTimestamp = {
-//     "0": "0"
-// }
-// let userStakedBalaceAtTimestamp = {
-//     "0": { "0x": "0" }
-// }
-// let timestamps = [];
 const dayInMs = 60 * 60 * 24 * 1000;
-const dayInS = 60 * 60 * 24;
+const DAY = 60 * 60 * 24
+const dayInS = DAY;
 const HOUR = 60 * 60
+const YEAR = DAY * 365;
+const IOO = BigNumber.from(100);
 
 const wait = (seconds) => new Promise((resolve) => {
     setTimeout(() => { resolve() }, seconds * 1000)
 })
-
-// const setUserStakedBalaceAtTimestamp = (timestamp, address, amount) => {
-//     const temp = {}
-//     temp[address] = String(amount)
-//     userStakedBalaceAtTimestamp[timestamp] = temp
-// }
-
-// const calculateUserRewards = (account) => {
-//     let userReward = BigNumber.from(0);
-//     for (let i = 0; i < timestamps.length; i++) {
-//         const t = timestamps[i]
-
-//         if (timestamps[i + 1]) {
-//             userReward = userReward.add(
-//                 rewardRate
-//                 .mul(BigNumber.from(timestamps[i + 1] - t - 1))
-//                 .mul(userStakedBalaceAtTimestamp[t][String(account)])
-//                     .div(BigNumber.from(totalStakedSupplyAtTimestamp[t]))
-//             )
-//         } else {
-//             userReward = userReward.add(
-//                 rewardRate.mul(userStakedBalaceAtTimestamp[t][String(account)])
-//                     .div(BigNumber.from(totalStakedSupplyAtTimestamp[t]))
-//             )
-//         }
-//         console.log({
-//             time: t,
-//             "l(u, t): ": userStakedBalaceAtTimestamp[t][String(account)],
-//             "L(t): ": totalStakedSupplyAtTimestamp[t],
-//             rewardRate: rewardRate.toString(),
-//             userRewardNow: userReward.toString()
-//         })
-//     }
-//     return userReward
-// }
 
 async function increaseTime(amount) {
     await hre.network.provider.request({
@@ -79,8 +40,7 @@ async function increaseTime(amount) {
 
 describe("Staking Rewards Contract", function () {
     before('deploy contracts', async function () {
-        // userStakedBalaceAtTimestamp = {}
-        // totalStakedSupplyAtTimestamp = {}
+
         accounts = await ethers.getSigners()
 
         console.log(
@@ -133,6 +93,7 @@ describe("Staking Rewards Contract", function () {
         await expect(stakingRewards.connect(accounts[2]).updateMaxReward(BigNumber.from(10).pow(21))).to.be.reverted
         await expect(stakingRewards.updateMaxReward(BigNumber.from(10).pow(21))).to.emit(stakingRewards, "RewardRateUpdated")
         expect(await stakingRewards.maxReward()).to.eq(BigNumber.from(10).pow(21))
+        rewardRate = await stakingRewards.rewardRate();
     });
 
     it('Mints staking token to Account 1', async function () {
@@ -428,7 +389,7 @@ describe("Staking Rewards Contract", function () {
         }
     })
 
-    it("check earning is proportional to stake amount, when more than 1 staker", async () => {
+    it("check earning is proportional to stake amount and according to apy, when more than 1 staker", async () => {
         try {
 
             const accountList = [accounts[10], accounts[11]];
@@ -443,9 +404,15 @@ describe("Staking Rewards Contract", function () {
             const timestamp_on_stake_acc10 = await stakeAndReturnTimestamp(accounts[10], tinyAmount);
             // storing reward values for account 10
             let userRewardPerTokenPaid_account10 = await stakingRewards.rewardPerToken();
+            await updateTotalStakedLpData()
 
             // stake largeAmount from account 11
             const timestamp_on_stake_acc11 = await stakeAndReturnTimestamp(accounts[11], largeAmount);
+
+            // calculating user's reward using apy function
+            const acc10_apy_between_stakeOf10_stakeOf11 = await apy(tinyAmount, timestamp_on_stake_acc11, timestamp_on_stake_acc10);
+            const acc10_duration_between_stake10_stake11 = BigNumber.from(timestamp_on_stake_acc11 - timestamp_on_stake_acc10);
+            let acc10_amnt_as_per_apy = BigNumber.from(acc10_apy_between_stakeOf10_stakeOf11)
             // storing reward values for account 11
             let userRewardPerTokenPaid_account11 = await stakingRewards.rewardPerToken();
 
@@ -457,7 +424,7 @@ describe("Staking Rewards Contract", function () {
             const account11_clay_balance_before_unstake = await clayToken.balanceOf(accounts[11].address);
             const account11_staked_lp_balance = await stakingRewards.balanceOf(accounts[11].address);
 
-            const totalStakedSupply = await stakingRewards.totalSupply();
+            await updateTotalStakedLpData()
 
             console.log(`
                 Account 10
@@ -468,13 +435,17 @@ describe("Staking Rewards Contract", function () {
                 clay balance:                    ${account11_clay_balance_before_unstake}
                 lp balance:                      ${account11_staked_lp_balance}
 
-                totalStakedSupply:               ${totalStakedSupply}
+                totalStakedSupply:               ${totalLpStaked}
             `)
 
             // unstake tinyAmount from account 10 after 1 day, that's when the next block timestamp comes into play
             const timestamp_on_unstake_acc10 = await exitAndReturnTimestamp(accounts[10], tinyAmount);
             // ((_balances[accounts[10]] * (rewardPerToken() - userRewardPerTokenPaid[accounts[11]])) / multiplier ) + rewards[accounts[10])
             let expected_calculated_reward_acc10 = ((BigNumber.from(account10_staked_lp_balance).mul(BigNumber.from(await stakingRewards.rewardPerToken()).sub(userRewardPerTokenPaid_account10))).div(multiplier)).add(BigNumber.from(0));
+
+            const acc10_updated_apy_between_stakeOf11_unstake10 = await apy(tinyAmount, timestamp_on_unstake_acc10, timestamp_on_stake_acc11)
+            // const acc10_duration_excluding_stake10_stake11 = BigNumber.from(timestamp_on_unstake_acc10 - timestamp_on_stake_acc10).sub(acc10_duration_between_stake10_stake11)
+            acc10_amnt_as_per_apy = BigNumber.from(acc10_amnt_as_per_apy).add(acc10_updated_apy_between_stakeOf11_unstake10)
 
             // unstake largeAmount from account 11 after 1 day, that's when the next block timestamp comes into play
             const timestamp_on_unstake_acc11 = await exitAndReturnTimestamp(accounts[11], largeAmount);
@@ -497,6 +468,7 @@ describe("Staking Rewards Contract", function () {
                 rewardRate:                       ${rewardRate}
                 userRewardPerTokenPaid_account10: ${userRewardPerTokenPaid_account10}
                 expected_calculated_reward:       ${expected_calculated_reward_acc10}
+                acc10_amnt_as_per_apy:            ${acc10_amnt_as_per_apy}
                 actual_reward:                    ${actual_reward_acc10}
                 error:                            ${BigNumber.from(expected_calculated_reward_acc10).sub(BigNumber.from(actual_reward_acc10))}
 
@@ -512,6 +484,7 @@ describe("Staking Rewards Contract", function () {
                 error:                            ${BigNumber.from(expected_calculated_reward_acc11).sub(BigNumber.from(actual_reward_acc11))}
                 `)
 
+            expect(acc10_amnt_as_per_apy.toString()).to.be.equal(BigNumber.from(actual_reward_acc10).toString())
             expect(expected_calculated_reward_acc10).to.be.equal(BigNumber.from(actual_reward_acc10).toString())
             expect(expected_calculated_reward_acc11).to.be.equal(BigNumber.from(actual_reward_acc11).toString())
 
@@ -633,6 +606,27 @@ describe("Staking Rewards Contract", function () {
     })
 });
 
+// rewardRate * durationInS * (userLpTokenStaked/totalSupply)
+async function apy(USER_STAKE, end, start, TOTAL_LP = totalLpStaked) {
+    const REWARD_RATE = await stakingRewards.rewardRate();
+
+    const MAXIMUM_REWARD_GIVEN_OVER_GIVEN_TIMESTAMPS = BigNumber.from(REWARD_RATE).mul(BigNumber.from(end - start))
+
+    // console.log(`TOTAL_LP: ${TOTAL_LP}`)
+    // const NUMERATOR = MAXIMUM_REWARD_GIVEN_OVER_GIVEN_TIMESTAMPS.mul(USER_STAKE)
+    // const DENOMINATOR = BigNumber.from(TOTAL_LP);
+    // return NUMERATOR.div(DENOMINATOR)
+
+    const USER_APY = MAXIMUM_REWARD_GIVEN_OVER_GIVEN_TIMESTAMPS.mul(BigNumber.from(USER_STAKE))
+        .div(BigNumber.from(TOTAL_LP))
+    return USER_APY
+}
+
+async function updateTotalStakedLpData() {
+    totalLpStaked = await stakingRewards.totalSupply();
+    return totalLpStaked;
+}
+
 // helper functions
 const getTxTimestamp = tx => new Promise((resolve) => {
     tx.then(async tx => resolve((await ethers.provider.getBlock(tx.blockNumber)).timestamp))
@@ -649,10 +643,6 @@ const mintLpTokens = async (amount, accounts) => {
 
 const approveAllowances = async (approvalAmount, accounts) => {
     for (const i in accounts) {
-        expect(BigNumber.from(await sumeroLpToken.balanceOf(accounts[i].address)).gte(approvalAmount)).to.be.true;
-        await sumeroLpToken.connect(accounts[i]).approve(StakingRewardsAddress, approvalAmount)
-        expect(BigNumber.from(await sumeroLpToken.balanceOf(accounts[i].address)).gte(approvalAmount)).to.be.true;
-        await sumeroLpToken.connect(accounts[i]).approve(StakingRewardsAddress, approvalAmount)
         expect(BigNumber.from(await sumeroLpToken.balanceOf(accounts[i].address)).gte(approvalAmount)).to.be.true;
         await sumeroLpToken.connect(accounts[i]).approve(StakingRewardsAddress, approvalAmount)
     }
