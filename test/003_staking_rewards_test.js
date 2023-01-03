@@ -486,22 +486,15 @@ describe("Staking Rewards Contract", function () {
     })
 
     it("should fail to stake after staking period is over", async () => {
-
-        expect(await getLpTokenBalance(accounts[4])).to.equal(0)
-        await sumeroLpToken.mint(accounts[4].address, ethers.utils.parseUnits('100.0', 'ether'))
-        const balance = await getLpTokenBalance(accounts[4])
-        expect(balance).to.equal(ethers.utils.parseUnits('100.0', 'ether'))
-
-
         const approvalAmount = ethers.utils.parseUnits('40.0', 'ether')
         const amount = ethers.utils.parseUnits('20.0', 'ether')
-        expect(BigNumber.from(await getLpTokenBalance(accounts[4])).gte(approvalAmount)).to.be.true;
-        await sumeroLpToken.connect(accounts[4]).approve(StakingRewardsAddress, approvalAmount)
-        await stakeAndReturnTimestamp(accounts[4], amount);
+
+        await mintLpTokens(ethers.utils.parseUnits('100.0', 'ether'), [accounts[4]]);
+        await approveAllowances(approvalAmount, [accounts[4]]);
 
         console.log("incrementing node time by 3 months");
         await increaseTime(DAY * 30 * 3)
-        expect(await sumeroLpToken.allowance(accounts[4].address, StakingRewardsAddress)).to.eq(amount)
+        expect(await sumeroLpToken.allowance(accounts[4].address, StakingRewardsAddress)).to.eq(approvalAmount)
         await expect(stakingRewards.connect(accounts[4]).stake(amount)).to.be.revertedWith('ClayStakingRewards: STAKING_PERIOD_OVER');
 
     })
