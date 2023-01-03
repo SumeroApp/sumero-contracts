@@ -189,16 +189,11 @@ describe("Staking Rewards Contract", function () {
     // // //todo: get user reward without calling withdraw function
     it('can exit', async function () {
 
-        // Mint LP Tokens to Account 3
-        expect(await getLpTokenBalance(accounts[3])).to.equal(0)
-        await sumeroLpToken.mint(accounts[3].address, ethers.utils.parseUnits('4.0', 'ether'))
-        const balance = await getLpTokenBalance(accounts[3])
-        expect(balance).to.equal(ethers.utils.parseEther("4.0"))
-
-        // Give allowance to the StakingRewards Contract from Account 3
         const amount = ethers.utils.parseUnits('4.0', 'ether')
-        await sumeroLpToken.connect(accounts[3]).approve(StakingRewardsAddress, amount)
-        expect(await sumeroLpToken.allowance(accounts[3].address, StakingRewardsAddress)).to.eq(amount)
+        // Mint LP Tokens to Account 3
+        await mintLpTokens(amount, [accounts[3]]);
+        // Give allowance to the StakingRewards Contract from Account 3
+        await approveAllowances(amount, [accounts[3]]);
 
         // Staking LP Tokens from Account 3
         await stakeAndReturnTimestamp(accounts[3], amount)
@@ -218,22 +213,13 @@ describe("Staking Rewards Contract", function () {
 
     it("account 5 and 6 earning same reward for same staking amount and same staking period", async () => {
 
-        // Minting lp Tokens for account 5 and 6
-        expect(await getLpTokenBalance(accounts[5])).to.equal(0)
-        await sumeroLpToken.mint(accounts[5].address, ethers.utils.parseUnits('20.0', 'ether'))
-        const balance5 = await getLpTokenBalance(accounts[5])
-        expect(balance5).to.equal(ethers.utils.parseUnits('20.0', 'ether'))
-        expect(await getLpTokenBalance(accounts[6])).to.equal(0)
-        await sumeroLpToken.mint(accounts[6].address, ethers.utils.parseUnits('20.0', 'ether'))
-        const balance6 = await getLpTokenBalance(accounts[6])
-        expect(balance6).to.equal(ethers.utils.parseUnits('20.0', 'ether'))
-
         const approvalAmount = ethers.utils.parseUnits('20.0', 'ether')
         const amount = ethers.utils.parseUnits('20.0', 'ether')
-        expect(BigNumber.from(await getLpTokenBalance(accounts[5])).gte(approvalAmount)).to.be.true;
-        await sumeroLpToken.connect(accounts[5]).approve(StakingRewardsAddress, approvalAmount)
-        expect(BigNumber.from(await getLpTokenBalance(accounts[6])).gte(approvalAmount)).to.be.true;
-        await sumeroLpToken.connect(accounts[6]).approve(StakingRewardsAddress, approvalAmount)
+
+        // Minting lp Tokens for account 5 and 6
+        await mintLpTokens(amount, [accounts[5], accounts[6]]);
+        
+        await approveAllowances(approvalAmount, [accounts[5], accounts[6]]);
 
         await stakeAndReturnTimestamp(accounts[5], amount)
         await increaseTime(DAY)
