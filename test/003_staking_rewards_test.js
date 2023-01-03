@@ -248,7 +248,7 @@ describe("Staking Rewards Contract", function () {
             let userRewardPerTokenPaid_account7 = await stakingRewards.rewardPerToken();
 
             // set next blocktimestamp 2 days in future
-            await time.setNextBlockTimestamp(timestamp_on_stake_acc7 + (2 * DAY));
+            await timeTravel(timestamp_on_stake_acc7 + (2 * DAY));
 
             const account7_clay_balance_before_unstake = await getClayBalance(accounts[7]);
             const account7_staked_lp_balance = await getUserStakedBalance(accounts[7]);
@@ -306,7 +306,7 @@ describe("Staking Rewards Contract", function () {
             let userRewardPerTokenPaid_account9 = await stakingRewards.rewardPerToken();
 
             // set next blocktimestamp 1 days in future
-            await time.setNextBlockTimestamp(timestamp_on_stake_acc8 + (1 * DAY));
+            await timeTravel(timestamp_on_stake_acc8 + (1 * DAY));
 
             const account8_clay_balance_before_unstake = await getClayBalance(accounts[8]);
             const account8_staked_lp_balance = await getUserStakedBalance(accounts[8]);
@@ -400,7 +400,7 @@ describe("Staking Rewards Contract", function () {
             let userRewardPerTokenPaid_account11 = await stakingRewards.rewardPerToken();
 
             // set next blocktimestamp 1 day in future
-            await time.setNextBlockTimestamp(timestamp_on_stake_acc10 + (1 * DAY));
+            await timeTravel(timestamp_on_stake_acc10 + (1 * DAY));
 
             const account10_clay_balance_before_unstake = await getClayBalance(accounts[10]);
             const account10_staked_lp_balance = await getUserStakedBalance(accounts[10]);
@@ -517,6 +517,8 @@ const getLpTokenBalance = account => sumeroLpToken.balanceOf(account.address)
 const getUserStakedBalance = account => stakingRewards.balanceOf(account.address)
 
 const getClayBalance = account => clayToken.balanceOf(account.address)
+
+const timeTravel = timestamp => time.setNextBlockTimestamp(timestamp)
 
 // rewardRate * durationInS * (userLpTokenStaked/totalSupply)
 async function apy(USER_STAKE, end, start, TOTAL_LP = totalLpStaked) {
