@@ -186,7 +186,6 @@ describe("Staking Rewards Contract", function () {
         await stakingRewards.unpause()
 
     });
-    // // //todo: get user reward without calling withdraw function
     it('can exit', async function () {
 
         const amount = ethers.utils.parseUnits('4.0', 'ether')
@@ -218,7 +217,7 @@ describe("Staking Rewards Contract", function () {
 
         // Minting lp Tokens for account 5 and 6
         await mintLpTokens(amount, [accounts[5], accounts[6]]);
-        
+
         await approveAllowances(approvalAmount, [accounts[5], accounts[6]]);
 
         await stakeAndReturnTimestamp(accounts[5], amount)
@@ -372,7 +371,7 @@ describe("Staking Rewards Contract", function () {
         }
     })
 
-    it("check earning is proportional to stake amount and according to apy, when more than 1 staker", async () => {
+    it("check earning is according to stake amount and apy, when more than 1 staker", async () => {
         try {
 
             const accountList = [accounts[10], accounts[11]];
@@ -470,16 +469,6 @@ describe("Staking Rewards Contract", function () {
             expect(acc10_amnt_as_per_apy.toString()).to.be.equal(BigNumber.from(actual_reward_acc10).toString())
             expect(expected_calculated_reward_acc10).to.be.equal(BigNumber.from(actual_reward_acc10).toString())
             expect(expected_calculated_reward_acc11).to.be.equal(BigNumber.from(actual_reward_acc11).toString())
-
-            console.log(`
-            Proportion of rewards earned by account 10 to account 11:
-            ${actual_reward_acc10 / actual_reward_acc11}
-            `)
-
-            console.log(`
-            Proportion of rewards earned by account 11 to account 10:
-            ${actual_reward_acc11 / actual_reward_acc10}
-            `)
         } catch (err) {
             console.log(err);
         }
@@ -500,6 +489,7 @@ describe("Staking Rewards Contract", function () {
     })
 });
 
+// helper functions
 const stakes = {};
 const unstakes = {};
 const totalStaked = {};
@@ -514,7 +504,7 @@ const getClayBalance = account => clayToken.balanceOf(account.address)
 const timeTravel = timestamp => time.setNextBlockTimestamp(timestamp)
 
 // rewardRate * durationInS * (userLpTokenStaked/totalSupply)
-async function apy(USER_STAKE, end, start, TOTAL_LP = totalLpStaked) {
+const apy = async (USER_STAKE, end, start, TOTAL_LP = totalLpStaked) => {
     const REWARD_RATE = await stakingRewards.rewardRate();
 
     const MAXIMUM_REWARD_GIVEN_OVER_GIVEN_TIMESTAMPS = BigNumber.from(REWARD_RATE).mul(BigNumber.from(end - start))
@@ -524,12 +514,11 @@ async function apy(USER_STAKE, end, start, TOTAL_LP = totalLpStaked) {
     return USER_APY
 }
 
-async function updateTotalStakedLpVar() {
+const updateTotalStakedLpVar = async () => {
     totalLpStaked = await stakingRewards.totalSupply();
     return totalLpStaked;
 }
 
-// helper functions
 const getTxTimestamp = tx => new Promise((resolve) => {
     tx.then(async tx => resolve((await ethers.provider.getBlock(tx.blockNumber)).timestamp))
 })
@@ -564,7 +553,7 @@ const stakeAndReturnTimestamp = async (account, amount) => {
 const exitAndReturnTimestamp = async (account, amount, expectedReward = 0) => {
     const tx = stakingRewards.connect(account).exit();
     await expect(tx).to.emit(stakingRewards, "Withdrawn").withArgs(account.address, amount).to.emit(stakingRewards, "RewardPaid");
-    if(expectedReward) await expect(tx).to.emit(stakingRewards, "RewardPaid").withArgs(account.address, expectedReward);
+    if (expectedReward) await expect(tx).to.emit(stakingRewards, "RewardPaid").withArgs(account.address, expectedReward);
     await logEventsFromTx(tx);
     const t = await getTxTimestamp(tx);
     unstakes[t] = BigNumber.from(amount)

@@ -6,6 +6,7 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./interfaces/IClayToken.sol";
+
 // import "hardhat/console.sol";
 
 /**
@@ -105,9 +106,7 @@ contract ClayStakingRewards is Ownable, ReentrancyGuard, Pausable {
 
     /* ========== MUTATIVE FUNCTIONS ========== */
 
-    function stake(
-        uint256 _amount
-    )
+    function stake(uint256 _amount)
         external
         nonReentrant
         whenNotPaused
@@ -129,9 +128,7 @@ contract ClayStakingRewards is Ownable, ReentrancyGuard, Pausable {
         emit Staked(msg.sender, _amount);
     }
 
-    function withdraw(
-        uint256 _amount
-    )
+    function withdraw(uint256 _amount)
         public
         nonReentrant
         updateReward(msg.sender)
@@ -183,10 +180,10 @@ contract ClayStakingRewards is Ownable, ReentrancyGuard, Pausable {
     }
 
     // Added to support recovering LP Rewards from other systems
-    function recoverERC20(
-        address tokenAddress,
-        uint256 tokenAmount
-    ) external onlyOwner {
+    function recoverERC20(address tokenAddress, uint256 tokenAmount)
+        external
+        onlyOwner
+    {
         require(
             tokenAddress != address(stakingToken),
             "Cannot withdraw the staking token"
