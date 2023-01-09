@@ -38,7 +38,6 @@ contract ClayStakingRewards is Ownable, ReentrancyGuard, Pausable {
     uint256 public rewardPerTokenStored;
     uint256 public periodFinish; // Contract lifetime.
     uint256 public maxReward; // Max reward that this contract will emit during it's lifetime.
-    uint256 public rewardsPaidSoFar;
 
     mapping(address => uint256) public userRewardPerTokenPaid;
     mapping(address => uint256) public rewards;
@@ -155,7 +154,6 @@ contract ClayStakingRewards is Ownable, ReentrancyGuard, Pausable {
         uint256 reward = rewards[msg.sender];
         require(reward > 0, "ClayStakingRewards: NO_REWARDS");
         rewards[msg.sender] = 0;
-        rewardsPaidSoFar += reward;
         // Sumero Owner needs to grant MINTER_ROLE for CLAY to StakingRewards
         clayToken.mint(msg.sender, reward);
         emit RewardPaid(msg.sender, reward);
@@ -172,9 +170,12 @@ contract ClayStakingRewards is Ownable, ReentrancyGuard, Pausable {
     }
 
     function updateMaxReward(uint256 _maxReward) external onlyOwner {
+        rewardPerTokenStored = rewardPerToken();
+        require(rewardPerTokenStored < _maxReward, "ClayStakingRewards: INVALID_MAX_REWARD_AMOUNT");
+        lastUpdateTime = lastRewardTimeApplicable();
         maxReward = _maxReward;
         rewardRate =
-            (_maxReward - rewardsPaidSoFar) /
+            (_maxReward - rewardPerTokenStored/1e18) /
             (periodFinish - block.timestamp);
         emit RewardRateUpdated(rewardRate);
     }
