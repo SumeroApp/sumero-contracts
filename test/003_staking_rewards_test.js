@@ -400,7 +400,6 @@ describe("Staking Rewards Contract", function () {
         const account11_clay_balance_before_unstake = await getClayBalance(accounts[11]);
         const account11_staked_lp_balance = await getUserStakedBalance(accounts[11]);
 
-        await getTotalStakedLpVar()
 
         console.log(`
                 Account 10
@@ -467,7 +466,7 @@ describe("Staking Rewards Contract", function () {
                 expected_calculated_reward:       ${expected_calculated_reward_acc11}
                 acc11_amnt_as_per_apy:            ${acc11_amnt_as_per_apy}
                 actual_reward:                    ${actual_reward_acc11}
-                error:                            ${sub(expected_calculated_reward_acc11, actual_reward_acc11)}
+                error:                            ${sub(acc11_amnt_as_per_apy, actual_reward_acc11)}
                 `)
 
         expect(acc10_amnt_as_per_apy.toString()).to.be.equal(BigNumber.from(actual_reward_acc10).toString())
