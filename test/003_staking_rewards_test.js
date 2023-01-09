@@ -375,22 +375,22 @@ describe("Staking Rewards Contract", function () {
         const tinyAmount = ethers.utils.parseUnits('0.00001', 'ether');
         const largeAmount = ethers.utils.parseUnits('100.0', 'ether');
 
-            // stake tinyAmount from account 10
-            const timestamp_on_stake_acc10 = await stakeAndReturnTimestamp(accounts[10], tinyAmount);
-            // storing reward values for account 10
-            let userRewardPerTokenPaid_account10 = await stakingRewards.rewardPerToken();
-            const totalSupplyAfterStakeOf10 = await getTotalStakedLpVar();
+        // stake tinyAmount from account 10
+        const timestamp_on_stake_acc10 = await stakeAndReturnTimestamp(accounts[10], tinyAmount);
+        // storing reward values for account 10
+        let userRewardPerTokenPaid_account10 = await stakingRewards.rewardPerToken();
+        const totalSupplyAfterStakeOf10 = await getTotalStakedLpVar();
 
         // stake largeAmount from account 11
         const timestamp_on_stake_acc11 = await stakeAndReturnTimestamp(accounts[11], largeAmount);
-            const totalSupplyAfterStakeOf11 = await getTotalStakedLpVar();
+        const totalSupplyAfterStakeOf11 = await getTotalStakedLpVar();
 
-            // calculating account 10 reward using apy function
-            const acc10_apy_between_stakeOf10_stakeOf11 = await apy(tinyAmount, timestamp_on_stake_acc11, timestamp_on_stake_acc10, totalSupplyAfterStakeOf10);
-            const acc10_duration_between_stake10_stake11 = BigNumber.from(timestamp_on_stake_acc11 - timestamp_on_stake_acc10);
-            let acc10_amnt_as_per_apy = BigNumber.from(acc10_apy_between_stakeOf10_stakeOf11)
-            // storing reward values for account 11
-            let userRewardPerTokenPaid_account11 = await stakingRewards.rewardPerToken();
+        // calculating account 10 reward using apy function
+        const acc10_apy_between_stakeOf10_stakeOf11 = await apy(tinyAmount, timestamp_on_stake_acc11, timestamp_on_stake_acc10, totalSupplyAfterStakeOf10);
+        const acc10_duration_between_stake10_stake11 = BigNumber.from(timestamp_on_stake_acc11 - timestamp_on_stake_acc10);
+        let acc10_amnt_as_per_apy = BigNumber.from(acc10_apy_between_stakeOf10_stakeOf11)
+        // storing reward values for account 11
+        let userRewardPerTokenPaid_account11 = await stakingRewards.rewardPerToken();
 
         // set next blocktimestamp 1 day in future
         await timeTravel(timestamp_on_stake_acc10 + (1 * DAY));
@@ -414,27 +414,27 @@ describe("Staking Rewards Contract", function () {
                 totalStakedSupply:               ${totalLpStaked}
             `)
 
-            // unstake tinyAmount from account 10 after 1 day, that's when the next block timestamp comes into play
-            const timestamp_on_unstake_acc10 = await exitAndReturnTimestamp(accounts[10], tinyAmount);
-            // ((_balances[accounts[10]] * (rewardPerToken() - userRewardPerTokenPaid[accounts[11]])) / multiplier ) + rewards[accounts[10])
-            let expected_calculated_reward_acc10 = ((BigNumber.from(account10_staked_lp_balance).mul(BigNumber.from(await stakingRewards.rewardPerToken()).sub(userRewardPerTokenPaid_account10))).div(multiplier)).add(BigNumber.from(0));
-            const totalSupplyAfterUnStakeOf10 = await getTotalStakedLpVar();
+        // unstake tinyAmount from account 10 after 1 day, that's when the next block timestamp comes into play
+        const timestamp_on_unstake_acc10 = await exitAndReturnTimestamp(accounts[10], tinyAmount);
+        // ((_balances[accounts[10]] * (rewardPerToken() - userRewardPerTokenPaid[accounts[11]])) / multiplier ) + rewards[accounts[10])
+        let expected_calculated_reward_acc10 = ((BigNumber.from(account10_staked_lp_balance).mul(BigNumber.from(await stakingRewards.rewardPerToken()).sub(userRewardPerTokenPaid_account10))).div(multiplier)).add(BigNumber.from(0));
+        const totalSupplyAfterUnStakeOf10 = await getTotalStakedLpVar();
 
-            // calculating account 11 reward using apy function
-            // stake 10, stake 11, unstake 10, unstake 11
-            const acc11_apy_between_stakeOf11_unstakeOf10 = await apy(largeAmount, timestamp_on_unstake_acc10, timestamp_on_stake_acc11, totalSupplyAfterStakeOf11);
-            const acc10_updated_apy_between_stakeOf11_unstake10 = await apy(tinyAmount, timestamp_on_unstake_acc10, timestamp_on_stake_acc11, totalSupplyAfterStakeOf11);
-            // const acc10_duration_excluding_stake10_stake11 = BigNumber.from(timestamp_on_unstake_acc10 - timestamp_on_stake_acc10).sub(acc10_duration_between_stake10_stake11)
-            acc10_amnt_as_per_apy = BigNumber.from(acc10_amnt_as_per_apy).add(acc10_updated_apy_between_stakeOf11_unstake10);
+        // calculating account 11 reward using apy function
+        // stake 10, stake 11, unstake 10, unstake 11
+        const acc11_apy_between_stakeOf11_unstakeOf10 = await apy(largeAmount, timestamp_on_unstake_acc10, timestamp_on_stake_acc11, totalSupplyAfterStakeOf11);
+        const acc10_updated_apy_between_stakeOf11_unstake10 = await apy(tinyAmount, timestamp_on_unstake_acc10, timestamp_on_stake_acc11, totalSupplyAfterStakeOf11);
+        // const acc10_duration_excluding_stake10_stake11 = BigNumber.from(timestamp_on_unstake_acc10 - timestamp_on_stake_acc10).sub(acc10_duration_between_stake10_stake11)
+        acc10_amnt_as_per_apy = BigNumber.from(acc10_amnt_as_per_apy).add(acc10_updated_apy_between_stakeOf11_unstake10);
 
-            // unstake largeAmount from account 11 after 1 day, that's when the next block timestamp comes into play
-            const timestamp_on_unstake_acc11 = await exitAndReturnTimestamp(accounts[11], largeAmount);
-            // ((_balances[accounts[11]] * (rewardPerToken() - userRewardPerTokenPaid[accounts[10]])) / multiplier ) + rewards[accounts[11])
-            let expected_calculated_reward_acc11 = ((BigNumber.from(account11_staked_lp_balance).mul(BigNumber.from(await stakingRewards.rewardPerToken()).sub(userRewardPerTokenPaid_account11))).div(multiplier)).add(BigNumber.from(0));
-            const totalSupplyAfterUnStakeOf11 = await getTotalStakedLpVar();
+        // unstake largeAmount from account 11 after 1 day, that's when the next block timestamp comes into play
+        const timestamp_on_unstake_acc11 = await exitAndReturnTimestamp(accounts[11], largeAmount);
+        // ((_balances[accounts[11]] * (rewardPerToken() - userRewardPerTokenPaid[accounts[10]])) / multiplier ) + rewards[accounts[11])
+        let expected_calculated_reward_acc11 = ((BigNumber.from(account11_staked_lp_balance).mul(BigNumber.from(await stakingRewards.rewardPerToken()).sub(userRewardPerTokenPaid_account11))).div(multiplier)).add(BigNumber.from(0));
+        const totalSupplyAfterUnStakeOf11 = await getTotalStakedLpVar();
 
-            const acc11_apy_between_unstakeOf11_unstakeOf10 = await apy(largeAmount, timestamp_on_unstake_acc11, timestamp_on_unstake_acc10, totalSupplyAfterUnStakeOf10);
-            let acc11_amnt_as_per_apy = acc11_apy_between_stakeOf11_unstakeOf10.add(acc11_apy_between_unstakeOf11_unstakeOf10)
+        const acc11_apy_between_unstakeOf11_unstakeOf10 = await apy(largeAmount, timestamp_on_unstake_acc11, timestamp_on_unstake_acc10, totalSupplyAfterUnStakeOf10);
+        let acc11_amnt_as_per_apy = acc11_apy_between_stakeOf11_unstakeOf10.add(acc11_apy_between_unstakeOf11_unstakeOf10)
 
 
         // calculate earning for account 10 and account 11 reward
@@ -483,11 +483,11 @@ describe("Staking Rewards Contract", function () {
             Proportion of rewards earned by account 11 to account 10:
             ${actual_reward_acc11 / actual_reward_acc10}
             `)
-            expect(acc10_amnt_as_per_apy.toString()).to.be.equal(BigNumber.from(actual_reward_acc10).toString())
-            expect(expected_calculated_reward_acc10).to.be.equal(BigNumber.from(actual_reward_acc10).toString())
-            expect(acc11_amnt_as_per_apy.toString()).to.be.equal(BigNumber.from(actual_reward_acc11).toString())
-            expect(expected_calculated_reward_acc11).to.be.equal(BigNumber.from(actual_reward_acc11).toString())
-        
+        expect(acc10_amnt_as_per_apy.toString()).to.be.equal(BigNumber.from(actual_reward_acc10).toString())
+        expect(expected_calculated_reward_acc10).to.be.equal(BigNumber.from(actual_reward_acc10).toString())
+        expect(acc11_amnt_as_per_apy.toString()).to.be.equal(BigNumber.from(actual_reward_acc11).toString())
+        expect(expected_calculated_reward_acc11).to.be.equal(BigNumber.from(actual_reward_acc11).toString())
+
     })
 
     it("should fail to stake after staking period is over", async () => {
@@ -600,10 +600,10 @@ const logEventsFromTx = async (tx) => {
     }
 }
 
-function sub (a, b){
+function sub(a, b) {
     return BigNumber.from(a).sub(BigNumber.from(b))
 }
 
-function add (a, b){
+function add(a, b) {
     return BigNumber.from(a).add(BigNumber.from(b))
 }
