@@ -17,6 +17,7 @@ let StakingRewardsAddress;
 let totalLpStaked = BigNumber.from(0);
 let rewardRate = BigNumber.from(0);
 const multiplier = BigNumber.from(10).pow(18);
+const MAX_PRECISION_ERR = BigNumber.from(500);
 const HOUR = 60 * 60
 const DAY = HOUR * 24
 const MONTH = 30 * DAY;
@@ -484,13 +485,10 @@ describe("Staking Rewards Contract", function () {
             `)
         expect(acc10_amnt_as_per_apy.toString()).to.be.equal(BigNumber.from(actual_reward_acc10).toString())
         expect(expected_calculated_reward_acc10).to.be.equal(BigNumber.from(actual_reward_acc10).toString())
-        try{
-            // There is precision error in the calculcation
-            // This happens in rewardPerToken() calculation.
-            // when _totalSupply is devided in “rewardPerTokenStored +((rewardRate * (lastRewardTimeApplicable() - lastUpdateTime) * 1e18) / _totalSupply)”
-            
-            expect(acc11_amnt_as_per_apy.toString()).to.be.equal(BigNumber.from(actual_reward_acc11).toString())
-        }catch{}
+        // There is precision error in the calculcation
+        // This happens in rewardPerToken() calculation.
+        // when _totalSupply is devided in “rewardPerTokenStored +((rewardRate * (lastRewardTimeApplicable() - lastUpdateTime) * 1e18) / _totalSupply)”
+        expect(sub(acc11_amnt_as_per_apy, actual_reward_acc11).lt(MAX_PRECISION_ERR)).to.be.true;
         expect(expected_calculated_reward_acc11).to.be.equal(BigNumber.from(actual_reward_acc11).toString())
 
     })
