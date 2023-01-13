@@ -484,18 +484,15 @@ describe("Staking Rewards Contract", function () {
 
     })
 
-    // In progress
     it("checks rewards are proportionate for same stake amount", async () => {
         const stake_amount = ethers.utils.parseUnits('20.0', 'ether')
 
         await mintAndApprove(ethers.utils.parseUnits('100.0', 'ether'), [accounts[12], accounts[13], accounts[14]]);
         
         const timestamp_on_stake_acc12 = await stakeAndReturnTimestamp(accounts[12], stake_amount);
-        const totalRewardsTillStake12 = await stakingRewards.rewardPerTokenStored();
         await timeTravel(timestamp_on_stake_acc12 + DAY * 1)
 
         const timestamp_on_stake_acc13 = await stakeAndReturnTimestamp(accounts[13], stake_amount);
-        const totalRewardsTillStake13 = await stakingRewards.rewardPerTokenStored();
         await timeTravel(timestamp_on_stake_acc13 + DAY * 1)
 
         const timestamp_on_unstake_acc13 = await exitAndReturnTimestamp(accounts[13], stake_amount);
@@ -509,6 +506,9 @@ describe("Staking Rewards Contract", function () {
         const p_acc12_reward_between_unstake12_unstake13 = rewardRate.mul(BigNumber.from(timestamp_on_unstake_acc12 - timestamp_on_unstake_acc13 ))
         const proportionate_expected_reward_acc12 = add(add(p_acc12_reward_between_stake12and13, p_acc12_reward_between_stake13_unstake13), p_acc12_reward_between_unstake12_unstake13)
         expect(proportionate_expected_reward_acc12.toString()).to.be.equal((await getClayBalance(accounts[12])).toString())
+
+        // checking for acc13
+        expect(p_acc12_reward_between_stake13_unstake13.toString()).to.be.equal((await getClayBalance(accounts[13])).toString())
 
     })
 
