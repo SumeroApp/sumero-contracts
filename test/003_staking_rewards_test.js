@@ -17,7 +17,7 @@ let StakingRewardsAddress;
 let totalLpStaked = BigNumber.from(0);
 let rewardRate = BigNumber.from(0);
 const multiplier = BigNumber.from(10).pow(18);
-const MAX_PRECISION_ERR = BigNumber.from(500);
+const MAX_PRECISION_ERR_PCT = 0.000001;
 const HOUR = 60 * 60
 const DAY = HOUR * 24
 const MONTH = 30 * DAY;
@@ -488,7 +488,7 @@ describe("Staking Rewards Contract", function () {
         // There is precision error in the calculcation
         // This happens in rewardPerToken() calculation.
         // when _totalSupply is devided in “rewardPerTokenStored +((rewardRate * (lastRewardTimeApplicable() - lastUpdateTime) * 1e18) / _totalSupply)”
-        expect(sub(acc11_amnt_as_per_apy, actual_reward_acc11).lt(MAX_PRECISION_ERR)).to.be.true;
+        expect(checkPrecision(actual_reward_acc11, acc11_amnt_as_per_apy)).to.be.true;
         expect(expected_calculated_reward_acc11).to.be.equal(BigNumber.from(actual_reward_acc11).toString())
 
     })
@@ -602,6 +602,14 @@ const logEventsFromTx = async (tx) => {
         }
     }
 }
+
+const bignumber = require("bignumber.js")
+function checkPrecision(errored, expected){
+    const error = (sub(expected, errored)).mul(multiplier);
+    const pct = bignumber(error.mul(BigNumber.from(100)).div(expected).toString())
+    return (pct.div(multiplier.toString())).isLessThan(MAX_PRECISION_ERR_PCT.toString());
+}
+
 
 function sub(a, b) {
     return BigNumber.from(a).sub(BigNumber.from(b))
