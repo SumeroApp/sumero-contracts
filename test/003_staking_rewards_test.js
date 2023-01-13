@@ -276,8 +276,6 @@ describe("Staking Rewards Contract", function () {
                 staked timestamp:                ${timestamp_on_stake_acc7}
                 unstaked timestamp:              ${timestamp_on_unstake_acc7}
                 stake duration:                  ${timestamp_on_unstake_acc7 - timestamp_on_stake_acc7}
-                rewardRate:                      ${rewardRate}
-                userRewardPerTokenPaid_account7: ${userRewardPerTokenPaid_account7}
                 expected_calculated_reward:      ${expected_calculated_reward}
                 actual_reward:                   ${actual_reward}
                 error:                           ${sub(expected_calculated_reward, actual_reward)}
@@ -342,10 +340,7 @@ describe("Staking Rewards Contract", function () {
                 Account 8
                 amount:                          ${amount}
                 staked timestamp:                ${timestamp_on_stake_acc8}
-                unstaked timestamp:              ${timestamp_on_unstake_acc8}
                 stake duration:                  ${timestamp_on_unstake_acc8 - timestamp_on_stake_acc8}
-                rewardRate:                      ${rewardRate}
-                userRewardPerTokenPaid_account8: ${userRewardPerTokenPaid_account8}
                 expected_calculated_reward:      ${expected_calculated_reward_acc8}
                 actual_reward:                   ${actual_reward_acc8}
                 error:                           ${sub(expected_calculated_reward_acc8, actual_reward_acc8)}
@@ -353,10 +348,7 @@ describe("Staking Rewards Contract", function () {
                 Account 9
                 amount:                          ${amount}
                 staked timestamp:                ${timestamp_on_stake_acc9}
-                unstaked timestamp:              ${timestamp_on_unstake_acc9}
                 stake duration:                  ${timestamp_on_unstake_acc9 - timestamp_on_stake_acc9}
-                rewardRate:                      ${rewardRate}
-                userRewardPerTokenPaid_account9: ${userRewardPerTokenPaid_account9}
                 expected_calculated_reward:      ${expected_calculated_reward_acc9}
                 actual_reward:                   ${actual_reward_acc9}
                 error:                           ${sub(expected_calculated_reward_acc9, actual_reward_acc9)}
