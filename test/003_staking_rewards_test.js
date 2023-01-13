@@ -362,8 +362,7 @@ describe("Staking Rewards Contract", function () {
 
         const accountList = [accounts[10], accounts[11]];
         const amount = ethers.utils.parseUnits('100.0', 'ether');
-        await mintLpTokens(amount, accountList);
-        await approveAllowances(amount, accountList);
+        await mintAndApprove(amount, accountList);
 
         const tinyAmount = ethers.utils.parseUnits('0.00001', 'ether');
         const largeAmount = ethers.utils.parseUnits('100.0', 'ether');
@@ -485,6 +484,34 @@ describe("Staking Rewards Contract", function () {
 
     })
 
+    // In progress
+    it("checks rewards are proportionate for same stake amount", async () => {
+        const stake_amount = ethers.utils.parseUnits('20.0', 'ether')
+
+        await mintAndApprove(ethers.utils.parseUnits('100.0', 'ether'), [accounts[12], accounts[13], accounts[14]]);
+        
+        const timestamp_on_stake_acc12 = await stakeAndReturnTimestamp(accounts[12], stake_amount);
+        const totalRewardsTillStake12 = await stakingRewards.rewardPerTokenStored();
+        await timeTravel(timestamp_on_stake_acc12 + DAY * 1)
+
+        const timestamp_on_stake_acc13 = await stakeAndReturnTimestamp(accounts[13], stake_amount);
+        const totalRewardsTillStake13 = await stakingRewards.rewardPerTokenStored();
+        await timeTravel(timestamp_on_stake_acc13 + DAY * 1)
+
+        const timestamp_on_unstake_acc13 = await exitAndReturnTimestamp(accounts[13], stake_amount);
+        await timeTravel(timestamp_on_unstake_acc13 + DAY * 1)
+
+        const timestamp_on_unstake_acc12 = await exitAndReturnTimestamp(accounts[12], stake_amount);
+
+        // calculating for acc12
+        const p_acc12_reward_between_stake12and13 = rewardRate.mul(BigNumber.from(timestamp_on_stake_acc13 - timestamp_on_stake_acc12))
+        const p_acc12_reward_between_stake13_unstake13 = rewardRate.mul(BigNumber.from(timestamp_on_unstake_acc13 - timestamp_on_stake_acc13)).div(BigNumber.from(2))
+        const p_acc12_reward_between_unstake12_unstake13 = rewardRate.mul(BigNumber.from(timestamp_on_unstake_acc12 - timestamp_on_unstake_acc13 ))
+        const proportionate_expected_reward_acc12 = add(add(p_acc12_reward_between_stake12and13, p_acc12_reward_between_stake13_unstake13), p_acc12_reward_between_unstake12_unstake13)
+        expect(proportionate_expected_reward_acc12.toString()).to.be.equal((await getClayBalance(accounts[12])).toString())
+
+    })
+
     it("should fail to stake after staking period is over", async () => {
         const approvalAmount = ethers.utils.parseUnits('40.0', 'ether')
         const amount = ethers.utils.parseUnits('20.0', 'ether')
@@ -550,6 +577,11 @@ const approveAllowances = async (approvalAmount, accounts) => {
     }
 }
 
+const mintAndApprove = async (amount, accounts) =>{
+    await mintLpTokens(amount, accounts)
+    await approveAllowances(amount, accounts)
+}
+
 const stakeAndReturnTimestamp = async (account, amount) => {
     const tx = stakingRewards.connect(account).stake(amount);
     await expect(tx).to.emit(stakingRewards, "Staked").withArgs(account.address, amount);
@@ -596,10 +628,10 @@ const logEventsFromTx = async (tx) => {
 }
 
 const bignumber = require("bignumber.js")
-function checkPrecision(errored, expected){
+function checkPrecision(errored, expected, max_expected_precision_err_pct = MAX_PRECISION_ERR_PCT){
     const error = (sub(expected, errored)).mul(multiplier);
     const pct = bignumber(error.mul(BigNumber.from(100)).div(expected).toString())
-    return (pct.div(multiplier.toString())).isLessThan(MAX_PRECISION_ERR_PCT.toString());
+    return (pct.div(multiplier.toString())).isLessThan(max_expected_precision_err_pct);
 }
 
 
