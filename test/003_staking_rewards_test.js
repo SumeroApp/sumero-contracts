@@ -487,7 +487,7 @@ describe("Staking Rewards Contract", function () {
     it("checks rewards are proportionate for same stake amount", async () => {
         const stake_amount = ethers.utils.parseUnits('20.0', 'ether')
 
-        await mintAndApprove(ethers.utils.parseUnits('100.0', 'ether'), [accounts[12], accounts[13], accounts[14]]);
+        await mintAndApprove(ethers.utils.parseUnits('100.0', 'ether'), [accounts[12], accounts[13]]);
         
         const timestamp_on_stake_acc12 = await stakeAndReturnTimestamp(accounts[12], stake_amount);
         await timeTravel(timestamp_on_stake_acc12 + DAY * 1)
@@ -509,6 +509,37 @@ describe("Staking Rewards Contract", function () {
 
         // checking for acc13
         expect(p_acc12_reward_between_stake13_unstake13.toString()).to.be.equal((await getClayBalance(accounts[13])).toString())
+
+    })
+
+    it("checks rewards are proportionate for different stake amounts", async () => {
+        const large_stake_amount = ethers.utils.parseUnits('20.0', 'ether')
+        const tiny_stake_amount = ethers.utils.parseUnits('0.001', 'ether')
+
+        await mintAndApprove(ethers.utils.parseUnits('100.0', 'ether'), [accounts[14], accounts[15]]);
+        
+        const timestamp_on_stake_acc14 = await stakeAndReturnTimestamp(accounts[14], large_stake_amount);
+        await timeTravel(timestamp_on_stake_acc14 + DAY * 1)
+
+        const timestamp_on_stake_acc15 = await stakeAndReturnTimestamp(accounts[15], tiny_stake_amount);
+        await timeTravel(timestamp_on_stake_acc15 + DAY * 1)
+
+        const timestamp_on_unstake_acc15 = await exitAndReturnTimestamp(accounts[15], tiny_stake_amount);
+        await timeTravel(timestamp_on_unstake_acc15 + DAY * 1)
+
+        const timestamp_on_unstake_acc14 = await exitAndReturnTimestamp(accounts[14], large_stake_amount);
+
+        // calculating for acc14
+        const p_acc14_reward_between_stake14and15 = rewardRate.mul(BigNumber.from(timestamp_on_stake_acc15 - timestamp_on_stake_acc14))
+        const p_acc14_reward_between_stake15_unstake15 = (rewardRate.mul(BigNumber.from(timestamp_on_unstake_acc15 - timestamp_on_stake_acc15)).mul((large_stake_amount.mul(multiplier)).div(tiny_stake_amount.add(large_stake_amount)))).div(multiplier)
+        const p_acc14_reward_between_unstake14_unstake15 = rewardRate.mul(BigNumber.from(timestamp_on_unstake_acc14 - timestamp_on_unstake_acc15 ))
+        const proportionate_expected_reward_acc14 = add(add(p_acc14_reward_between_stake14and15, p_acc14_reward_between_stake15_unstake15), p_acc14_reward_between_unstake14_unstake15)
+        console.log("await getClayBalance(accounts[14])).toString()", (await getClayBalance(accounts[14])).toString())
+        expect(checkPrecision(await getClayBalance(accounts[14]), proportionate_expected_reward_acc14)).to.be.true;
+
+        // checking for acc15
+        const proportionate_reward_acc15 = (rewardRate.mul(BigNumber.from(timestamp_on_unstake_acc15 - timestamp_on_stake_acc15)).mul((tiny_stake_amount.mul(multiplier)).div(tiny_stake_amount.add(large_stake_amount)))).div(multiplier)
+        expect(checkPrecision(await getClayBalance(accounts[15]), proportionate_reward_acc15)).to.be.true;
 
     })
 
