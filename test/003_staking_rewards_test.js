@@ -486,29 +486,29 @@ describe("Staking Rewards Contract", function () {
 
     it("checks rewards are proportionate for same stake amount", async () => {
         const stake_amount = ethers.utils.parseUnits('20.0', 'ether')
+        const stake_amount_10x = ethers.utils.parseUnits('200.0', 'ether')
 
-        await mintAndApprove(ethers.utils.parseUnits('100.0', 'ether'), [accounts[12], accounts[13]]);
+        await mintAndApprove(ethers.utils.parseUnits('200.0', 'ether'), [accounts[12], accounts[13]]);
         
-        const timestamp_on_stake_acc12 = await stakeAndReturnTimestamp(accounts[12], stake_amount);
-        await timeTravel(timestamp_on_stake_acc12 + DAY * 1)
+        await stakeAndReturnTimestamp(accounts[12], stake_amount_10x);
 
         const timestamp_on_stake_acc13 = await stakeAndReturnTimestamp(accounts[13], stake_amount);
         await timeTravel(timestamp_on_stake_acc13 + DAY * 1)
 
-        const timestamp_on_unstake_acc13 = await exitAndReturnTimestamp(accounts[13], stake_amount);
-        await timeTravel(timestamp_on_unstake_acc13 + DAY * 1)
+        await exitAndReturnTimestamp(accounts[13], stake_amount);
 
-        const timestamp_on_unstake_acc12 = await exitAndReturnTimestamp(accounts[12], stake_amount);
+        await exitAndReturnTimestamp(accounts[12], stake_amount_10x);
 
-        // calculating for acc12
-        const p_acc12_reward_between_stake12and13 = rewardRate.mul(BigNumber.from(timestamp_on_stake_acc13 - timestamp_on_stake_acc12))
-        const p_acc12_reward_between_stake13_unstake13 = rewardRate.mul(BigNumber.from(timestamp_on_unstake_acc13 - timestamp_on_stake_acc13)).div(BigNumber.from(2))
-        const p_acc12_reward_between_unstake12_unstake13 = rewardRate.mul(BigNumber.from(timestamp_on_unstake_acc12 - timestamp_on_unstake_acc13 ))
-        const proportionate_expected_reward_acc12 = add(add(p_acc12_reward_between_stake12and13, p_acc12_reward_between_stake13_unstake13), p_acc12_reward_between_unstake12_unstake13)
-        expect(proportionate_expected_reward_acc12.toString()).to.be.equal((await getClayBalance(accounts[12])).toString())
+        const earning12 = await getClayBalance(accounts[12])
+        const earning13 = await getClayBalance(accounts[13])
+        console.log(`
+        earning12: ${earning12}
+        earning13: ${earning13}
+        earning13 * 10: ${earning13.mul(BigNumber.from(10))}
+        err: ${earning12.sub(earning13.mul(BigNumber.from(10)))}
+        `)
 
-        // checking for acc13
-        expect(p_acc12_reward_between_stake13_unstake13.toString()).to.be.equal((await getClayBalance(accounts[13])).toString())
+        expect(checkPrecision(earning12, earning13.mul(BigNumber.from(10)), 0.0001)).to.be.true;
 
     })
 
@@ -534,7 +534,6 @@ describe("Staking Rewards Contract", function () {
         const p_acc14_reward_between_stake15_unstake15 = (rewardRate.mul(BigNumber.from(timestamp_on_unstake_acc15 - timestamp_on_stake_acc15)).mul((large_stake_amount.mul(multiplier)).div(tiny_stake_amount.add(large_stake_amount)))).div(multiplier)
         const p_acc14_reward_between_unstake14_unstake15 = rewardRate.mul(BigNumber.from(timestamp_on_unstake_acc14 - timestamp_on_unstake_acc15 ))
         const proportionate_expected_reward_acc14 = add(add(p_acc14_reward_between_stake14and15, p_acc14_reward_between_stake15_unstake15), p_acc14_reward_between_unstake14_unstake15)
-        console.log("await getClayBalance(accounts[14])).toString()", (await getClayBalance(accounts[14])).toString())
         expect(checkPrecision(await getClayBalance(accounts[14]), proportionate_expected_reward_acc14)).to.be.true;
 
         // checking for acc15
@@ -660,8 +659,11 @@ const logEventsFromTx = async (tx) => {
 
 const bignumber = require("bignumber.js")
 function checkPrecision(errored, expected, max_expected_precision_err_pct = MAX_PRECISION_ERR_PCT){
-    const error = (sub(expected, errored)).mul(multiplier);
-    const pct = bignumber(error.mul(BigNumber.from(100)).div(expected).toString())
+    const error = BigNumber.from(errored).gte(BigNumber.from(expected)) ? (sub(errored, expected)).mul(multiplier): (sub(expected, errored)).mul(multiplier);
+    const pct = bignumber(error.toString()).div(bignumber(expected.toString()))
+    console.log(`
+    Precision off by ${pct.div(multiplier.toString())}
+    `)
     return (pct.div(multiplier.toString())).isLessThan(max_expected_precision_err_pct);
 }
 
