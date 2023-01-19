@@ -489,7 +489,7 @@ describe("Staking Rewards Contract", function () {
         const stake_amount_10x = ethers.utils.parseUnits('200.0', 'ether')
 
         await mintAndApprove(ethers.utils.parseUnits('200.0', 'ether'), [accounts[12], accounts[13]]);
-        
+
         await stakeAndReturnTimestamp(accounts[12], stake_amount_10x);
 
         const timestamp_on_stake_acc13 = await stakeAndReturnTimestamp(accounts[13], stake_amount);
@@ -511,7 +511,7 @@ describe("Staking Rewards Contract", function () {
         const tiny_stake_amount = ethers.utils.parseUnits('0.001', 'ether')
 
         await mintAndApprove(ethers.utils.parseUnits('100.0', 'ether'), [accounts[14], accounts[15]]);
-        
+
         await stakeAndReturnTimestamp(accounts[14], large_stake_amount);
 
         const timestamp_on_stake_acc15 = await stakeAndReturnTimestamp(accounts[15], tiny_stake_amount);
@@ -592,7 +592,7 @@ const approveAllowances = async (approvalAmount, accounts) => {
     }
 }
 
-const mintAndApprove = async (amount, accounts) =>{
+const mintAndApprove = async (amount, accounts) => {
     await mintLpTokens(amount, accounts)
     await approveAllowances(amount, accounts)
 }
@@ -643,8 +643,8 @@ const logEventsFromTx = async (tx) => {
 }
 
 const bignumber = require("bignumber.js")
-function checkPrecision(errored, expected, max_expected_precision_err_pct = MAX_PRECISION_ERR_PCT){
-    const error = BigNumber.from(errored).gte(BigNumber.from(expected)) ? (sub(errored, expected)).mul(multiplier): (sub(expected, errored)).mul(multiplier);
+function checkPrecision(errored, expected, max_expected_precision_err_pct = MAX_PRECISION_ERR_PCT) {
+    const error = BigNumber.from(errored).gte(BigNumber.from(expected)) ? (sub(errored, expected)).mul(multiplier) : (sub(expected, errored)).mul(multiplier);
     const pct = bignumber(error.toString()).div(bignumber(expected.toString()))
     console.log(`
     Precision off by ${pct.div(multiplier.toString())}

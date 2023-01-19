@@ -7,8 +7,6 @@ import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./interfaces/IClayToken.sol";
 
-// import "hardhat/console.sol";
-
 /**
     User can stake Sumero LP Tokens (received by providing liquidity to a Liquidity Pool on Sumero) to earn CLAY rewards.
     User can unstake the Sumero LP tokens and claim rewards at any point in time.
@@ -25,15 +23,8 @@ contract ClayStakingRewards is Ownable, ReentrancyGuard, Pausable {
     // Staking token would be Sumero LP tokens
     IERC20 public immutable stakingToken;
 
-    // Reward Rate per day
-    // 10 gwei CLAY per second
-    // 10 gwei * (24 * 60 * 60)
-    // 10 gwei * 86400
-    // 864000 gwei => 0.000864 CLAY per day per token
-    // Make this a max deterministic reward so that we can control outflow of CLAY?
-
     // reward rate i.e. reward in wei rewarded per second for staking a whole token
-    uint256 public rewardRate = 10 gwei;
+    uint256 public rewardRate;
     uint256 public lastUpdateTime;
     uint256 public rewardPerTokenStored;
     uint256 public periodFinish; // Contract lifetime.
@@ -171,11 +162,14 @@ contract ClayStakingRewards is Ownable, ReentrancyGuard, Pausable {
 
     function updateMaxReward(uint256 _maxReward) external onlyOwner {
         rewardPerTokenStored = rewardPerToken();
-        require(rewardPerTokenStored < _maxReward, "ClayStakingRewards: INVALID_MAX_REWARD_AMOUNT");
+        require(
+            rewardPerTokenStored < _maxReward,
+            "ClayStakingRewards: INVALID_MAX_REWARD_AMOUNT"
+        );
         lastUpdateTime = lastRewardTimeApplicable();
         maxReward = _maxReward;
         rewardRate =
-            (_maxReward - rewardPerTokenStored/1e18) /
+            (_maxReward - rewardPerTokenStored / 1e18) /
             (periodFinish - block.timestamp);
         emit RewardRateUpdated(rewardRate);
     }
@@ -200,5 +194,4 @@ contract ClayStakingRewards is Ownable, ReentrancyGuard, Pausable {
     event RewardPaid(address indexed user, uint256 reward);
     event RewardRateUpdated(uint256 rewardRate);
     event Recovered(address token, uint256 amount);
-    // event RewardsDurationUpdated(uint256 newDuration);
 }
