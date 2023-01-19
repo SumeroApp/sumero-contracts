@@ -479,7 +479,7 @@ describe("Staking Rewards Contract", function () {
         // There is precision error in the calculcation
         // This happens in rewardPerToken() calculation.
         // when _totalSupply is devided in “rewardPerTokenStored +((rewardRate * (lastRewardTimeApplicable() - lastUpdateTime) * 1e18) / _totalSupply)”
-        expect(checkPrecision(actual_reward_acc11, acc11_amnt_as_per_apy)).to.be.true;
+        expect(checkPrecisionAgainstExpectedErrPercent(actual_reward_acc11, acc11_amnt_as_per_apy)).to.be.true;
         expect(expected_calculated_reward_acc11).to.be.equal(BigNumber.from(actual_reward_acc11).toString())
 
     })
@@ -501,8 +501,12 @@ describe("Staking Rewards Contract", function () {
 
         const earning12 = await getClayBalance(accounts[12])
         const earning13 = await getClayBalance(accounts[13])
-
-        expect(checkPrecision(earning12, earning13.mul(BigNumber.from(10)), 0.0001)).to.be.true;
+        console.log(`
+        DEBUG:
+        earning12: ${earning12}
+        earning13: ${earning13}
+        `)
+        expect(checkPrecisionAgainstExpectedErrPercent(earning12, earning13.mul(BigNumber.from(10)), 0.0001)).to.be.true;
 
     })
 
@@ -523,7 +527,7 @@ describe("Staking Rewards Contract", function () {
 
         const earning14 = await getClayBalance(accounts[14])
         const earning15 = await getClayBalance(accounts[15])
-        expect(checkPrecision(earning14, earning15.mul(BigNumber.from(20000)), 0.0001)).to.be.true;
+        expect(checkPrecisionAgainstExpectedErrPercent(earning14, earning15.mul(BigNumber.from(20000)), 0.0001)).to.be.true;
 
     })
 
@@ -642,16 +646,37 @@ const logEventsFromTx = async (tx) => {
     }
 }
 
-const bignumber = require("bignumber.js")
-function checkPrecision(errored, expected, max_expected_precision_err_pct = MAX_PRECISION_ERR_PCT) {
-    const error = BigNumber.from(errored).gte(BigNumber.from(expected)) ? (sub(errored, expected)).mul(multiplier) : (sub(expected, errored)).mul(multiplier);
-    const pct = bignumber(error.toString()).div(bignumber(expected.toString()))
-    console.log(`
-    Precision off by ${pct.div(multiplier.toString())}
-    `)
-    return (pct.div(multiplier.toString())).isLessThan(max_expected_precision_err_pct);
+/**
+* checkPrecisionAgainstExpectedErrPercent is used to check the precision difference between the expected correct value and errord being the value where error is expected.
+* @param {BigNumber} errored represents the value where error is expected.
+* @param {BigNumber} expected represents the correct value against which function will operate.
+*/
+function checkPrecisionAgainstExpectedErrPercent(errored, expected, max_expected_precision_err_pct = MAX_PRECISION_ERR_PCT) {
+    let error;
+    /*
+    * Getting error value
+    * Ex: If 100 is correct value and errored value is 98, then here the error is 2% or 0.02
+    *     If 100 is correct value and errored value is 105, then here the error is 5% or 0.05
+    * Notice the error value below is multiplied by 1e18, this is to maintain precision in the next step after if-else block.
+    * After if-else block error value is devided by expected which would be fairly large value than error, so in order to not loss the precision the error is multiplied by 1e18
+    */
+    if(BigNumber.from(errored).gte(BigNumber.from(expected))) error = (sub(errored, expected)).mul(multiplier)
+    else error = (sub(expected, errored)).mul(multiplier)
+
+    // pct here is percent representation of error in 'errored', where 'expected' is assumed to be the correct value.
+    const pct = error.div(expected)
+
+    console.log( `Precision off by ${addDecimalPlaces(pct.toString(), 18)}` )
+
+    return (pct).lt(BigNumber.from(max_expected_precision_err_pct * 1e10).mul(BigNumber.from(1e8)));
 }
 
+
+function addDecimalPlaces(num, decimalPlaces) {
+    const numStr = String(num);
+    const zero = '0'
+    return `${zero}.${zero.repeat(decimalPlaces - numStr.length)}${numStr}`
+}
 
 function sub(a, b) {
     return BigNumber.from(a).sub(BigNumber.from(b))
