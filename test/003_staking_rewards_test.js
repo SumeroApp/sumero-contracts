@@ -3,7 +3,7 @@
 const { expect } = require("chai")
 const { ethers } = require("hardhat")
 const { time } = require("@nomicfoundation/hardhat-network-helpers");
-const { BigNumber, constants } = ethers
+const { BigNumber } = require("ethers");
 const hre = require("hardhat")
 const { getEpochFromDate } = require("../utils/helper")
 
@@ -648,8 +648,8 @@ const logEventsFromTx = async (tx) => {
 
 /**
 * checkPrecisionAgainstExpectedErrPercent is used to check the precision difference between the expected correct value and errord being the value where error is expected.
-* @param {BigNumber} errored represents the value where error is expected.
-* @param {BigNumber} expected represents the correct value against which function will operate.
+* @param {BigNumber} errored the value where error is expected.
+* @param {BigNumber} expected the correct value against which function will operate.
 */
 function checkPrecisionAgainstExpectedErrPercent(errored, expected, max_expected_precision_err_pct = MAX_PRECISION_ERR_PCT) {
     let error;
