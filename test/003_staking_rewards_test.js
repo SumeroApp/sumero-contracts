@@ -479,7 +479,7 @@ describe("Staking Rewards Contract", function () {
         // There is precision error in the calculcation
         // This happens in rewardPerToken() calculation.
         // when _totalSupply is devided in “rewardPerTokenStored +((rewardRate * (lastRewardTimeApplicable() - lastUpdateTime) * 1e18) / _totalSupply)”
-        expect(checkPrecisionAgainstExpectedErrPercent(actual_reward_acc11, acc11_amnt_as_per_apy)).to.be.true;
+        expect(checkPrecisionWithinLimit(actual_reward_acc11, acc11_amnt_as_per_apy)).to.be.true;
         expect(expected_calculated_reward_acc11).to.be.equal(BigNumber.from(actual_reward_acc11).toString())
 
     })
@@ -506,7 +506,7 @@ describe("Staking Rewards Contract", function () {
         earning12: ${earning12}
         earning13: ${earning13}
         `)
-        expect(checkPrecisionAgainstExpectedErrPercent(earning12, earning13.mul(BigNumber.from(10)), 0.0001)).to.be.true;
+        expect(checkPrecisionWithinLimit(earning12, earning13.mul(BigNumber.from(10)), 0.01)).to.be.true;
 
     })
 
@@ -527,7 +527,7 @@ describe("Staking Rewards Contract", function () {
 
         const earning14 = await getClayBalance(accounts[14])
         const earning15 = await getClayBalance(accounts[15])
-        expect(checkPrecisionAgainstExpectedErrPercent(earning14, earning15.mul(BigNumber.from(20000)), 0.0001)).to.be.true;
+        expect(checkPrecisionWithinLimit(earning14, earning15.mul(BigNumber.from(20000)), 0.01)).to.be.true;
 
     })
 
@@ -647,28 +647,33 @@ const logEventsFromTx = async (tx) => {
 }
 
 /**
-* checkPrecisionAgainstExpectedErrPercent is used to check the precision difference between the expected correct value and errord being the value where error is expected.
-* @param {BigNumber} errored the value where error is expected.
-* @param {BigNumber} expected the correct value against which function will operate.
+* checkPrecisionWithinLimit is used to check the precision difference between the expected correct value and errord being the value where error is expected.
+* @param {BigNumber} val1 the value where error is expected.
+* @param {BigNumber} val2 the correct value against which function will operate.
 */
-function checkPrecisionAgainstExpectedErrPercent(errored, expected, max_expected_precision_err_pct = MAX_PRECISION_ERR_PCT) {
-    let error;
-    /*
-    * Getting error value
-    * Ex: If 100 is correct value and errored value is 98, then here the error is 2% or 0.02
-    *     If 100 is correct value and errored value is 105, then here the error is 5% or 0.05
-    * Notice the error value below is multiplied by 1e18, this is to maintain precision in the next step after if-else block.
-    * After if-else block error value is devided by expected which would be fairly large value than error, so in order to not loss the precision the error is multiplied by 1e18
-    */
-    if(BigNumber.from(errored).gte(BigNumber.from(expected))) error = (sub(errored, expected)).mul(multiplier)
-    else error = (sub(expected, errored)).mul(multiplier)
+function checkPrecisionWithinLimit(val1, val2, allowedPrecisionPercentNumber = MAX_PRECISION_ERR_PCT) {
 
-    // pct here is percent representation of error in 'errored', where 'expected' is assumed to be the correct value.
-    const pct = error.div(expected)
+    const value1 = val1.gt(val2) ? val1: val2;
+    const value2 = val1.gt(val2) ? val2: val1;
+   
+    const difference = sub(value1, value2);
 
-    console.log( `Precision off by ${addDecimalPlaces(pct.toString(), 18)}` )
+    const precisionBalancedErrorPercent = difference.mul(multiplier).div(value1).mul(100);       // multiplied by 1e18 to maintain precision
 
-    return (pct).lt(BigNumber.from(max_expected_precision_err_pct * 1e10).mul(BigNumber.from(1e8)));
+    console.log( `Precision off by ${addDecimalPlaces(precisionBalancedErrorPercent.toString(), 18)} %` )
+
+    const precisionBalancedAllowedPercent = multiplyDecimalNumberBy1e18(allowedPrecisionPercentNumber)
+
+    return precisionBalancedErrorPercent.lte(precisionBalancedAllowedPercent)
+}
+
+/**
+* Since BigNumber.from for decimal number results in error. Ex: BigNumber.from(0.01) will throw 'underflow' error, 
+* some might argue to multiply the value with 1e18 but BigNumber.from(0.01 * 1e18) will also result in 'overflow' error
+* @param {Number} val
+*/
+function multiplyDecimalNumberBy1e18 (val) {
+    return BigNumber.from(val * 1e10).mul(BigNumber.from(1e8))
 }
 
 
