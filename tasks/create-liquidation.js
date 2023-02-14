@@ -38,7 +38,7 @@ task("create-liquidation", "creates liquidation on sponsor's position")
             })
 
             const currentTimestamp = Date.now() / 1000;
-            const expirationTimestamp = Math.floor(currentTimestamp + (Number(exp) * 3600));
+            const expirationTimestamp = Math.floor(currentTimestamp + (Number(args.exp) * 3600));
 
             tx = await emp.createLiquidation(
                 sponsor,
