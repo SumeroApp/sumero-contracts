@@ -3,6 +3,7 @@
 task("create-liquidation", "creates liquidation on sponsor's position")
     .addParam("empAddress", "Address of EMP contract")
     .addParam("sponsor", "Address of the sponsor")
+    .addParam("exp", "EMP expiry in hour")
     .setAction(
         async (args, hre) => {
             const { getTxUrl } = require('../utils/helper');
@@ -22,12 +23,11 @@ task("create-liquidation", "creates liquidation on sponsor's position")
             console.log('GCR: ' + GCR)
             console.log('positionTokensOutstanding: ' + positionTokensOutstanding)
 
-
             await run("erc20-approve",{
                 name: "ClayToken",
                 address: await emp.collateralCurrency(),
                 spender: args.empAddress,
-                amount: positionTokensOutstanding.toString(),
+                amount: (await emp.ooReward()).toString(),
             })
 
             await run("erc20-approve",{
@@ -37,12 +37,15 @@ task("create-liquidation", "creates liquidation on sponsor's position")
                 amount: positionTokensOutstanding.toString(),
             })
 
+            const currentTimestamp = Date.now() / 1000;
+            const expirationTimestamp = Math.floor(currentTimestamp + (Number(exp) * 3600));
+
             tx = await emp.createLiquidation(
                 sponsor,
                 { rawValue: "0" },
                 { rawValue: GCR.toString() },
                 { rawValue: positionTokensOutstanding.toString() },
-                '1968160845',
+                expirationTimestamp,
             );
             const txUrl = getTxUrl(hre.deployments.getNetworkName(), tx.hash);
             if (txUrl != null) {
