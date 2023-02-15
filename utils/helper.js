@@ -2,6 +2,13 @@ const hre = require("hardhat");
 const { ethers } = require("hardhat");
 const fetch = require('node-fetch');
 
+function getEpochFromDate(date) {
+    if (!(date instanceof Date)) {
+        throw new Error("getEpochFromDate(): given value is not a date object");
+    }
+    return Math.round(new Date(date).getTime()/1000)
+}
+
 // Network Helpers
 function isLocalNetwork() {
     return (hre.network.name == 'localhost' || hre.network.name == 'hardhat') ? true : false;
@@ -158,5 +165,6 @@ module.exports = {
     getUsdcOrThrow,
     isZeroAddress,
     getAddressUrl,
-    getPriceFromIdentifier
+    getPriceFromIdentifier,
+    getEpochFromDate,
 }

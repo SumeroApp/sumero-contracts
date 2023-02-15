@@ -24,6 +24,7 @@
   },
   "homepage": "https://github.com/Signo-App/sumero-contracts#readme",
   "dependencies": {
+    "@nomicfoundation/hardhat-network-helpers": "^1.0.7",
     "babel-polyfill": "^6.26.0",
     "babel-register": "^6.26.0",
     "node-fetch": "2.6.1"
