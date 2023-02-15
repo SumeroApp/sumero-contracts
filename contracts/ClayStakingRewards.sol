@@ -23,17 +23,12 @@ contract ClayStakingRewards is Ownable, ReentrancyGuard, Pausable {
     // Staking token would be Sumero LP tokens
     IERC20 public immutable stakingToken;
 
-    // Reward Rate per day
-    // 10 gwei CLAY per second
-    // 10 gwei * (24 * 60 * 60)
-    // 10 gwei * 86400
-    // 864000 gwei => 0.000864 CLAY per day per token
-    // Make this a max deterministic reward so that we can control outflow of CLAY?
-
     // reward rate i.e. reward in wei rewarded per second for staking a whole token
-    uint256 public rewardRate = 10 gwei;
+    uint256 public rewardRate;
     uint256 public lastUpdateTime;
     uint256 public rewardPerTokenStored;
+    uint256 public periodFinish; // Contract lifetime.
+    uint256 public maxReward; // Max reward that this contract will emit during it's lifetime.
 
     mapping(address => uint256) public userRewardPerTokenPaid;
     mapping(address => uint256) public rewards;
@@ -41,9 +36,17 @@ contract ClayStakingRewards is Ownable, ReentrancyGuard, Pausable {
     uint256 private _totalSupply;
     mapping(address => uint256) private _balances;
 
-    constructor(address _stakedToken, address _clayToken) {
+    constructor(
+        address _stakedToken,
+        address _clayToken,
+        uint256 _periodFinish,
+        uint256 _maxReward
+    ) {
         stakingToken = IERC20(_stakedToken);
         clayToken = IClayToken(_clayToken);
+        periodFinish = _periodFinish;
+        maxReward = _maxReward;
+        rewardRate = _maxReward / (_periodFinish - block.timestamp);
     }
 
     /* ========== VIEWS ========== */
@@ -56,14 +59,22 @@ contract ClayStakingRewards is Ownable, ReentrancyGuard, Pausable {
         return _balances[account];
     }
 
+    function lastRewardTimeApplicable() public view returns (uint256) {
+        return block.timestamp < periodFinish ? block.timestamp : periodFinish;
+    }
+
+    // Gives the rewards calculation till the block.timestamp
+    // If the protocol has L(t) tokens staked at time t, then this function returns rewards from time t to block.timestamp
+    // i.e, Rewards generated from the time where first ever staking happened in this contract, till now.
     function rewardPerToken() public view returns (uint256) {
         if (_totalSupply == 0) {
             return rewardPerTokenStored;
         }
         return
             rewardPerTokenStored +
-            ((rewardRate * (block.timestamp - lastUpdateTime) * 1e18) /
-                _totalSupply);
+            ((rewardRate *
+                (lastRewardTimeApplicable() - lastUpdateTime) *
+                1e18) / _totalSupply);
     }
 
     function earned(address _account) public view returns (uint256) {
@@ -77,8 +88,7 @@ contract ClayStakingRewards is Ownable, ReentrancyGuard, Pausable {
 
     modifier updateReward(address _account) {
         rewardPerTokenStored = rewardPerToken();
-        lastUpdateTime = block.timestamp;
-
+        lastUpdateTime = lastRewardTimeApplicable();
         rewards[_account] = earned(_account);
         userRewardPerTokenPaid[_account] = rewardPerTokenStored;
         _;
@@ -92,6 +102,10 @@ contract ClayStakingRewards is Ownable, ReentrancyGuard, Pausable {
         whenNotPaused
         updateReward(msg.sender)
     {
+        require(
+            periodFinish > block.timestamp,
+            "ClayStakingRewards: STAKING_PERIOD_OVER"
+        );
         require(_amount > 0, "ClayStakingRewards: AMOUNT_IS_ZERO");
         _totalSupply += _amount;
         _balances[msg.sender] += _amount;
@@ -129,6 +143,7 @@ contract ClayStakingRewards is Ownable, ReentrancyGuard, Pausable {
 
     function getReward() public nonReentrant updateReward(msg.sender) {
         uint256 reward = rewards[msg.sender];
+        require(reward > 0, "ClayStakingRewards: NO_REWARDS");
         rewards[msg.sender] = 0;
         // Sumero Owner needs to grant MINTER_ROLE for CLAY to StakingRewards
         clayToken.mint(msg.sender, reward);
@@ -145,9 +160,31 @@ contract ClayStakingRewards is Ownable, ReentrancyGuard, Pausable {
         _unpause();
     }
 
-    function updateRewardRate(uint256 _rewardRate) external onlyOwner {
-        rewardRate = _rewardRate;
-        emit RewardRateUpdated(_rewardRate);
+    function updateMaxReward(uint256 _maxReward) external onlyOwner {
+        rewardPerTokenStored = rewardPerToken();
+        require(
+            rewardPerTokenStored < _maxReward,
+            "ClayStakingRewards: INVALID_MAX_REWARD_AMOUNT"
+        );
+        lastUpdateTime = lastRewardTimeApplicable();
+        maxReward = _maxReward;
+        rewardRate =
+            (_maxReward - rewardPerTokenStored / 1e18) /
+            (periodFinish - block.timestamp);
+        emit RewardRateUpdated(rewardRate);
+    }
+
+    // Added to support recovering LP Rewards from other systems
+    function recoverERC20(address tokenAddress, uint256 tokenAmount)
+        external
+        onlyOwner
+    {
+        require(
+            tokenAddress != address(stakingToken),
+            "Cannot withdraw the staking token"
+        );
+        IERC20(tokenAddress).transfer(owner(), tokenAmount);
+        emit Recovered(tokenAddress, tokenAmount);
     }
 
     /* ========== EVENTS ========== */
@@ -156,4 +193,5 @@ contract ClayStakingRewards is Ownable, ReentrancyGuard, Pausable {
     event Withdrawn(address indexed user, uint256 amount);
     event RewardPaid(address indexed user, uint256 reward);
     event RewardRateUpdated(uint256 rewardRate);
+    event Recovered(address token, uint256 amount);
 }
