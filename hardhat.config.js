@@ -5,6 +5,7 @@ require("@nomiclabs/hardhat-ethers");
 require("@nomiclabs/hardhat-etherscan");
 require("hardhat-deploy");
 require("./tasks/clay-balance");
+require("./tasks/create-liquidation");
 require("./tasks/clay-mint");
 require("./tasks/clay-approve");
 require("./tasks/clay-get-allowance");
