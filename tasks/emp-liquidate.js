@@ -1,5 +1,4 @@
-// npx hardhat emp-settle --emp-address <address> --synthAddress <address> --network <network-name>
-
+//npx hardhat emp-liquidate --emp-address <address> --sponsor-address <address> --network goerli
 task("emp-liquidate", "Liquidates EMP position")
     .addParam("empAddress", "Address of EMP contract")
     .addParam("sponsorAddress", "Address of the synthetic token contract")
