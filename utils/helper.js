@@ -154,7 +154,7 @@ async function getPriceFromIdentifier(hexlifiedPriceIdentifier, hexlifiedAncilla
     console.log(loweredIdentifier + ": " + price);
     return price;
 }
-
+const MAX_UINT = ethers.BigNumber.from('115792089237316195423570985008687907853269984665640564039457584007913129639935');
 module.exports = {
     isLocalNetwork,
     isForkedNetwork,
@@ -167,4 +167,5 @@ module.exports = {
     getAddressUrl,
     getPriceFromIdentifier,
     getEpochFromDate,
+    MAX_UINT
 }
