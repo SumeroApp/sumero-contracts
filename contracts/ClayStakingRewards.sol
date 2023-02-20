@@ -166,7 +166,7 @@ contract ClayStakingRewards is Ownable, ReentrancyGuard, Pausable {
             rewardPerTokenStored < _maxReward,
             "ClayStakingRewards: INVALID_MAX_REWARD_AMOUNT"
         );
-        lastUpdateTime = lastRewardTimeApplicable();
+        lastUpdateTime = block.timestamp;
         maxReward = _maxReward;
         rewardRate =
             (_maxReward - rewardPerTokenStored / 1e18) /
