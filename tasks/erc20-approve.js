@@ -1,42 +1,46 @@
-// npx hardhat erc20-approve --name <deployed-token-name> --address <token-address> --spender <spender-address> --amount <amount> --network <network-name>
+// npx hardhat erc20-approve --token <token-address> --spender <spender-address> --amount <amount> --network <network-name>
 task("erc20-approve", "Approves ERC20 tokens to the given account")
-    .addParam("name", "Token name")
-    .addParam("address", "Token Address")
+    .addParam("token", "Token Address")
     .addParam("spender", "The account's address") // Router parameter
     .addParam("amount", "The amount to be approved")
     .setAction(
         async (args, hre) => {
-            const { expect } = require('chai');
             const { deployer } = await hre.getNamedAccounts();
             const { getTxUrl } = require('../utils/helper');
 
-            const Token = await hre.ethers.getContractFactory(args.name);
-            const token = await Token.attach(args.address);
+            const Token = await hre.ethers.getContractFactory('ClayToken');
+            const token = await Token.attach(args.token);
 
             const tokenName = await token.name();
             const tokenDecimals = await token.decimals();
-            // expect(tokenName).to.eq(args.name);
-
-            // to get USDC with ETH 
-            // await token.deposit({ value: ethers.utils.parseEther(args.amount) })
 
             const tokenBalance = await token.balanceOf(deployer);
-            console.log("My account's balance is : " + ethers.utils.formatUnits(tokenBalance, tokenDecimals));
-
+            
+            console.log(`My account's ${tokenName} balance is : ` + ethers.utils.formatUnits(tokenBalance, tokenDecimals));
+            
             //Convert ether  to wei
-            const amountInWei = ethers.utils.parseUnits(args.amount, 'ether');
+            const amountInWei = ethers.utils.parseUnits(args.amount, tokenDecimals);
+            const allowance = await token.allowance(deployer, args.spender);
 
-            console.log("Approving ERC20 token ", tokenName);
-            const tx = await token.approve(args.spender, amountInWei);
-            await tx.wait();
-
-            expect(await token.allowance(deployer, args.spender)).to.eq(amountInWei);
-            console.log(tokenName + " Approved");
-
-            console.log("\nTransaction Receipt: \n", tx)
-            const txUrl = getTxUrl(hre.deployments.getNetworkName(), tx.hash);
-            if (txUrl != null) {
-                console.log(txUrl);
+            console.log(`Approving ${tokenName} token`);
+            if(amountInWei.gt(allowance)){
+                try {
+                    const tx = await token.approve(args.spender, amountInWei);
+                    await tx.wait();        
+                    const txUrl = getTxUrl(hre.deployments.getNetworkName(), tx.hash);
+                    if (txUrl != null) {
+                        console.log(txUrl);
+                    } 
+                    
+                } catch (error) {
+                    console.log(`Approving tokenName} token failed...`);
+                    console.log(error);
+                }
+                console.log(`Approving ${tokenName} token completed...`)
             }
+            else{
+                console.log(`Approving ${tokenName} token passed...`)
+            }
+
         }
     );
