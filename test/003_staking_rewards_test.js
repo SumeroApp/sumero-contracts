@@ -541,7 +541,7 @@ describe("Staking Rewards Contract", function () {
         console.log("incrementing node time by 3 months");
         await increaseTime(DAY * 30 * 3)
         expect(await sumeroLpToken.allowance(accounts[4].address, StakingRewardsAddress)).to.eq(approvalAmount)
-        await expect(stakingRewards.connect(accounts[4]).stake(amount)).to.be.revertedWith('ClayStakingRewards: STAKING_PERIOD_OVER');
+        await expect(stakingRewards.connect(accounts[4]).stake(amount)).to.be.revertedWith('ClayStakingRewards: STAKING_PERIOD_EXPIRED');
 
     })
 });
