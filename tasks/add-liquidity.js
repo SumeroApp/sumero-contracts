@@ -1,8 +1,5 @@
-// Before running this task approve operations must be done!
-// Approve CLAY for uniswap router:  npx hardhat clay-approve --spender <spender-address> --amount <amount> --network <network-name>
-// Approve ERC20 for uniswap router: npx hardhat erc20-approve --name <deployed-token-name> --address <token-address> --spender <spender-address> --amount <amount> --network <network-name>
-// Add Liquidity: npx hardhat add-liquidity --token1 <token-1-name> --address1 <address> --decimal1 <decimal> --amount1 <token-1-amount> --token2 <token-2-name> --address2 <address> --decimal2 <decimal> --amount2 <token-2-amount> --network <network-name>
-// Add Liquidity: npx hardhat add-liquidity --token1 ClayToken --address1 0xE0544883f42Dc1812528234ea8B2b7687d8FA38A --decimal1 18 --amount1 1000 --token2 USDCoin --address2 0xb7a4F3E9097C08dA09517b5aB877F7a917224ede --decimal2 6 --amount2 10
+// npx hardhat add-liquidity --token1 <token-1-name> --address1 <address> --decimal1 <decimal> --amount1 <token-1-amount> --token2 <token-2-name> --address2 <address> --decimal2 <decimal> --amount2 <token-2-amount> --network <network-name>
+// npx hardhat add-liquidity --token1 ClayToken --address1 0xee62a7d7dCa1C7f6647368B8F2148A6E1bcbb728 --decimal1 18 --amount1 1000 --token2 USDCoin --address2 0x07865c6E87B9F70255377e024ace6630C1Eaa37F --decimal2 6 --amount2 10
 
 const colors = require('colors');
 
@@ -19,6 +16,7 @@ task("add-liquidity", "Adds liquidity to the pool.")
         async (args, hre) => {
             const { deployer } = await getNamedAccounts();
             const { getTxUrl } = require('../utils/helper');
+            const { run } = require('hardhat');
 
             console.log("Deployer Account: " + deployer)
 
@@ -27,16 +25,27 @@ task("add-liquidity", "Adds liquidity to the pool.")
 
             // Get Router Addresses
             console.log("Router Address: " + router.address)
-
             console.log("\nToken 1 address: " + args.address1);
-            console.log("Token 1 decimal: " + args.decimal1);
-            const amount1InUnits = ethers.utils.parseUnits(args.amount1, args.decimal1);
-            console.log("Amount for Token 1: " + amount1InUnits.toString());
-
             console.log("\nToken 2 address: " + args.address2);
-            console.log("Token 1 decimal: " + args.decimal2);
+
+
+            console.log(colors.blue(`\n 1- Approving ${args.token1} tokens: .....`));
+            await run("erc20-approve", {
+                token: args.address1,
+                spender: router.address,
+                amount: args.amount1,
+            })
+            console.log(colors.blue(`\n 2- Approving ${args.token2}  tokens: .....`));
+            await run("erc20-approve", {
+                token: args.address2,
+                spender: router.address,
+                amount: args.amount2,
+            })
+
+            const amount1InUnits = ethers.utils.parseUnits(args.amount1, args.decimal1);
             const amount2InUnits = ethers.utils.parseUnits(args.amount2, args.decimal2);
-            console.log("Amount for Token 2: " + amount2InUnits.toString());
+            
+            console.log(colors.blue("\n 3- Adding liquidity: ....."));
 
             try {
                 //Make sure address `adding liquidity` has balance of both the tokens. Also, should have approved sufficient amount of tokens to the router contract.
