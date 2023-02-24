@@ -25,7 +25,7 @@ require("./tasks/emp-request-withdrawal");
 require("./tasks/add-impl-to-finder");
 require("./tasks/create-lp");
 require("./tasks/setup-finder");
-require("./tasks/transfer-ownership-to-multisig");
+require("./tasks/transfer-owner-multisig");
 require("hardhat-gas-reporter");
 
 const solcVersion = "0.8.0";
