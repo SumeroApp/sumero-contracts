@@ -25,8 +25,8 @@ require("./tasks/emp-request-withdrawal");
 require("./tasks/add-impl-to-finder");
 require("./tasks/create-lp");
 require("./tasks/setup-finder");
-require("./tasks/transfer-owner-multisig");
-require("./tasks/transfer-stakingRewards-ownership");
+require("./tasks/transfer-clayToken-ownership");
+require("./tasks/ownership-transfer");
 require("hardhat-gas-reporter");
 
 const solcVersion = "0.8.0";
