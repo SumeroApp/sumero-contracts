@@ -1,7 +1,7 @@
 // npx hardhat transfer-ownerships --emp <address> --sponsor <address> --network <network-name>
 
-task("transfer-ownerships", "Transfer all ownership/admin roles to given eth address")
-    .addParam("address", "Address of the intended owner")
+task("transfer-ownerships", "Transfer all ownership/admin roles to target eth address")
+    .addParam("address", "Address of the intended new owner")
     .setAction(
         async (args, hre) => {
             const colors = require('colors');

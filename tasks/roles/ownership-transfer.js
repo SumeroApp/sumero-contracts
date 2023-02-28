@@ -1,17 +1,16 @@
-// npx hardhat ownership-transfer --target <address> --network <network>
+// npx hardhat ownership-transfer --address <address> --contract <contract> --network <network>
 
-// npx hardhat ownership-transfer --target 0xD934fbEd3CB5dAa5A82C14089cAcaD6035718163 --network dashboard
+// npx hardhat ownership-transfer --address 0xD934fbEd3CB5dAa5A82C14089cAcaD6035718163 --contract ClayBonds --network dashboard
 
-task("ownership-transfer", "Transfers ownership of contract to multisig address")
+task("ownership-transfer", "Transfers ownership of specified contract to the target address")
 .addParam("address", "The address of the target wallet/contract")
-.addParam("contract", "The name of the contract")
+.addParam("contract", "The name of the contract whose ownership is being transferred")
 .setAction(
     async (args, hre) => {
-        const colors = require('colors');
-        console.log(colors.blue(`\nTransfering ${args.contract}'s ownerhship...`));
-
         const { deployer } = await hre.getNamedAccounts();
         const { expect } = require('chai');
+        const colors = require('colors');
+        console.log(colors.blue(`\nTransfering ${args.contract}'s ownerhship to: ${args.address}`));
 
         const ownableContract = await ethers.getContract(args.contract, deployer);
         
@@ -20,6 +19,6 @@ task("ownership-transfer", "Transfers ownership of contract to multisig address"
 
         expect(await ownableContract.owner()).to.be.eq(args.address , "Something went wrong while transfering ownership...")
   
-        console.log(`Transferred ${args.contract}'s ownership to: ${args.address}`);
+        console.log(`Successfully transferred ${args.contract}'s ownership to: ${args.address}`);
 }
 );
