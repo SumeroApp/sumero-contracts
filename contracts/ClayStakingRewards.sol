@@ -94,18 +94,23 @@ contract ClayStakingRewards is Ownable, ReentrancyGuard, Pausable {
         _;
     }
 
+    modifier notExpired {
+        require(
+            periodFinish > block.timestamp,
+            "ClayStakingRewards: STAKING_PERIOD_EXPIRED"
+        );
+        _;
+    }
+
     /* ========== MUTATIVE FUNCTIONS ========== */
 
     function stake(uint256 _amount)
         external
         nonReentrant
         whenNotPaused
+        notExpired
         updateReward(msg.sender)
     {
-        require(
-            periodFinish > block.timestamp,
-            "ClayStakingRewards: STAKING_PERIOD_OVER"
-        );
         require(_amount > 0, "ClayStakingRewards: AMOUNT_IS_ZERO");
         _totalSupply += _amount;
         _balances[msg.sender] += _amount;
@@ -160,13 +165,13 @@ contract ClayStakingRewards is Ownable, ReentrancyGuard, Pausable {
         _unpause();
     }
 
-    function updateMaxReward(uint256 _maxReward) external onlyOwner {
+    function updateMaxReward(uint256 _maxReward) external onlyOwner notExpired {
         rewardPerTokenStored = rewardPerToken();
         require(
             rewardPerTokenStored < _maxReward,
             "ClayStakingRewards: INVALID_MAX_REWARD_AMOUNT"
         );
-        lastUpdateTime = lastRewardTimeApplicable();
+        lastUpdateTime = block.timestamp;
         maxReward = _maxReward;
         rewardRate =
             (_maxReward - rewardPerTokenStored / 1e18) /
