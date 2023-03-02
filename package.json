@@ -25,13 +25,9 @@
   "homepage": "https://github.com/Signo-App/sumero-contracts#readme",
   "dependencies": {
     "@nomicfoundation/hardhat-network-helpers": "^1.0.7",
-    "@walletconnect/node": "^1.0.0",
-    "@walletconnect/qrcode-modal": "^1.8.0",
     "@walletconnect/web3-provider": "^1.8.0",
     "babel-polyfill": "^6.26.0",
-    "babel-register": "^6.26.0",
-    "hardhat-safe-deployer": "git://github.com/rmeissner/hardhat-safe-deployer.git",
-    "node-fetch": "2.6.1"
+    "babel-register": "^6.26.0"
   },
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "npm:hardhat-deploy-ethers@^0.3.0-beta.13",
