@@ -172,7 +172,8 @@ contract ExpiringMultiPartyCreator is ContractCreator, Testable, Lockable {
         // Known from creator deployment.
         constructorParams.finderAddress = finderAddress;
         constructorParams.timerAddress = timerAddress;
-
+        //Sumero FIX
+        constructorParams.financialContractsAdmin = msg.sender;
         // Enforce configuration constraints.
         require(
             params.withdrawalLiveness != 0,

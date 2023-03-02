@@ -80,6 +80,7 @@ contract Liquidatable is PricelessPositionManager {
         FixedPoint.Unsigned disputeBondPercentage;
         FixedPoint.Unsigned sponsorDisputeRewardPercentage;
         FixedPoint.Unsigned disputerDisputeRewardPercentage;
+        address financialContractsAdmin;
     }
 
     // This struct is used in the `withdrawLiquidation` method that disperses liquidation and dispute rewards.
@@ -115,6 +116,7 @@ contract Liquidatable is PricelessPositionManager {
     // Percent of liquidated collateral paid to disputer in the Disputed state (i.e. following a successful dispute)
     // Represented as a multiplier, see above.
     FixedPoint.Unsigned public disputerDisputeRewardPercentage;
+
 
     /****************************************
      *                EVENTS                *
@@ -184,7 +186,8 @@ contract Liquidatable is PricelessPositionManager {
             params.ooReward,
             params.timerAddress,
             params.financialProductLibraryAddress,
-            params.ancillaryData
+            params.ancillaryData,
+            params.financialContractsAdmin
         )
         nonReentrant()
     {

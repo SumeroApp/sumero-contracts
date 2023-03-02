@@ -98,7 +98,8 @@ contract PricelessPositionManager is Testable, Lockable {
 
     // How much to offer the Optimistic Oracle as a reward for price requests
     FixedPoint.Unsigned public ooReward;
-
+    // Sumero FIX
+    address public immutable financialContractsAdmin;
     // Instance of FinancialProductLibrary to provide custom price and collateral requirement transformations to extend
     // the functionality of the EMP to support a wider range of financial products.
     FinancialProductLibrary public financialProductLibrary;
@@ -218,7 +219,8 @@ contract PricelessPositionManager is Testable, Lockable {
         FixedPoint.Unsigned memory _ooReward,
         address _timerAddress,
         address _financialProductLibraryAddress,
-        bytes memory _ancillaryData
+        bytes memory _ancillaryData,
+        address _financialContractsAdmin
     )
         Testable(_timerAddress)
         nonReentrant()
@@ -236,6 +238,8 @@ contract PricelessPositionManager is Testable, Lockable {
         ooReward = _ooReward;
         priceIdentifier = _priceIdentifier;
         ancillaryData = _ancillaryData;
+        // Sumero fix
+        financialContractsAdmin = _financialContractsAdmin;
 
         // Initialize the financialProductLibrary at the provided address.
         financialProductLibrary = FinancialProductLibrary(_financialProductLibraryAddress);
@@ -720,8 +724,8 @@ contract PricelessPositionManager is Testable, Lockable {
         onlyPreExpiration
         onlyOpenState
         nonReentrant
-    {
-        require(msg.sender == _getFinancialContractsAdminAddress());
+    {   // sumero fix
+        require(msg.sender == financialContractsAdmin);
 
         contractState = ContractState.ExpiredPriceRequested;
         // Expiratory time now becomes the current time (emergency shutdown time).
@@ -873,10 +877,8 @@ contract PricelessPositionManager is Testable, Lockable {
         view
         returns (address)
     {
-        return
-            finder.getImplementationAddress(
-                OracleInterfaces.FinancialContractsAdmin
-            );
+        // Sumero Fix
+        return financialContractsAdmin;
     }
 
     // Requests a price for transformed `priceIdentifier` at `requestedTime` from the Oracle, charging the caller for the OO proposer reward.
