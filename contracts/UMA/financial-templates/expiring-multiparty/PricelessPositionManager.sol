@@ -99,7 +99,7 @@ contract PricelessPositionManager is Testable, Lockable {
     // How much to offer the Optimistic Oracle as a reward for price requests
     FixedPoint.Unsigned public ooReward;
     // Sumero FIX
-    address public immutable financialContractsAdmin;
+    address public immutable owner;
     // Instance of FinancialProductLibrary to provide custom price and collateral requirement transformations to extend
     // the functionality of the EMP to support a wider range of financial products.
     FinancialProductLibrary public financialProductLibrary;
@@ -204,7 +204,6 @@ contract PricelessPositionManager is Testable, Lockable {
      * @param _priceIdentifier registered in the DVM for the synthetic.
      * @param _minSponsorTokens minimum number of tokens that must exist at any time in a position.
      * @param _ooReward How much collateral to offer to the Optimistic Oracle when resolving prices
-     * @param _timerAddress Contract that stores the current time in a testing environment.
      * Must be set to 0x0 for production environments that use live time.
      * @param _financialProductLibraryAddress Contract providing contract state transformations.
      */
@@ -217,12 +216,11 @@ contract PricelessPositionManager is Testable, Lockable {
         bytes32 _priceIdentifier,
         FixedPoint.Unsigned memory _minSponsorTokens,
         FixedPoint.Unsigned memory _ooReward,
-        address _timerAddress,
         address _financialProductLibraryAddress,
         bytes memory _ancillaryData,
-        address _financialContractsAdmin
+        address _owner
     )
-        Testable(_timerAddress)
+        Testable(address(0))
         nonReentrant()
     {
         finder = FinderInterface(_finderAddress);
@@ -239,7 +237,7 @@ contract PricelessPositionManager is Testable, Lockable {
         priceIdentifier = _priceIdentifier;
         ancillaryData = _ancillaryData;
         // Sumero fix
-        financialContractsAdmin = _financialContractsAdmin;
+        owner = _owner;
 
         // Initialize the financialProductLibrary at the provided address.
         financialProductLibrary = FinancialProductLibrary(_financialProductLibraryAddress);
@@ -725,7 +723,7 @@ contract PricelessPositionManager is Testable, Lockable {
         onlyOpenState
         nonReentrant
     {   // sumero fix
-        require(msg.sender == financialContractsAdmin);
+        require(msg.sender == owner);
 
         contractState = ContractState.ExpiredPriceRequested;
         // Expiratory time now becomes the current time (emergency shutdown time).
@@ -878,7 +876,7 @@ contract PricelessPositionManager is Testable, Lockable {
         returns (address)
     {
         // Sumero Fix
-        return financialContractsAdmin;
+        return owner;
     }
 
     // Requests a price for transformed `priceIdentifier` at `requestedTime` from the Oracle, charging the caller for the OO proposer reward.

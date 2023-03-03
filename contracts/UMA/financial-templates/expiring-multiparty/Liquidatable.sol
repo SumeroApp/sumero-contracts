@@ -68,7 +68,6 @@ contract Liquidatable is PricelessPositionManager {
         address collateralAddress;
         address tokenAddress;
         address finderAddress;
-        address timerAddress;
         address financialProductLibraryAddress;
         bytes32 priceFeedIdentifier;
         bytes ancillaryData;
@@ -80,7 +79,7 @@ contract Liquidatable is PricelessPositionManager {
         FixedPoint.Unsigned disputeBondPercentage;
         FixedPoint.Unsigned sponsorDisputeRewardPercentage;
         FixedPoint.Unsigned disputerDisputeRewardPercentage;
-        address financialContractsAdmin;
+        address owner;
     }
 
     // This struct is used in the `withdrawLiquidation` method that disperses liquidation and dispute rewards.
@@ -184,10 +183,9 @@ contract Liquidatable is PricelessPositionManager {
             params.priceFeedIdentifier,
             params.minSponsorTokens,
             params.ooReward,
-            params.timerAddress,
             params.financialProductLibraryAddress,
             params.ancillaryData,
-            params.financialContractsAdmin
+            params.owner
         )
         nonReentrant()
     {
