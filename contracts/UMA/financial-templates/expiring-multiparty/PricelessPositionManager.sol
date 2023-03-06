@@ -14,7 +14,6 @@ import "../../oracle/interfaces/OptimisticOracleInterface.sol";
 import "../../oracle/interfaces/IdentifierWhitelistInterface.sol";
 
 import "../../oracle/implementation/Constants.sol";
-import "../../common/implementation/Testable.sol";
 import "../../common/implementation/Lockable.sol";
 
 import "../common/financial-product-libraries/expiring-multiparty-libraries/FinancialProductLibrary.sol";
@@ -25,7 +24,7 @@ import "../common/financial-product-libraries/expiring-multiparty-libraries/Fina
  * on a price feed. On construction, deploys a new ERC20, managed by this contract, that is the synthetic token.
  */
 
-contract PricelessPositionManager is Testable, Lockable {
+contract PricelessPositionManager is Lockable {
     using SafeMath for uint256;
     using FixedPoint for FixedPoint.Unsigned;
     using SafeERC20 for IERC20;
@@ -98,7 +97,7 @@ contract PricelessPositionManager is Testable, Lockable {
 
     // How much to offer the Optimistic Oracle as a reward for price requests
     FixedPoint.Unsigned public ooReward;
-    // Sumero FIX
+
     address public immutable owner;
     // Instance of FinancialProductLibrary to provide custom price and collateral requirement transformations to extend
     // the functionality of the EMP to support a wider range of financial products.
@@ -220,7 +219,7 @@ contract PricelessPositionManager is Testable, Lockable {
         bytes memory _ancillaryData,
         address _owner
     )
-        Testable(address(0))
+       
         nonReentrant()
     {
         finder = FinderInterface(_finderAddress);
@@ -236,7 +235,6 @@ contract PricelessPositionManager is Testable, Lockable {
         ooReward = _ooReward;
         priceIdentifier = _priceIdentifier;
         ancillaryData = _ancillaryData;
-        // Sumero fix
         owner = _owner;
 
         // Initialize the financialProductLibrary at the provided address.
@@ -722,7 +720,7 @@ contract PricelessPositionManager is Testable, Lockable {
         onlyPreExpiration
         onlyOpenState
         nonReentrant
-    {   // sumero fix
+    {  
         require(msg.sender == owner);
 
         contractState = ContractState.ExpiredPriceRequested;
@@ -875,7 +873,6 @@ contract PricelessPositionManager is Testable, Lockable {
         view
         returns (address)
     {
-        // Sumero Fix
         return owner;
     }
 
@@ -1106,5 +1103,8 @@ contract PricelessPositionManager is Testable, Lockable {
         } catch {
             return priceIdentifier;
         }
+    }
+    function getCurrentTime() public view returns (uint256) {
+        return block.timestamp;
     }
 }
