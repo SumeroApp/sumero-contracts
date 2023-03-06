@@ -4,6 +4,7 @@ require("@nomiclabs/hardhat-waffle");
 require("@nomiclabs/hardhat-ethers");
 require("@nomiclabs/hardhat-etherscan");
 require("hardhat-deploy");
+require("./tasks/gnosis-poc");
 require("./tasks/clay-balance");
 require("./tasks/clay-mint");
 require("./tasks/clay-approve");

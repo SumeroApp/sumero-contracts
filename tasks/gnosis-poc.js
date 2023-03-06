@@ -1,4 +1,4 @@
-task("erc20-approve", "Approves ERC20 tokens to the given account")
+task("gnosis-poc", "Approves ERC20 tokens to the given account")
     .setAction(async (args, hre) => {
 
         const { Contract, Signer, providers } = require('ethers')
