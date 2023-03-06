@@ -1,4 +1,5 @@
 const { BigNumber } = require("ethers");
+const { ethers } = require("hardhat");
 
 /**
  * This script deploys the CLAY Staking Rewards token contract
@@ -12,18 +13,20 @@ const func = async function (hre) {
 
     const ClayToken = await deployments.get("ClayToken");
 
-    let sumeroLpToken = { address: "0x3F42bFb8b5378Ea2E1F23A0Ce506E425250dd7d3" };
-    const MIN = 60
-    const HOUR = 60 * MIN
-    const DAY = 24 * HOUR
-    const expiry = Math.round((Date.now()/1000 ) + DAY * 30)
-    const maxReward = BigNumber.from(10).pow(28);
+    let sumeroLpToken = { address: "0xC3e287A9c8fc030B181d41c5BB7A971ed18de4eE" };
+
+    // change days depending on when you want staking to end
+    const days = 13;
+    const currentTimestamp = Date.now() / 1000;
+    const expirationTimestamp = Math.floor(currentTimestamp + (days * 24 * 3600));
+    const maxReward = ethers.utils.parseEther("16000000").toString()
+
     // hardcode above address to point to correct LP token address
     if (!sumeroLpToken.address) throw new Error("Need the LP token address");
 
     await deploy("ClayStakingRewards", {
         from: deployer,
-        args: [sumeroLpToken.address, ClayToken.address, expiry, maxReward],
+        args: [sumeroLpToken.address, ClayToken.address, expirationTimestamp, maxReward],
         log: true,
         skipIfAlreadyDeployed: true
     });
