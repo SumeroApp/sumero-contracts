@@ -54,6 +54,7 @@ async function iterateAssets(numOfAssets, mappingName, contract) {
 
 // Contracts Address Helper
 function getWethAddressOrThrow(network) {
+    return '0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6'
     if (network.name === 'kovan') {
         return "0xd0A1E359811322d97991E03f863a0C30C2cF029C";
     } else if (network.name === "goerli" || network.name === "dashboard") {
@@ -65,6 +66,7 @@ function getWethAddressOrThrow(network) {
 }
 
 function getUsdcOrThrow(network) {
+    return '0x07865c6E87B9F70255377e024ace6630C1Eaa37F'
     if (network.name === 'kovan') {
         return "0xb7a4F3E9097C08dA09517b5aB877F7a917224ede";
     } else if (network.name === "goerli") {
