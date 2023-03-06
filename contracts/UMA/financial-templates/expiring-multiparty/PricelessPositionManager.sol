@@ -218,14 +218,13 @@ contract PricelessPositionManager is Lockable {
         address _financialProductLibraryAddress,
         bytes memory _ancillaryData,
         address _owner
-    )
-       
-        nonReentrant()
-    {
+    ) nonReentrant() {
         finder = FinderInterface(_finderAddress);
-        
-        require(_expirationTimestamp > getCurrentTime());
-        require(_getIdentifierWhitelist().isIdentifierSupported(_priceIdentifier));
+
+        require(_expirationTimestamp > block.timestamp);
+        require(
+            _getIdentifierWhitelist().isIdentifierSupported(_priceIdentifier)
+        );
 
         expirationTimestamp = _expirationTimestamp;
         withdrawalLiveness = _withdrawalLiveness;
@@ -238,7 +237,9 @@ contract PricelessPositionManager is Lockable {
         owner = _owner;
 
         // Initialize the financialProductLibrary at the provided address.
-        financialProductLibrary = FinancialProductLibrary(_financialProductLibraryAddress);
+        financialProductLibrary = FinancialProductLibrary(
+            _financialProductLibraryAddress
+        );
     }
 
     /****************************************
@@ -255,7 +256,7 @@ contract PricelessPositionManager is Lockable {
         require(positionData.transferPositionRequestPassTimestamp == 0);
 
         // Make sure the proposed expiration of this request is not post-expiry.
-        uint256 requestPassTime = getCurrentTime().add(withdrawalLiveness);
+        uint256 requestPassTime = (block.timestamp).add(withdrawalLiveness);
         require(requestPassTime < expirationTimestamp);
 
         // Update the position object for the user.
@@ -276,14 +277,16 @@ contract PricelessPositionManager is Lockable {
         noPendingWithdrawal(msg.sender)
         nonReentrant
     {
-        require(positions[newSponsorAddress].collateral
-            .isEqual(FixedPoint.fromUnscaledUint(0))
+        require(
+            positions[newSponsorAddress].collateral.isEqual(
+                FixedPoint.fromUnscaledUint(0)
+            )
         );
         PositionData storage positionData = _getPositionData(msg.sender);
         require(
             positionData.transferPositionRequestPassTimestamp != 0 &&
                 positionData.transferPositionRequestPassTimestamp <=
-                getCurrentTime()
+                block.timestamp
         );
 
         // Reset transfer request.
@@ -392,11 +395,11 @@ contract PricelessPositionManager is Lockable {
         PositionData storage positionData = _getPositionData(msg.sender);
         require(
             collateralAmount.isGreaterThan(0) &&
-            collateralAmount.isLessThanOrEqual(positionData.collateral)
+                collateralAmount.isLessThanOrEqual(positionData.collateral)
         );
 
         // Make sure the proposed expiration of this request is not post-expiry.
-        uint256 requestPassTime = getCurrentTime().add(withdrawalLiveness);
+        uint256 requestPassTime = (block.timestamp).add(withdrawalLiveness);
         require(requestPassTime < expirationTimestamp);
 
         // Update the position object for the user.
@@ -422,20 +425,26 @@ contract PricelessPositionManager is Lockable {
         PositionData storage positionData = _getPositionData(msg.sender);
         require(
             positionData.withdrawalRequestPassTimestamp != 0 &&
-            positionData.withdrawalRequestPassTimestamp <= getCurrentTime()
+                positionData.withdrawalRequestPassTimestamp <= block.timestamp
         );
 
         // If withdrawal request amount is > position collateral, then withdraw the full collateral amount.
         FixedPoint.Unsigned memory amountToWithdraw;
-        if (positionData.withdrawalRequestAmount.isGreaterThan(positionData.collateral)) {
+        if (
+            positionData.withdrawalRequestAmount.isGreaterThan(
+                positionData.collateral
+            )
+        ) {
             amountToWithdraw = positionData.collateral;
-        }
-        else {
+        } else {
             amountToWithdraw = positionData.withdrawalRequestAmount;
         }
 
         // Decrement the sponsor's collateral and global collateral amounts.
-        amountWithdrawn = _decrementCollateralBalances(positionData, amountToWithdraw);
+        amountWithdrawn = _decrementCollateralBalances(
+            positionData,
+            amountToWithdraw
+        );
 
         // Reset withdrawal request by setting withdrawal amount and withdrawal timestamp to 0.
         _resetWithdrawalRequest(positionData);
@@ -486,10 +495,16 @@ contract PricelessPositionManager is Lockable {
             "Insufficient collateral"
         );
 
-        require(positionData.withdrawalRequestPassTimestamp == 0, "Pending withdrawal");
+        require(
+            positionData.withdrawalRequestPassTimestamp == 0,
+            "Pending withdrawal"
+        );
 
         if (positionData.tokensOutstanding.isEqual(0)) {
-            require(numTokens.isGreaterThanOrEqual(minSponsorTokens), "Below minimum sponsor position");
+            require(
+                numTokens.isGreaterThanOrEqual(minSponsorTokens),
+                "Below minimum sponsor position"
+            );
             emit NewSponsor(msg.sender);
         }
 
@@ -497,7 +512,9 @@ contract PricelessPositionManager is Lockable {
         _incrementCollateralBalances(positionData, collateralAmount);
 
         // Add the number of tokens created to the position's outstanding tokens.
-        positionData.tokensOutstanding = positionData.tokensOutstanding.add(numTokens);
+        positionData.tokensOutstanding = positionData.tokensOutstanding.add(
+            numTokens
+        );
         totalTokensOutstanding = totalTokensOutstanding.add(numTokens);
 
         emit PositionCreated(
@@ -532,7 +549,8 @@ contract PricelessPositionManager is Lockable {
         require(numTokens.isLessThanOrEqual(positionData.tokensOutstanding));
 
         // Decrease the sponsors position tokens size. Ensure it is above the min sponsor size.
-        FixedPoint.Unsigned memory newTokenCount = positionData.tokensOutstanding
+        FixedPoint.Unsigned memory newTokenCount = positionData
+            .tokensOutstanding
             .sub(numTokens);
         require(newTokenCount.isGreaterThanOrEqual(minSponsorTokens));
         positionData.tokensOutstanding = newTokenCount;
@@ -569,18 +587,26 @@ contract PricelessPositionManager is Lockable {
         PositionData storage positionData = _getPositionData(msg.sender);
         require(!numTokens.isGreaterThan(positionData.tokensOutstanding));
 
-        FixedPoint.Unsigned memory fractionRedeemed = numTokens.div(positionData.tokensOutstanding);
-        FixedPoint.Unsigned memory collateralRedeemed = fractionRedeemed.mul(positionData.collateral);
+        FixedPoint.Unsigned memory fractionRedeemed = numTokens.div(
+            positionData.tokensOutstanding
+        );
+        FixedPoint.Unsigned memory collateralRedeemed = fractionRedeemed.mul(
+            positionData.collateral
+        );
 
         // If redemption returns all tokens the sponsor has then we can delete their position. Else, downsize.
         if (positionData.tokensOutstanding.isEqual(numTokens)) {
             amountWithdrawn = _deleteSponsorPosition(msg.sender);
         } else {
             // Decrement the sponsor's collateral and global collateral amounts.
-            amountWithdrawn = _decrementCollateralBalances(positionData,collateralRedeemed);
+            amountWithdrawn = _decrementCollateralBalances(
+                positionData,
+                collateralRedeemed
+            );
 
             // Decrease the sponsors position tokens size. Ensure it is above the min sponsor size.
-            FixedPoint.Unsigned memory newTokenCount = positionData.tokensOutstanding
+            FixedPoint.Unsigned memory newTokenCount = positionData
+                .tokensOutstanding
                 .sub(numTokens);
             require(
                 newTokenCount.isGreaterThanOrEqual(minSponsorTokens),
@@ -629,7 +655,9 @@ contract PricelessPositionManager is Lockable {
         }
 
         // Get caller's tokens balance and calculate amount of underlying entitled to them.
-        FixedPoint.Unsigned memory tokensToRedeem = FixedPoint.Unsigned(tokenCurrency.balanceOf(msg.sender));
+        FixedPoint.Unsigned memory tokensToRedeem = FixedPoint.Unsigned(
+            tokenCurrency.balanceOf(msg.sender)
+        );
 
         FixedPoint.Unsigned memory totalRedeemableCollateral = tokensToRedeem
             .mul(expiryPrice);
@@ -638,13 +666,16 @@ contract PricelessPositionManager is Lockable {
         PositionData storage positionData = positions[msg.sender];
         if (positionData.collateral.isGreaterThan(0)) {
             // Calculate the underlying entitled to a token sponsor. This is collateral - debt in underlying.
-            FixedPoint.Unsigned memory tokenDebtValueInCollateral = positionData.tokensOutstanding
+            FixedPoint.Unsigned memory tokenDebtValueInCollateral = positionData
+                .tokensOutstanding
                 .mul(expiryPrice);
-            FixedPoint.Unsigned memory positionCollateral = positionData.collateral;
+            FixedPoint.Unsigned memory positionCollateral = positionData
+                .collateral;
 
             // If the debt is greater than the remaining collateral, they cannot redeem anything.
-            FixedPoint.Unsigned memory positionRedeemableCollateral =
-                tokenDebtValueInCollateral.isLessThan(positionCollateral)
+            FixedPoint.Unsigned
+                memory positionRedeemableCollateral = tokenDebtValueInCollateral
+                    .isLessThan(positionCollateral)
                     ? positionCollateral.sub(tokenDebtValueInCollateral)
                     : FixedPoint.Unsigned(0);
 
@@ -694,12 +725,7 @@ contract PricelessPositionManager is Lockable {
      * @notice Locks contract state in expired and requests oracle price.
      * @dev this function can only be called once the contract is expired and can't be re-called.
      */
-    function expire()
-        external
-        onlyPostExpiration
-        onlyOpenState
-        nonReentrant
-    {
+    function expire() external onlyPostExpiration onlyOpenState nonReentrant {
         contractState = ContractState.ExpiredPriceRequested;
 
         _requestOraclePrice_senderPays(expirationTimestamp);
@@ -720,14 +746,14 @@ contract PricelessPositionManager is Lockable {
         onlyPreExpiration
         onlyOpenState
         nonReentrant
-    {  
+    {
         require(msg.sender == owner);
 
         contractState = ContractState.ExpiredPriceRequested;
         // Expiratory time now becomes the current time (emergency shutdown time).
         // Price requested at this time stamp. `settleExpired` can now withdraw at this timestamp.
         uint256 oldExpirationTimestamp = expirationTimestamp;
-        expirationTimestamp = getCurrentTime();
+        expirationTimestamp = block.timestamp;
         _requestOraclePrice_senderPays(expirationTimestamp);
 
         emit EmergencyShutdown(
@@ -784,7 +810,8 @@ contract PricelessPositionManager is Lockable {
         PositionData storage positionData = _getPositionData(sponsor);
 
         // If the entire position is being removed, delete it instead.
-        if (tokensToRemove.isEqual(positionData.tokensOutstanding) &&
+        if (
+            tokensToRemove.isEqual(positionData.tokensOutstanding) &&
             positionData.collateral.isEqual(collateralToRemove)
         ) {
             _deleteSponsorPosition(sponsor);
@@ -795,7 +822,8 @@ contract PricelessPositionManager is Lockable {
         _decrementCollateralBalances(positionData, collateralToRemove);
 
         // Ensure that the sponsor will meet the min position size after the reduction.
-        FixedPoint.Unsigned memory newTokenCount = positionData.tokensOutstanding
+        FixedPoint.Unsigned memory newTokenCount = positionData
+            .tokensOutstanding
             .sub(tokensToRemove);
         require(
             newTokenCount.isGreaterThanOrEqual(minSponsorTokens),
@@ -804,7 +832,8 @@ contract PricelessPositionManager is Lockable {
         positionData.tokensOutstanding = newTokenCount;
 
         // Decrement the position's withdrawal amount.
-        positionData.withdrawalRequestAmount = positionData.withdrawalRequestAmount
+        positionData.withdrawalRequestAmount = positionData
+            .withdrawalRequestAmount
             .sub(withdrawalAmountToRemove);
 
         // Decrement the total outstanding tokens in the overall contract.
@@ -818,11 +847,16 @@ contract PricelessPositionManager is Lockable {
     {
         PositionData storage positionToLiquidate = _getPositionData(sponsor);
 
-        FixedPoint.Unsigned memory startingGlobalCollateral = totalPositionCollateral;
+        FixedPoint.Unsigned
+            memory startingGlobalCollateral = totalPositionCollateral;
 
         // Remove the collateral and outstanding from the overall total position.
-        totalPositionCollateral = totalPositionCollateral.sub(positionToLiquidate.collateral);
-        totalTokensOutstanding = totalTokensOutstanding.sub(positionToLiquidate.tokensOutstanding);
+        totalPositionCollateral = totalPositionCollateral.sub(
+            positionToLiquidate.collateral
+        );
+        totalTokensOutstanding = totalTokensOutstanding.sub(
+            positionToLiquidate.tokensOutstanding
+        );
 
         // Reset the sponsors position to have zero outstanding and collateral.
         delete positions[sponsor];
@@ -881,10 +915,17 @@ contract PricelessPositionManager is Lockable {
         OptimisticOracleInterface optimisticOracle = _getOptimisticOracle();
 
         // Pull final fee from sender
-        collateralCurrency.safeTransferFrom(msg.sender, address(this), ooReward.rawValue);
+        collateralCurrency.safeTransferFrom(
+            msg.sender,
+            address(this),
+            ooReward.rawValue
+        );
 
         // Increase token allowance to enable the optimistic oracle fee payment.
-        collateralCurrency.safeIncreaseAllowance(address(optimisticOracle), ooReward.rawValue);
+        collateralCurrency.safeIncreaseAllowance(
+            address(optimisticOracle),
+            ooReward.rawValue
+        );
         optimisticOracle.requestPrice(
             _transformPriceIdentifier(requestedTime),
             requestedTime,
@@ -982,14 +1023,14 @@ contract PricelessPositionManager is Lockable {
 
     function _onlyPreExpiration() internal view {
         require(
-            getCurrentTime() < expirationTimestamp,
+            block.timestamp < expirationTimestamp,
             "Only callable pre-expiry"
         );
     }
 
     function _onlyPostExpiration() internal view {
         require(
-            getCurrentTime() >= expirationTimestamp,
+            block.timestamp >= expirationTimestamp,
             "Only callable post-expiry"
         );
     }
@@ -1103,8 +1144,5 @@ contract PricelessPositionManager is Lockable {
         } catch {
             return priceIdentifier;
         }
-    }
-    function getCurrentTime() public view returns (uint256) {
-        return block.timestamp;
     }
 }

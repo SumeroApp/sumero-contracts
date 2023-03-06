@@ -96,10 +96,10 @@ contract ExpiringMultiPartyCreator is ContractCreator, Lockable {
      * @param _finderAddress UMA protocol Finder used to discover other protocol contracts.
      * @param _tokenFactoryAddress ERC20 token factory used to deploy synthetic token instances.
      */
-    constructor(
-        address _finderAddress,
-        address _tokenFactoryAddress
-    ) ContractCreator(_finderAddress) nonReentrant() {
+    constructor(address _finderAddress, address _tokenFactoryAddress)
+        ContractCreator(_finderAddress)
+        nonReentrant()
+    {
         tokenFactoryAddress = _tokenFactoryAddress;
     }
 
@@ -108,9 +108,11 @@ contract ExpiringMultiPartyCreator is ContractCreator, Lockable {
      * @param params is a `ConstructorParams` object from ExpiringMultiParty.
      * @return address of the deployed ExpiringMultiParty contract.
      */
-    function createExpiringMultiParty(
-        Params memory params
-    ) public nonReentrant returns (address) {
+    function createExpiringMultiParty(Params memory params)
+        public
+        nonReentrant
+        returns (address)
+    {
         // Create a new synthetic token using the params.
         require(
             bytes(params.syntheticName).length != 0,
@@ -217,9 +219,11 @@ contract ExpiringMultiPartyCreator is ContractCreator, Lockable {
     // IERC20Standard.decimals() will revert if the collateral contract has not implemented the decimals() method,
     // which is possible since the method is only an OPTIONAL method in the ERC20 standard:
     // https://eips.ethereum.org/EIPS/eip-20#methods.
-    function _getSyntheticDecimals(
-        address _collateralAddress
-    ) public view returns (uint8 decimals) {
+    function _getSyntheticDecimals(address _collateralAddress)
+        public
+        view
+        returns (uint8 decimals)
+    {
         try IERC20Standard(_collateralAddress).decimals() returns (
             uint8 _decimals
         ) {
