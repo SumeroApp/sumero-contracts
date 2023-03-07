@@ -25,6 +25,8 @@ require("./tasks/emp-request-withdrawal");
 require("./tasks/add-impl-to-finder");
 require("./tasks/create-lp");
 require("./tasks/setup-finder");
+require("./tasks/build-merkle");
+require("./tasks/clay-claim");
 require("hardhat-gas-reporter");
 
 const solcVersion = "0.8.0";

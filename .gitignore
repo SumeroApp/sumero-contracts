@@ -8,3 +8,4 @@ deployments/localhost/
 .vscode
 .*
 gas-report.txt
+utils/addressList.json
