@@ -22,6 +22,8 @@ task("add-asset", "Adds assets to Asset Manager")
             let txUrl;
             let tx;
 
+            if (args.gnosisSafe && !ethers.utils.isAddress(args.gnosisSafe)) throw new Error("Invalid safe address")
+
             switch (args.type) {
                 case 'emp': tx = await addEMP(args, assetManager)
                     break;
@@ -32,7 +34,7 @@ task("add-asset", "Adds assets to Asset Manager")
                 default: return console.error("Asset type error!");
             }
 
-            txUrl = getTxUrl(hre.deployments.getNetworkName(), tx.hash);
+            txUrl = getTxUrl(hre.deployments.getNetworkName(), tx?.hash);
 
             if (txUrl != null) {
                 console.log(colors.yellow("\n", txUrl));
@@ -45,6 +47,14 @@ const addEMP = async (args, assetManager) => {
     const colors = require('colors');
     console.log(colors.blue("\n Adding EMP: ....."));
     try {
+        const { gnosisSafe } = args;
+        if (gnosisSafe) {
+            const getGnosisSigner = require('../gnosis/signer');
+            const tx = await assetManager.connect(await getGnosisSigner(gnosisSafe)).addEmp(args.address)
+            console.log("Gnosis tx hash: ",tx.hash)
+            console.log(`Go to gnosis dashbaord to view/confirm the txn: https://app.safe.global/transactions/queue?safe=${gnosisSafe}`)
+            return
+        }
         const tx = await assetManager.addEmp(args.address)
         await tx.wait()
         const totalEMP = await assetManager.totalEmpAssets()
@@ -63,6 +73,14 @@ const addSwapPair = async (args, assetManager) => {
     const colors = require('colors');
     console.log(colors.blue("\n Adding swap pair: ....."));
     try {
+        const { gnosisSafe } = args;
+        if (gnosisSafe) {
+            const getGnosisSigner = require('../gnosis/signer');
+            const tx = await assetManager.connect(await getGnosisSigner(gnosisSafe)).addSwapPair(args.address)
+            console.log("Gnosis tx hash: ",tx.hash)
+            console.log(`Go to gnosis dashbaord to view/confirm the txn: https://app.safe.global/transactions/queue?safe=${gnosisSafe}`)
+            return
+        }
         const tx = await assetManager.addSwapPair(args.address)
         await tx.wait()
         const totalSwapPair = await assetManager.totalSwapPairAssets()
@@ -80,6 +98,14 @@ const addStakingReward = async (args, assetManager) => {
     const colors = require('colors');
     console.log(colors.blue("\n Adding staking reward: ....."));
     try {
+        const { gnosisSafe } = args;
+        if (gnosisSafe) {
+            const getGnosisSigner = require('../gnosis/signer');
+            const tx = await assetManager.connect(await getGnosisSigner(gnosisSafe)).addStakingReward(args.address)
+            console.log("Gnosis tx hash: ",tx.hash)
+            console.log(`Go to gnosis dashbaord to view/confirm the txn: https://app.safe.global/transactions/queue?safe=${gnosisSafe}`)
+            return
+        }
         const tx = await assetManager.addStakingReward(args.address)
         await tx.wait()
         const totalStakingReward = await assetManager.totalStakingRewardAssets()

@@ -36,7 +36,7 @@ function matchesForkedNetwork(name) {
 
 // Transaction Helper
 function getTxUrl(networkName, txHash) {
-    if (!isLocalNetwork() && !isForkedNetwork()) {
+    if (!isLocalNetwork() && !isForkedNetwork() && txHash) {
         let txLink = "https://" + networkName + ".etherscan.io/tx/" + txHash
         return "Etherscan URL: " + txLink;
     }
