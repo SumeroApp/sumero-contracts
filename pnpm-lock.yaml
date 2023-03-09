@@ -22,6 +22,7 @@ specifiers:
   hardhat: ^2.12.2
   hardhat-deploy: ^0.11.20
   hardhat-gas-reporter: ^1.0.9
+  node-fetch: 2.6.1
   prettier: ^2.6.2
   prettier-plugin-solidity: ^1.0.0-beta.19
 
@@ -32,6 +33,7 @@ dependencies:
   '@safe-global/safe-ethers-lib': 1.9.2
   babel-polyfill: 6.26.0
   babel-register: 6.26.0
+  node-fetch: 2.6.1
 
 devDependencies:
   '@nomiclabs/hardhat-ethers': /hardhat-deploy-ethers/0.3.0-beta.13_wknqauzjtp3mhprkntsmqpccee
@@ -6059,6 +6061,11 @@ packages:
       encoding: 0.1.13
       is-stream: 1.1.0
     dev: true
+
+  /node-fetch/2.6.1:
+    resolution: {integrity: sha512-V4aYg89jEoVRxRb2fJdAg8FHvI7cEyYdVAh94HH0UIK8oJxUfkjlDQN9RbMx+bEjP7+ggMiFRprSti032Oipxw==}
+    engines: {node: 4.x || >=6.0.0}
+    dev: false
 
   /node-fetch/2.6.7:
     resolution: {integrity: sha512-ZjMPFEfVx5j+y2yF35Kzx5sF7kDzxuDj6ziH4FFbOp87zKDZNx8yExJIb05OGF4Nlt9IHFIMBkRl41VdvcNdbQ==}
