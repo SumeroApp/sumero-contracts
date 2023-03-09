@@ -4,8 +4,16 @@ task("add-impl-to-finder", "Adds assets to Asset Manager")
     .addParam("name", "The name of the interface")
     .addParam("address", "The address of the implementation")
     .addFlag("skipIfImplementationExists", "boolean value to skip changing implementation if it already exists")
+    .addOptionalParam(
+        "gnosisSafe",
+        "Gnosis safe address, should be given if trasactions need to be submitted to gnosis",
+        undefined,
+        types.string
+    )
     .setAction(
         async (args, hre) => {
+            if (args.gnosisSafe && !ethers.utils.isAddress(args.gnosisSafe)) throw new Error("Invalid safe address")
+
             const colors = require('colors');
             const { getTxUrl, isZeroAddress } = require('../utils/helper');
             const { deployer } = await hre.getNamedAccounts();
@@ -23,6 +31,15 @@ task("add-impl-to-finder", "Adds assets to Asset Manager")
                 console.log(colors.green("\n adding new interface -> ", args.name));
                 console.log(colors.green(" converted interface to bytes32 -> ", bytes32Name));
                 console.log(colors.green(" implementation address -> ", args.address));
+
+                const { gnosisSafe } = args;
+                if (gnosisSafe) {
+                    const getGnosisSigner = require('../gnosis/signer');
+                    const tx = await finder.connect(await getGnosisSigner(gnosisSafe)).changeImplementationAddress(bytes32Name, args.address)
+                    console.log("Gnosis tx hash: ", tx.hash)
+                    console.log(`Go to gnosis dashbaord to view/confirm the txn: https://app.safe.global/transactions/queue?safe=${gnosisSafe}`)
+                    return
+                }
 
                 const tx = await finder.changeImplementationAddress(bytes32Name, args.address);
                 await tx.wait()

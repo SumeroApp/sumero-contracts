@@ -3,6 +3,12 @@
 task("clay-grant-role", "Grants role to the given address")
     .addParam("account", "The account address for which role is to be granted")
     .addParam("role", "The role to be assigned")
+    .addOptionalParam(
+        "gnosisSafe",
+        "Gnosis safe address, should be given if trasactions need to be submitted to gnosis",
+        undefined,
+        types.string
+    )
     .setAction(
         async (args, hre) => {
             const { expect } = require('chai');
@@ -10,10 +16,21 @@ task("clay-grant-role", "Grants role to the given address")
             const { ethers } = require("hardhat");
             const { getTxUrl } = require('../utils/helper');
 
+            if (args.gnosisSafe && !ethers.utils.isAddress(args.gnosisSafe)) throw new Error("Invalid safe address")
+
             const clayToken = await ethers.getContract("ClayToken", deployer);
             console.log("Clay Contract Address: " + clayToken.address);
 
             const roleHash = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(args.role));
+
+            const { gnosisSafe } = args;
+            if (gnosisSafe) {
+                const getGnosisSigner = require('../gnosis/signer');
+                const tx = await clayToken.connect(await getGnosisSigner(gnosisSafe)).grantRole(roleHash, args.account);
+                console.log("Gnosis tx hash: ", tx.hash)
+                console.log(`Go to gnosis dashbaord to view/confirm the txn: https://app.safe.global/transactions/queue?safe=${gnosisSafe}`)
+                return
+            }
             const tx = await clayToken.grantRole(roleHash, args.account);
             await tx.wait();
 
