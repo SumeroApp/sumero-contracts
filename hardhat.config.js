@@ -45,11 +45,16 @@ module.exports = {
   // networks: addForkConfiguration({
   // }),
   networks: {
-    localhost: {
-      live: false,
-      tags: ["local"],
-      hardfork: "istanbul",
-      blockGasLimit: 67000000,
+    // localhost: {
+    //   live: false,
+    //   tags: ["local"],
+    //   hardfork: "istanbul",
+    //   blockGasLimit: 67000000,
+    // },
+    hardhat: {
+      forking: {
+        url: 'https://eth-goerli.public.blastapi.io'
+      }
     },
     kovan: {
       live: false,
