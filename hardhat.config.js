@@ -69,7 +69,7 @@ module.exports = {
       accounts: accounts('goerli'),
       chainId: 5,
     },
-    'dashboard': {
+    'dashboard-goerli': {
       url: "http://localhost:24012/rpc",
       timeout: 400000,
       live: true
