@@ -13,10 +13,10 @@ const func = async function (hre) {
 
     const ClayToken = await deployments.get("ClayToken");
 
-    let sumeroLpToken = { address: "0xC3e287A9c8fc030B181d41c5BB7A971ed18de4eE" };
+    let sumeroLpToken = { address: "0x8Ad9995145D24bA99326ea637218e1fc86C6b1fb" };
 
     // change days depending on when you want staking to end
-    const days = 13;
+    const days = 16;
     const currentTimestamp = Date.now() / 1000;
     const expirationTimestamp = Math.floor(currentTimestamp + (days * 24 * 3600));
     const maxReward = ethers.utils.parseEther("16000000").toString()
