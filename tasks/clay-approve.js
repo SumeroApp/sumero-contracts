@@ -13,6 +13,7 @@ task("clay-approve", "Approves clay token to given account")
             const { expect } = require('chai');
             const { deployer } = await hre.getNamedAccounts();
             const { getTxUrl } = require('../utils/helper');
+            const submitTransactionToGnosisSafe = require('../gnosis/helper');
 
             if (args.gnosisSafe && !ethers.utils.isAddress(args.gnosisSafe)) throw new Error("Invalid safe address")
 
@@ -28,13 +29,7 @@ task("clay-approve", "Approves clay token to given account")
             console.log("Approving CLAY..");
 
             const { gnosisSafe } = args;
-            if (gnosisSafe) {
-                const getGnosisSigner = require('../gnosis/signer');
-                const tx = await clayToken.connect(await getGnosisSigner(gnosisSafe)).approve(args.spender, amountInWei);
-                console.log("Gnosis tx hash: ", tx.hash)
-                console.log(`Go to gnosis dashbaord to view/confirm the txn: https://app.safe.global/transactions/queue?safe=${gnosisSafe}`)
-                return
-            }
+            if (gnosisSafe) return submitTransactionToGnosisSafe(gnosisSafe, clayToken, 'approve', args.spender, amountInWei);
 
             const tx = await clayToken.approve(args.spender, amountInWei);
             await tx.wait();

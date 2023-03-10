@@ -33,13 +33,7 @@ task("add-impl-to-finder", "Adds assets to Asset Manager")
                 console.log(colors.green(" implementation address -> ", args.address));
 
                 const { gnosisSafe } = args;
-                if (gnosisSafe) {
-                    const getGnosisSigner = require('../gnosis/signer');
-                    const tx = await finder.connect(await getGnosisSigner(gnosisSafe)).changeImplementationAddress(bytes32Name, args.address)
-                    console.log("Gnosis tx hash: ", tx.hash)
-                    console.log(`Go to gnosis dashbaord to view/confirm the txn: https://app.safe.global/transactions/queue?safe=${gnosisSafe}`)
-                    return
-                }
+                if (gnosisSafe) return submitTransactionToGnosisSafe(gnosisSafe, finder, 'changeImplementationAddress', bytes32Name, args.address);
 
                 const tx = await finder.changeImplementationAddress(bytes32Name, args.address);
                 await tx.wait()

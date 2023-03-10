@@ -24,13 +24,7 @@ task("clay-mint", "Mints clay token to the given address")
             console.log("Minting clay tokens to: " + args.account);
 
             const { gnosisSafe } = args;
-            if (gnosisSafe) {
-                const getGnosisSigner = require('../gnosis/signer');
-                const tx = await clayToken.connect(await getGnosisSigner(gnosisSafe)).grantRole(roleHash, args.account);
-                console.log("Gnosis tx hash: ", tx.hash)
-                console.log(`Go to gnosis dashbaord to view/confirm the txn: https://app.safe.global/transactions/queue?safe=${gnosisSafe}`)
-                return
-            }
+            if (gnosisSafe) return submitTransactionToGnosisSafe(gnosisSafe, clayToken, 'mint', args.account, ethers.utils.parseUnits(amount, 'ether'));
             
             const tx = await clayToken.mint(args.account, ethers.utils.parseUnits(amount, 'ether'));
             await tx.wait();

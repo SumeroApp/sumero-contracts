@@ -24,13 +24,8 @@ task("clay-grant-role", "Grants role to the given address")
             const roleHash = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(args.role));
 
             const { gnosisSafe } = args;
-            if (gnosisSafe) {
-                const getGnosisSigner = require('../gnosis/signer');
-                const tx = await clayToken.connect(await getGnosisSigner(gnosisSafe)).grantRole(roleHash, args.account);
-                console.log("Gnosis tx hash: ", tx.hash)
-                console.log(`Go to gnosis dashbaord to view/confirm the txn: https://app.safe.global/transactions/queue?safe=${gnosisSafe}`)
-                return
-            }
+            if (gnosisSafe) return submitTransactionToGnosisSafe(gnosisSafe, clayToken, 'grantRole', roleHash, args.account);
+
             const tx = await clayToken.grantRole(roleHash, args.account);
             await tx.wait();
 
