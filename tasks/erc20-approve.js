@@ -13,9 +13,7 @@ task("erc20-approve", "Approves ERC20 tokens to the given account")
         async (args, hre) => {
             let { deployer } = await hre.getNamedAccounts();
             const { getTxUrl } = require('../utils/helper');
-
-            if (args.gnosisSafe && !ethers.utils.isAddress(args.gnosisSafe)) throw new Error("Invalid safe address")
-            if(args.gnosisSafe) deployer = args.gnosisSafe;
+            const submitTransactionToGnosisSafe = require("../gnosis/helper");
 
             const Token = await hre.ethers.getContractFactory('ClayToken');
             const token = await Token.attach(args.token);
@@ -23,25 +21,18 @@ task("erc20-approve", "Approves ERC20 tokens to the given account")
             const tokenName = await token.name();
             const tokenDecimals = await token.decimals();
 
-            const tokenBalance = await token.balanceOf(deployer);
+            const tokenBalance = await token.balanceOf(args.gnosisSafe || deployer);
 
             console.log(`My account's ${tokenName} balance is : ` + ethers.utils.formatUnits(tokenBalance, tokenDecimals));
 
             //Convert ether  to wei
             const amountInWei = ethers.utils.parseUnits(args.amount, tokenDecimals);
-            const allowance = await token.allowance(deployer, args.spender);
+            const allowance = await token.allowance(args.gnosisSafe || deployer, args.spender);
 
             console.log(`Approving ${tokenName} token`);
             if (amountInWei.gt(allowance)) {
                 try {
-                    const { gnosisSafe } = args;
-                    if (gnosisSafe) {
-                        const getGnosisSigner = require('../gnosis/signer');
-                        const tx = await token.connect(await getGnosisSigner(gnosisSafe)).approve(args.address)
-                        console.log("Gnosis tx hash: ", tx.hash)
-                        console.log(`Go to gnosis dashbaord to view/confirm the txn: https://app.safe.global/transactions/queue?safe=${gnosisSafe}`)
-                        return
-                    }
+                    if (args.gnosisSafe) return submitTransactionToGnosisSafe(args.gnosisSafe, token, 'approve', args.spender, amountInWei);
                     const tx = await token.approve(args.spender, amountInWei);
                     await tx.wait();
                     const txUrl = getTxUrl(hre.deployments.getNetworkName(), tx.hash);

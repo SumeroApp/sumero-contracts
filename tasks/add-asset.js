@@ -2,7 +2,6 @@
 
 // npx hardhat add-asset --type emp --address 0x3950da59428e9319ce113368f4141f877e2e4ac8 --network kovan
 const { expect } = require('chai');
-const submitTransactionToGnosisSafe = require('../gnosis/helper');
 
 task("add-asset", "Adds assets to Asset Manager")
     .addParam("type", "Asset Type: emp,swap-pair or staking-reward")
@@ -19,11 +18,10 @@ task("add-asset", "Adds assets to Asset Manager")
             const { getTxUrl } = require('../utils/helper');
             const assetManager = await ethers.getContract("AssetManager", deployer);
             const colors = require('colors');
+            const submitTransactionToGnosisSafe = require('../gnosis/helper');
 
             let txUrl;
             let tx;
-
-            if (args.gnosisSafe && !ethers.utils.isAddress(args.gnosisSafe)) throw new Error("Invalid safe address")
 
             switch (args.type) {
                 case 'emp': tx = await addEMP(args, assetManager)

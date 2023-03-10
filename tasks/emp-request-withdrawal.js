@@ -2,12 +2,19 @@
 task("emp-request-withdrawal", "Requests withdrawal")
     .addParam("empAddress", "Deployed EMP contract address")
     .addParam("collateralAmount", "The number of collateral tokens to collateralize the position with")
+    .addOptionalParam(
+        "gnosisSafe",
+        "Gnosis safe address, should be given if trasactions need to be submitted to gnosis",
+        undefined,
+        types.string
+    )
     .setAction(
         async (args, hre) => {
             const { deployer } = await getNamedAccounts();
             const { ethers } = require("hardhat")
             const helper = require('../utils/helper');
             const colors = require('colors');
+            const submitTransactionToGnosisSafe = require("../gnosis/helper");
 
             //---- Get Ethers Signer-------------------
             const signer0 = ethers.provider.getSigner(deployer);
@@ -33,20 +40,20 @@ task("emp-request-withdrawal", "Requests withdrawal")
 
             const collateralCurrencyAddress = await empInstance.collateralCurrency();
             const syntheticDecimals = await empInstance._getSyntheticDecimals(collateralCurrencyAddress);
-            const collateralRequirement = Number(ethers.utils.formatUnits(await empInstance.collateralRequirement(), 18)); 
+            const collateralRequirement = Number(ethers.utils.formatUnits(await empInstance.collateralRequirement(), 18));
             const positions = await empInstance.positions(deployer);
             const tokenOutstanding = positions.tokensOutstanding[0];
-            const collateralDeposited = positions.collateral[0]; 
+            const collateralDeposited = positions.collateral[0];
             const withdrawalLiveness = Number(await empInstance.withdrawalLiveness());
             const currentTime = Math.floor(Date.now() / 1000);
             const expirationTimestamp = Number(await empInstance.expirationTimestamp());
             const totalPositionCollateral = await empInstance.totalPositionCollateral();
             const totalTokensOutstanding = await empInstance.totalTokensOutstanding();
             const rawGCR = totalTokensOutstanding.isZero() ? ethers.BigNumber.from(0) : ethers.utils.formatUnits(totalPositionCollateral.mul(ethers.utils.parseEther("1")).div(totalTokensOutstanding), 18);
-            const globalCR = rawGCR / price; 
+            const globalCR = rawGCR / price;
 
 
-            const withdrawAmount = ethers.utils.parseUnits(args.collateralAmount.toString(), syntheticDecimals); 
+            const withdrawAmount = ethers.utils.parseUnits(args.collateralAmount.toString(), syntheticDecimals);
             const updatedCollateral = collateralDeposited - withdrawAmount;
             const calculatedPositionCR = (updatedCollateral / tokenOutstanding) / price;
 
@@ -79,20 +86,21 @@ task("emp-request-withdrawal", "Requests withdrawal")
                 console.log("Not enough time for withdrawal request(Expiration time is very close)...")
                 return
             }
-           
+
             if (Number(positions.withdrawalRequestAmount) != 0) {
                 console.log("There is an ongoing withdrawal request! Please wait for that to be resulted...")
                 return
             }
-            
+
             const collateralAmountObject = { rawValue: withdrawAmount };
 
             console.log(colors.blue("\n Requesting Witdrawal: ....."));
             try {
+                if (args.gnosisSafe) return submitTransactionToGnosisSafe(args.gnosisSafe, empInstance, 'requestWithdrawal',collateralAmountObject);
                 const requestWithdrawalTx = await empInstance.requestWithdrawal(collateralAmountObject);
                 const receipt = await requestWithdrawalTx.wait();
                 console.log("\nTransaction Receipt: \n", receipt)
-  
+
                 const txUrl = helper.getTxUrl(deployments.getNetworkName(), requestWithdrawalTx.hash);
                 if (txUrl != null) {
                     console.log(txUrl);
@@ -100,7 +108,7 @@ task("emp-request-withdrawal", "Requests withdrawal")
             } catch (error) {
                 console.log("Requesting Witdrawal failed!");
                 console.log(error);
-            } 
+            }
         }
     );
 

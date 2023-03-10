@@ -15,8 +15,6 @@ task("clay-approve", "Approves clay token to given account")
             const { getTxUrl } = require('../utils/helper');
             const submitTransactionToGnosisSafe = require('../gnosis/helper');
 
-            if (args.gnosisSafe && !ethers.utils.isAddress(args.gnosisSafe)) throw new Error("Invalid safe address")
-
             const clayToken = await ethers.getContract("ClayToken", deployer);
             console.log("Using ClayToken: ", clayToken.address);
 
@@ -28,8 +26,7 @@ task("clay-approve", "Approves clay token to given account")
 
             console.log("Approving CLAY..");
 
-            const { gnosisSafe } = args;
-            if (gnosisSafe) return submitTransactionToGnosisSafe(gnosisSafe, clayToken, 'approve', args.spender, amountInWei);
+            if (args.gnosisSafe) return submitTransactionToGnosisSafe(args.gnosisSafe, clayToken, 'approve', args.spender, amountInWei);
 
             const tx = await clayToken.approve(args.spender, amountInWei);
             await tx.wait();

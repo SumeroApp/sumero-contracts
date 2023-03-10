@@ -26,6 +26,12 @@ task("emp-create", "Deploys the EMP (Expiring Multi Party) Contract using UMA's 
     .addParam("disputerDisputeReward", "Dispute reward paid to the disputer")
     .addParam("minSponsorTokens", "The minimum number of tokens required in a sponsor position")
     .addParam("ooReward", "How much of the collateral to offer to the Optimistic Oracle system when requesting a price")
+    .addOptionalParam(
+        "gnosisSafe",
+        "Gnosis safe address, should be given if trasactions need to be submitted to gnosis",
+        undefined,
+        types.string
+    )
     .setAction(
         async (args, hre) => {
 
@@ -34,6 +40,7 @@ task("emp-create", "Deploys the EMP (Expiring Multi Party) Contract using UMA's 
 
             const { getTxUrl } = require('../utils/helper');
             const colors = require('colors');
+            const submitTransactionToGnosisSafe = require("../gnosis/helper");
 
             const { ExpiringMultiPartyCreatorEthers__factory } = require('@uma/contracts-node');
 
@@ -46,7 +53,6 @@ task("emp-create", "Deploys the EMP (Expiring Multi Party) Contract using UMA's 
             if (!ExpiringMultiPartyCreator || !ExpiringMultiPartyCreator.address) throw new Error("Unable to get deployed EMPC address");
 
 
-            const signer0 = ethers.provider.getSigner(deployer);
             // const emp_creator_instance = ExpiringMultiPartyCreatorEthers__factory.connect(ExpiringMultiPartyCreator.address, signer0);
             const syntheticDecimals = await emp_creator_instance._getSyntheticDecimals(args.collateralAddress);
             const collateralDecimals = syntheticDecimals; // The EMP Solidity code sets these to be the same on every EMP creation.
@@ -104,6 +110,7 @@ task("emp-create", "Deploys the EMP (Expiring Multi Party) Contract using UMA's 
 
             console.log(colors.blue("\n Creating EMP via EMPC: ....."));
             try {
+                if (args.gnosisSafe) return submitTransactionToGnosisSafe(args.gnosisSafe, emp_creator_instance, 'createExpiringMultiParty', createEmpParams);
                 const createEmpTx = await emp_creator_instance.createExpiringMultiParty(createEmpParams, { gasLimit: 6700000 });
                 const receipt = await createEmpTx.wait();
                 console.log("\nTransaction Receipt: \n", createEmpTx);

@@ -30,6 +30,12 @@ task("emp-mint", "Mint the EMP")
     .addParam("empAddress", "Deployed EMP contract address")
     .addParam("collateralAmount", "The number of collateral tokens to collateralize the position with")
     .addParam("additionalCollateralRatio", "Additional collateral ratio (e.g. 0.15)")
+    .addOptionalParam(
+        "gnosisSafe",
+        "Gnosis safe address, should be given if trasactions need to be submitted to gnosis",
+        undefined,
+        types.string
+    )
     .setAction(
         async (args, hre) => {
             const { expect } = require('chai');
@@ -37,6 +43,7 @@ task("emp-mint", "Mint the EMP")
             const { ethers } = require("hardhat");
             const helper = require('../utils/helper');
             const colors = require('colors');
+            const submitTransactionToGnosisSafe = require("../gnosis/helper");
 
             //---- Get Ethers Signer-------------------
             const signer0 = ethers.provider.getSigner(deployer);
@@ -107,6 +114,7 @@ task("emp-mint", "Mint the EMP")
             let mintEmpTx;
             let txUrl;
             try {
+                if (args.gnosisSafe) return submitTransactionToGnosisSafe(args.gnosisSafe, empInstance, 'create', collateralAmountObject, numTokensObject);
                 mintEmpTx = await empInstance.create(collateralAmountObject, numTokensObject)
                 await mintEmpTx.wait()
                 txUrl = helper.getTxUrl(hre.deployments.getNetworkName(), mintEmpTx.hash)

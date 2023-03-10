@@ -1,5 +1,6 @@
 
 async function submitTransactionToGnosisSafe(DEPLOYER_SAFE, artifact, functionName, ...args) {
+    if (!ethers.utils.isAddress(DEPLOYER_SAFE)) throw new Error("Invalid safe address")
     const getGnosisSigner = require('./signer');
     const colors = require('colors');
     const signer = await getGnosisSigner(DEPLOYER_SAFE)

@@ -15,16 +15,14 @@ task("clay-grant-role", "Grants role to the given address")
             const { deployer } = await hre.getNamedAccounts();
             const { ethers } = require("hardhat");
             const { getTxUrl } = require('../utils/helper');
-
-            if (args.gnosisSafe && !ethers.utils.isAddress(args.gnosisSafe)) throw new Error("Invalid safe address")
+            const submitTransactionToGnosisSafe = require("../gnosis/helper");
 
             const clayToken = await ethers.getContract("ClayToken", deployer);
             console.log("Clay Contract Address: " + clayToken.address);
 
             const roleHash = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(args.role));
 
-            const { gnosisSafe } = args;
-            if (gnosisSafe) return submitTransactionToGnosisSafe(gnosisSafe, clayToken, 'grantRole', roleHash, args.account);
+            if (args.gnosisSafe) return submitTransactionToGnosisSafe(args.gnosisSafe, clayToken, 'grantRole', roleHash, args.account);
 
             const tx = await clayToken.grantRole(roleHash, args.account);
             await tx.wait();

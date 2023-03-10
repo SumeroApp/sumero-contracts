@@ -3,11 +3,18 @@
 task("emp-create-liquidation", "creates liquidation on sponsor's position")
     .addParam("emp", "Address of EMP contract")
     .addParam("sponsor", "Address of the sponsor")
+    .addOptionalParam(
+        "gnosisSafe",
+        "Gnosis safe address, should be given if trasactions need to be submitted to gnosis",
+        undefined,
+        types.string
+    )
     .setAction(
         async (args, hre) => {
             const { getTxUrl } = require('../utils/helper');
             const { run } = require('hardhat');
             const colors = require('colors');
+            const submitTransactionToGnosisSafe = require("../gnosis/helper");
 
             console.log(colors.bold("\n==> Running create-liquidation task..."));
 
@@ -24,6 +31,7 @@ task("emp-create-liquidation", "creates liquidation on sponsor's position")
                 token: await emp.collateralCurrency(),
                 spender: args.emp,
                 amount: ooReward.toString(),
+                gnosisSafe: args.gnosisSafe
             })
 
             console.log(colors.blue("\n 2- Approving collateral tokens: ....."));
@@ -31,6 +39,7 @@ task("emp-create-liquidation", "creates liquidation on sponsor's position")
                 token: await emp.tokenCurrency(),
                 spender: args.emp,
                 amount: positionTokensOutstanding.toString(),
+                gnosisSafe: args.gnosisSafe
             })
 
 
@@ -39,6 +48,17 @@ task("emp-create-liquidation", "creates liquidation on sponsor's position")
 
             console.log(colors.blue("\n 3- Liquidating the position: ....."));
             try {
+                if (args.gnosisSafe) {
+                    return submitTransactionToGnosisSafe(
+                        args.gnosisSafe,
+                        emp,
+                        'createLiquidation',
+                        args.sponsor,
+                        { rawValue: "0" },
+                        { rawValue: GCR.toString() },
+                        { rawValue: positionTokensOutstanding.toString() },
+                        expirationTimestamp);
+                }
                 const liquidateTX = await emp.createLiquidation(
                     args.sponsor,
                     { rawValue: "0" },

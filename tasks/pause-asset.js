@@ -6,11 +6,18 @@
 task("pause-asset", "Pauses assets on asset manager")
     .addParam("type", "Asset Type: emp,swap-pair or staking-reward")
     .addParam("id", "Asset id")
+    .addOptionalParam(
+        "gnosisSafe",
+        "Gnosis safe address, should be given if trasactions need to be submitted to gnosis",
+        undefined,
+        types.string
+    )
     .setAction(
         async (args, hre) => {
             const { expect } = require('chai');
             const { deployer } = await hre.getNamedAccounts();
             const { getTxUrl } = require('../utils/helper');
+            const submitTransactionToGnosisSafe = require("../gnosis/helper");
 
             const assetManager = await ethers.getContract("AssetManager", deployer);
 
@@ -20,6 +27,7 @@ task("pause-asset", "Pauses assets on asset manager")
                 console.log("Pausing emp...")
                 try {
                     expect((await assetManager.idToVerifiedEmps(args.id)).status).eq(2)
+                    if (args.gnosisSafe) return submitTransactionToGnosisSafe(args.gnosisSafe, assetManager, 'pauseEmp', args.id);
                     tx = await assetManager.pauseEmp(args.id)
                     await tx.wait()
                     expect((await assetManager.idToVerifiedEmps(args.id)).status).eq(1)
@@ -34,6 +42,7 @@ task("pause-asset", "Pauses assets on asset manager")
                 console.log("Pausing swap pair...")
                 try {
                     expect((await assetManager.idToVerifiedSwapPairs(args.id)).status).eq(2)
+                    if (args.gnosisSafe) return submitTransactionToGnosisSafe(args.gnosisSafe, assetManager, 'pauseSwapPair', args.id);
                     tx = await assetManager.pauseSwapPair(args.id)
                     await tx.wait()
                     expect((await assetManager.idToVerifiedSwapPairs(args.id)).status).eq(1)
@@ -48,6 +57,7 @@ task("pause-asset", "Pauses assets on asset manager")
                 console.log("Pausing staking reward...")
                 try {
                     expect((await assetManager.idToVerifiedStakingRewards(args.id)).status).eq(2)
+                    if (args.gnosisSafe) return submitTransactionToGnosisSafe(args.gnosisSafe, assetManager, 'pauseStakingReward', args.id);
                     tx = await assetManager.pauseStakingReward(args.id)
                     await tx.wait()
                     expect((await assetManager.idToVerifiedStakingRewards(args.id)).status).eq(1)
