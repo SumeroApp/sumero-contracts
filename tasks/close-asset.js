@@ -42,7 +42,7 @@ task("close-asset", "Closes assets on asset manager")
                 console.log("Closing swap pair...")
 
                 try {
-                    if (gnosisSafe) return submitTransactionToGnosisSafe(gnosisSafe, assetManager, 'closeSwapPair', args.id);
+                    if (args.gnosisSafe) return submitTransactionToGnosisSafe(args.gnosisSafe, assetManager, 'closeSwapPair', args.id);
                     tx = await assetManager.closeSwapPair(args.id)
                     await tx.wait()
                     expect((await assetManager.idToVerifiedSwapPairs(args.id)).status).eq(0)
@@ -57,7 +57,7 @@ task("close-asset", "Closes assets on asset manager")
                 console.log("Closing staking reward...")
 
                 try {
-                    if (gnosisSafe) return submitTransactionToGnosisSafe(gnosisSafe, assetManager, 'closeStakingReward', args.id);
+                    if (args.gnosisSafe) return submitTransactionToGnosisSafe(args.gnosisSafe, assetManager, 'closeStakingReward', args.id);
                     tx = await assetManager.closeStakingReward(args.id)
                     await tx.wait()
                     expect((await assetManager.idToVerifiedStakingRewards(args.id)).status).eq(0)

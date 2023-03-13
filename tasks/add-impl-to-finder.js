@@ -12,7 +12,6 @@ task("add-impl-to-finder", "Adds assets to Asset Manager")
     )
     .setAction(
         async (args, hre) => {
-            if (args.gnosisSafe && !ethers.utils.isAddress(args.gnosisSafe)) throw new Error("Invalid safe address")
 
             const colors = require('colors');
             const { getTxUrl, isZeroAddress } = require('../utils/helper');
@@ -32,8 +31,7 @@ task("add-impl-to-finder", "Adds assets to Asset Manager")
                 console.log(colors.green(" converted interface to bytes32 -> ", bytes32Name));
                 console.log(colors.green(" implementation address -> ", args.address));
 
-                const { gnosisSafe } = args;
-                if (gnosisSafe) return submitTransactionToGnosisSafe(gnosisSafe, finder, 'changeImplementationAddress', bytes32Name, args.address);
+                if (args.gnosisSafe) return submitTransactionToGnosisSafe(args.gnosisSafe, finder, 'changeImplementationAddress', bytes32Name, args.address);
 
                 const tx = await finder.changeImplementationAddress(bytes32Name, args.address);
                 await tx.wait()
