@@ -26,6 +26,9 @@ require("./tasks/emp-request-withdrawal");
 require("./tasks/add-impl-to-finder");
 require("./tasks/create-lp");
 require("./tasks/setup-finder");
+require("./tasks/transfer-clayToken-ownership");
+require("./tasks/transfer-contract-ownership");
+require("./tasks/transfer-all-ownerships");
 require("hardhat-gas-reporter");
 
 const solcVersion = "0.8.0";
@@ -72,7 +75,7 @@ module.exports = {
       accounts: accounts('goerli'),
       chainId: 5,
     },
-    'dashboard': {
+    'dashboard-goerli': {
       url: "http://localhost:24012/rpc",
       timeout: 400000,
       live: true
