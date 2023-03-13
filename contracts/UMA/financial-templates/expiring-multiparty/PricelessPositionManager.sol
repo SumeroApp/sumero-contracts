@@ -902,14 +902,6 @@ contract PricelessPositionManager is Lockable {
             );
     }
 
-    function _getFinancialContractsAdminAddress()
-        internal
-        view
-        returns (address)
-    {
-        return owner;
-    }
-
     // Requests a price for transformed `priceIdentifier` at `requestedTime` from the Oracle, charging the caller for the OO proposer reward.
     function _requestOraclePrice_senderPays(uint256 requestedTime) internal {
         OptimisticOracleInterface optimisticOracle = _getOptimisticOracle();
