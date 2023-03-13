@@ -5,7 +5,7 @@ task("transfer-all-ownerships", "Transfer all ownership/admin roles to target et
     .setAction(
         async (args, hre) => {
             const colors = require('colors');
-            console.log(colors.bold("\n==> Transfer and renouncing all ownerships/admin roles to:" + args.address));
+            console.log(colors.bold("\n==> Transfering/renouncing all ownerships/admin roles to:" + args.address));
 
             await run("transfer-contract-ownership", {
                 contract: "AssetManager",

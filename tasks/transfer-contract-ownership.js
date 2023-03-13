@@ -14,11 +14,13 @@ task("transfer-contract-ownership", "Transfers ownership of specified contract t
 
             const ownableContract = await ethers.getContract(args.contract, deployer);
 
+            console.log(` Current owner: ${await ownableContract.owner()}`)
+
             const tx = await ownableContract.transferOwnership(args.address)
             await tx.wait()
 
             expect(await ownableContract.owner()).to.be.eq(args.address, "Something went wrong while transfering ownership...")
 
-            console.log(`Successfully transferred ${args.contract}'s ownership to: ${args.address}`);
+            console.log(`Successfully transferred ${args.contract}'s at ${ownableContract.address} ownership to: ${args.address}`);
         }
     );
