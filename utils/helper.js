@@ -1,6 +1,7 @@
 const hre = require("hardhat");
 const { ethers } = require("hardhat");
 const fetch = require('node-fetch');
+const colors = require('colors');
 
 function getEpochFromDate(date) {
     if (!(date instanceof Date)) {

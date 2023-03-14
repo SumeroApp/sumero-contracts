@@ -8,7 +8,7 @@ async function submitTransactionToGnosisSafe(deployerSafeAddress, artifact, func
     const tx = await artifact.connect(signer)[functionName](...args)
     console.log("Gnosis tx hash: ", tx.hash)
     console.log(`Go to gnosis dashboard to view/confirm the txn: https://app.safe.global/transactions/queue?safe=${deployerSafeAddress}`)
-    return
+    return tx
 }
 
 module.exports = submitTransactionToGnosisSafe
