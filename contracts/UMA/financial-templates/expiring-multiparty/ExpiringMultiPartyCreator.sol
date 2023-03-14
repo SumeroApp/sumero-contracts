@@ -1,5 +1,4 @@
-// SPDX-License-Identifier: MIT
-
+// SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity ^0.8.0;
 
 import "../../common/interfaces/ExpandedIERC20.sol";
@@ -11,46 +10,6 @@ import "../../common/implementation/Lockable.sol";
 import "../common/TokenFactory.sol";
 import "../common/SyntheticToken.sol";
 import "./ExpiringMultiPartyLib.sol";
-
-/**
-ExpandedIERC20
-IERC20Standard
-ContractCreator
-Testable
-Lockable
-TokenFactory
-ExpandedERC20
-SyntheticToken
-
-Registry
-RegistryInterface
-
-Finder
-FinderInterface
-
-MultiRole
-Constants
-
-AddressWhitelist
-AddressWhitelistInterface
-
-Timer
-
-ExpiringMultiPartyLib
-ExpiringMultiParty
-Liquidatable
-PricelessPositionManager
-
-FixedPoint
-
-OracleInterface
-OptimisticOracleInterface
-IdentifierWhitelistInterface
-
-StoreInterface
-AdministrateeInterface
-FinancialProductLibrary
- */
 
 /**
  * @title Expiring Multi Party Contract creator.
@@ -73,7 +32,6 @@ contract ExpiringMultiPartyCreator is ContractCreator, Testable, Lockable {
         uint256 expirationTimestamp;
         address collateralAddress;
         bytes32 priceFeedIdentifier;
-        bytes ancillaryData;
         string syntheticName;
         string syntheticSymbol;
         FixedPoint.Unsigned collateralRequirement;
@@ -81,7 +39,6 @@ contract ExpiringMultiPartyCreator is ContractCreator, Testable, Lockable {
         FixedPoint.Unsigned sponsorDisputeRewardPercentage;
         FixedPoint.Unsigned disputerDisputeRewardPercentage;
         FixedPoint.Unsigned minSponsorTokens;
-        FixedPoint.Unsigned ooReward;
         uint256 withdrawalLiveness;
         uint256 liquidationLiveness;
         address financialProductLibraryAddress;
@@ -113,11 +70,9 @@ contract ExpiringMultiPartyCreator is ContractCreator, Testable, Lockable {
      * @param params is a `ConstructorParams` object from ExpiringMultiParty.
      * @return address of the deployed ExpiringMultiParty contract.
      */
-    function createExpiringMultiParty(Params memory params)
-        public
-        nonReentrant
-        returns (address)
-    {
+    function createExpiringMultiParty(
+        Params memory params
+    ) public nonReentrant returns (address) {
         // Create a new synthetic token using the params.
         require(
             bytes(params.syntheticName).length != 0,
@@ -148,8 +103,7 @@ contract ExpiringMultiPartyCreator is ContractCreator, Testable, Lockable {
         tokenCurrency.addBurner(derivative);
         tokenCurrency.resetOwner(derivative);
 
-        // DO NOT REGISTER Financial Contract with UMA's Registry
-        // _registerContract(new address[](0), derivative);
+        _registerContract(new address[](0), derivative);
 
         emit CreatedExpiringMultiParty(derivative, msg.sender);
 
@@ -207,7 +161,6 @@ contract ExpiringMultiPartyCreator is ContractCreator, Testable, Lockable {
         constructorParams.expirationTimestamp = params.expirationTimestamp;
         constructorParams.collateralAddress = params.collateralAddress;
         constructorParams.priceFeedIdentifier = params.priceFeedIdentifier;
-        constructorParams.ancillaryData = params.ancillaryData;
         constructorParams.collateralRequirement = params.collateralRequirement;
         constructorParams.disputeBondPercentage = params.disputeBondPercentage;
         constructorParams.sponsorDisputeRewardPercentage = params
@@ -215,7 +168,6 @@ contract ExpiringMultiPartyCreator is ContractCreator, Testable, Lockable {
         constructorParams.disputerDisputeRewardPercentage = params
             .disputerDisputeRewardPercentage;
         constructorParams.minSponsorTokens = params.minSponsorTokens;
-        constructorParams.ooReward = params.ooReward;
         constructorParams.withdrawalLiveness = params.withdrawalLiveness;
         constructorParams.liquidationLiveness = params.liquidationLiveness;
         constructorParams.financialProductLibraryAddress = params
@@ -225,11 +177,9 @@ contract ExpiringMultiPartyCreator is ContractCreator, Testable, Lockable {
     // IERC20Standard.decimals() will revert if the collateral contract has not implemented the decimals() method,
     // which is possible since the method is only an OPTIONAL method in the ERC20 standard:
     // https://eips.ethereum.org/EIPS/eip-20#methods.
-    function _getSyntheticDecimals(address _collateralAddress)
-        public
-        view
-        returns (uint8 decimals)
-    {
+    function _getSyntheticDecimals(
+        address _collateralAddress
+    ) public view returns (uint8 decimals) {
         try IERC20Standard(_collateralAddress).decimals() returns (
             uint8 _decimals
         ) {

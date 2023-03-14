@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity ^0.8.0;
 
 import "./ExpiringMultiParty.sol";
@@ -15,10 +15,9 @@ library ExpiringMultiPartyLib {
      * @param params is a `ConstructorParams` object from ExpiringMultiParty.
      * @return address of the deployed ExpiringMultiParty contract
      */
-    function deploy(ExpiringMultiParty.ConstructorParams memory params)
-        public
-        returns (address)
-    {
+    function deploy(
+        ExpiringMultiParty.ConstructorParams memory params
+    ) public returns (address) {
         ExpiringMultiParty derivative = new ExpiringMultiParty(params);
         return address(derivative);
     }
