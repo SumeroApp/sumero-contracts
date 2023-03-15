@@ -18,7 +18,7 @@ task("add-impl-to-finder", "Adds assets to Asset Manager")
             const { deployer } = await hre.getNamedAccounts();
             const getGnosisSigner = require("../gnosis/signer");
 
-            const finder = await hre.ethers.getContract("Finder", deployer);
+            let finder = await hre.ethers.getContract("Finder", deployer);
             if(args.gnosisSafe){
                 finder = finder.connect(await getGnosisSigner(args.gnosisSafe))
             }
