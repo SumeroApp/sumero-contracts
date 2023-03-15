@@ -48,7 +48,7 @@ task("emp-create", "Deploys the EMP (Expiring Multi Party) Contract using UMA's 
 
             let emp_creator_instance = await hre.ethers.getContract("ExpiringMultiPartyCreator", deployer);
             if(args.gnosisSafe){
-                emp = emp.connect(await getGnosisSigner(args.gnosisSafe))
+                emp_creator_instance = emp_creator_instance.connect(await getGnosisSigner(args.gnosisSafe))
             }
 
             const ExpiringMultiPartyCreator = await deployments.get("ExpiringMultiPartyCreator");
