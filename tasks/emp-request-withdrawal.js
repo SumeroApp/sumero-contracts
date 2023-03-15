@@ -14,14 +14,17 @@ task("emp-request-withdrawal", "Requests withdrawal")
             const { ethers } = require("hardhat")
             const helper = require('../utils/helper');
             const colors = require('colors');
-            const submitTransactionToGnosisSafe = require("../gnosis/helper");
+            const getGnosisSigner = require("../gnosis/signer");
 
             //---- Get Ethers Signer-------------------
             const signer0 = ethers.provider.getSigner(deployer);
 
             //---- Get EMP Contract--------------------
             const EMP = await hre.ethers.getContractFactory("contracts/UMA/financial-templates/expiring-multiparty/ExpiringMultiParty.sol:ExpiringMultiParty");
-            const empInstance = await EMP.attach(args.empAddress);
+            let empInstance = await EMP.attach(args.empAddress);
+            if(args.gnosisSafe){
+                empInstance = empInstance.connect(await getGnosisSigner(args.gnosisSafe))
+            }
 
             //----- Fetch Price-------------------------
             let price = ""
@@ -96,7 +99,6 @@ task("emp-request-withdrawal", "Requests withdrawal")
 
             console.log(colors.blue("\n Requesting Witdrawal: ....."));
             try {
-                if (args.gnosisSafe) return submitTransactionToGnosisSafe(args.gnosisSafe, empInstance, 'requestWithdrawal',collateralAmountObject);
                 const requestWithdrawalTx = await empInstance.requestWithdrawal(collateralAmountObject);
                 const receipt = await requestWithdrawalTx.wait();
                 console.log("\nTransaction Receipt: \n", receipt)

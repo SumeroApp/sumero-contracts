@@ -16,8 +16,13 @@ task("add-impl-to-finder", "Adds assets to Asset Manager")
             const colors = require('colors');
             const { getTxUrl, isZeroAddress } = require('../utils/helper');
             const { deployer } = await hre.getNamedAccounts();
+            const getGnosisSigner = require("../gnosis/signer");
 
             const finder = await hre.ethers.getContract("Finder", deployer);
+            if(args.gnosisSafe){
+                finder = finder.connect(await getGnosisSigner(args.gnosisSafe))
+            }
+            
             console.log(colors.green("\nFINDER CONTRACT ADDRESS:", finder.address));
 
             const bytes32Name = hre.ethers.utils.formatBytes32String(args.name);
@@ -30,8 +35,6 @@ task("add-impl-to-finder", "Adds assets to Asset Manager")
                 console.log(colors.green("\n adding new interface -> ", args.name));
                 console.log(colors.green(" converted interface to bytes32 -> ", bytes32Name));
                 console.log(colors.green(" implementation address -> ", args.address));
-
-                if (args.gnosisSafe) return submitTransactionToGnosisSafe(args.gnosisSafe, finder, 'changeImplementationAddress', bytes32Name, args.address);
 
                 const tx = await finder.changeImplementationAddress(bytes32Name, args.address);
                 await tx.wait()

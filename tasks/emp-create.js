@@ -40,13 +40,16 @@ task("emp-create", "Deploys the EMP (Expiring Multi Party) Contract using UMA's 
 
             const { getTxUrl } = require('../utils/helper');
             const colors = require('colors');
-            const submitTransactionToGnosisSafe = require("../gnosis/helper");
+            const getGnosisSigner = require('../gnosis/signer');
 
             const { ExpiringMultiPartyCreatorEthers__factory } = require('@uma/contracts-node');
 
             console.log(colors.bold("\n==> Running create-emp task..."));
 
-            const emp_creator_instance = await hre.ethers.getContract("ExpiringMultiPartyCreator", deployer);
+            let emp_creator_instance = await hre.ethers.getContract("ExpiringMultiPartyCreator", deployer);
+            if(args.gnosisSafe){
+                emp = emp.connect(await getGnosisSigner(args.gnosisSafe))
+            }
 
             const ExpiringMultiPartyCreator = await deployments.get("ExpiringMultiPartyCreator");
             console.log(colors.green("\nEMPC_ADDRESS: ", ExpiringMultiPartyCreator.address));
@@ -110,7 +113,6 @@ task("emp-create", "Deploys the EMP (Expiring Multi Party) Contract using UMA's 
 
             console.log(colors.blue("\n Creating EMP via EMPC: ....."));
             try {
-                if (args.gnosisSafe) return submitTransactionToGnosisSafe(args.gnosisSafe, emp_creator_instance, 'createExpiringMultiParty', createEmpParams);
                 const createEmpTx = await emp_creator_instance.createExpiringMultiParty(createEmpParams, { gasLimit: 6700000 });
                 const receipt = await createEmpTx.wait();
                 console.log("\nTransaction Receipt: \n", createEmpTx);

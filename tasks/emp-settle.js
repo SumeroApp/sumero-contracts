@@ -14,10 +14,13 @@ task("emp-settle", "Settles emps")
             const { deployer } = await hre.getNamedAccounts();
             const { getTxUrl } = require('../utils/helper');
             const colors = require('colors');
-            const submitTransactionToGnosisSafe = require("../gnosis/helper");
+            const getGnosisSigner = require("../gnosis/signer");
 
             const EMP = await hre.ethers.getContractFactory("contracts/UMA/financial-templates/expiring-multiparty/ExpiringMultiParty.sol:ExpiringMultiParty");
-            const emp = await EMP.attach(args.empAddress);
+            let emp = await EMP.attach(args.empAddress);
+            if(args.gnosisSafe){
+                emp = emp.connect(await getGnosisSigner(args.gnosisSafe))
+            }
 
             const SYNTH = await hre.ethers.getContractFactory("contracts/UMA/common/implementation/ExpandedERC20.sol:ExpandedERC20");
             const synth = await SYNTH.attach(args.synthAddress);
@@ -39,7 +42,6 @@ task("emp-settle", "Settles emps")
             console.log(colors.blue("\n Settling EMPs: ....."));
             try {
                 console.log("Contract State: " + await emp.contractState())
-                if (args.gnosisSafe) return submitTransactionToGnosisSafe(args.gnosisSafe, emp, 'settleExpired');
                 const expireEmpTx = await emp.settleExpired()
                 await expireEmpTx.wait();
                 const txUrl = getTxUrl(hre.deployments.getNetworkName(), expireEmpTx.hash);

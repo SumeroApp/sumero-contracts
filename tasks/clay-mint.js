@@ -12,18 +12,18 @@ task("clay-mint", "Mints clay token to the given address")
         async (args, hre) => {
             const { expect } = require('chai');
             const { deployer } = await hre.getNamedAccounts();
-            const clayToken = await ethers.getContract("ClayToken", deployer);
+            let clayToken = await ethers.getContract("ClayToken", deployer);
             const { getTxUrl } = require('../utils/helper');
-            const submitTransactionToGnosisSafe = require("../gnosis/helper");
-            
+            const getGnosisSigner = require('../gnosis/signer');
+            if(args.gnosisSafe){
+                clayToken = clayToken.connect(await getGnosisSigner(args.gnosisSafe))
+            }
             console.log("Clay Contract Address: " + clayToken.address);
 
             const amount = args.amount;
             const beforeBalance = await clayToken.balanceOf(args.account);
             console.log("Minting clay tokens to: " + args.account);
 
-            
-            if (args.gnosisSafe) return submitTransactionToGnosisSafe(args.gnosisSafe, clayToken, 'mint', args.account, ethers.utils.parseUnits(amount, 'ether'));
             const tx = await clayToken.mint(args.account, ethers.utils.parseUnits(amount, 'ether'));
             await tx.wait();
             const afterBalance = await clayToken.balanceOf(args.account);

@@ -14,14 +14,16 @@ task("emp-expire", "Expires EMPs")
             const { expect } = require('chai');
             const { getTxUrl } = require('../utils/helper');
             const colors = require('colors');
-            const submitTransactionToGnosisSafe = require("../gnosis/helper");
+            const getGnosisSigner = require('../gnosis/signer');
 
             const EMP = await hre.ethers.getContractFactory("contracts/UMA/financial-templates/expiring-multiparty/ExpiringMultiParty.sol:ExpiringMultiParty");
-            const emp = await EMP.attach(args.address);
+            let emp = await EMP.attach(args.address);
+            if(args.gnosisSafe){
+                emp = emp.connect(await getGnosisSigner(args.gnosisSafe))
+            }
             console.log(colors.blue("\n Expiring EMP: ....."));
             try {
                 expect(await emp.contractState()).to.eq(0);
-                if (args.gnosisSafe) return submitTransactionToGnosisSafe(args.gnosisSafe, emp, 'expire');
                 const expireEmpTx = await emp.expire()
                 await expireEmpTx.wait();
                 expect(await emp.contractState()).to.eq(1);

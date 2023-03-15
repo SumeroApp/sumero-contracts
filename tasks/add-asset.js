@@ -16,7 +16,11 @@ task("add-asset", "Adds assets to Asset Manager")
         async (args, hre) => {
             const { deployer } = await hre.getNamedAccounts();
             const { getTxUrl } = require('../utils/helper');
-            const assetManager = await ethers.getContract("AssetManager", deployer);
+            let assetManager = await ethers.getContract("AssetManager", deployer);
+            const getGnosisSigner = require('../gnosis/signer');
+            if(args.gnosisSafe){
+                assetManager = assetManager.connect(await getGnosisSigner(args.gnosisSafe))
+            }
             const colors = require('colors');
 
             let txUrl;
@@ -45,10 +49,6 @@ const addEMP = async (args, assetManager) => {
     const colors = require('colors');
     console.log(colors.blue("\n Adding EMP: ....."));
     try {
-        if (args.gnosisSafe) {
-            const submitTransactionToGnosisSafe = require('../gnosis/helper');
-            return submitTransactionToGnosisSafe(args.gnosisSafe, assetManager, 'addEmp', args.address);
-        }
         const tx = await assetManager.addEmp(args.address)
         await tx.wait()
         const totalEMP = await assetManager.totalEmpAssets()
@@ -67,10 +67,6 @@ const addSwapPair = async (args, assetManager) => {
     const colors = require('colors');
     console.log(colors.blue("\n Adding swap pair: ....."));
     try {
-        if (args.gnosisSafe) {
-            const submitTransactionToGnosisSafe = require('../gnosis/helper');
-            return submitTransactionToGnosisSafe(args.gnosisSafe, assetManager, 'addSwapPair', args.address);
-        }
         const tx = await assetManager.addSwapPair(args.address)
         await tx.wait()
         const totalSwapPair = await assetManager.totalSwapPairAssets()
@@ -88,10 +84,6 @@ const addStakingReward = async (args, assetManager) => {
     const colors = require('colors');
     console.log(colors.blue("\n Adding staking reward: ....."));
     try {
-        if (args.gnosisSafe) {
-            const submitTransactionToGnosisSafe = require('../gnosis/helper');
-            return submitTransactionToGnosisSafe(args.gnosisSafe, assetManager, 'addStakingReward', args.address);
-        }
 
         const tx = await assetManager.addStakingReward(args.address)
         await tx.wait()

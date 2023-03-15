@@ -17,8 +17,11 @@ task("close-asset", "Closes assets on asset manager")
             const { expect } = require('chai');
             const { deployer } = await hre.getNamedAccounts();
             const { getTxUrl } = require('../utils/helper');
-            const assetManager = await ethers.getContract("AssetManager", deployer);
-            const submitTransactionToGnosisSafe = require("../gnosis/helper")
+            let assetManager = await ethers.getContract("AssetManager", deployer);
+            const getGnosisSigner = require('../gnosis/signer');
+            if(args.gnosisSafe){
+                assetManager = assetManager.connect(await getGnosisSigner(args.gnosisSafe))
+            }
 
             let tx;
             let txUrl;
@@ -27,7 +30,6 @@ task("close-asset", "Closes assets on asset manager")
                 console.log("Closing emp...")
                 
                 try {
-                    if (args.gnosisSafe) return submitTransactionToGnosisSafe(args.gnosisSafe, assetManager, 'closeEmp', args.id);
                     tx = await assetManager.closeEmp(args.id)
                     await tx.wait()
                     expect((await assetManager.idToVerifiedEmps(args.id)).status).eq(0)
@@ -42,7 +44,6 @@ task("close-asset", "Closes assets on asset manager")
                 console.log("Closing swap pair...")
 
                 try {
-                    if (args.gnosisSafe) return submitTransactionToGnosisSafe(args.gnosisSafe, assetManager, 'closeSwapPair', args.id);
                     tx = await assetManager.closeSwapPair(args.id)
                     await tx.wait()
                     expect((await assetManager.idToVerifiedSwapPairs(args.id)).status).eq(0)
@@ -57,7 +58,6 @@ task("close-asset", "Closes assets on asset manager")
                 console.log("Closing staking reward...")
 
                 try {
-                    if (args.gnosisSafe) return submitTransactionToGnosisSafe(args.gnosisSafe, assetManager, 'closeStakingReward', args.id);
                     tx = await assetManager.closeStakingReward(args.id)
                     await tx.wait()
                     expect((await assetManager.idToVerifiedStakingRewards(args.id)).status).eq(0)

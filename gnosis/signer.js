@@ -8,15 +8,15 @@ const chaidIdToServiceUrl = {
     }
 
 async function getGnosisSigner(deployerSafeAddress){
-        if( !process.env.SERVICE_URL || process.env.SERVICE_URL == '') throw new Error("SERVICE_URL not defined/empty in .env")
+        if (!ethers.utils.isAddress(deployerSafeAddress)) throw new Error("Invalid safe address")
         const chainId = await ethAdapter.getChainId()
         console.log("Initializing safe: ", deployerSafeAddress)
         const service = new SafeService(chaidIdToServiceUrl[chainId])
         const safe = await Safe.default.create({ ethAdapter: ethAdapter, safeAddress: deployerSafeAddress })
         console.log("Safe created")
 
-        const safeSigner = new SafeEthersSigner(safe, service, hre.network.provider)
-        console.log("Safe singer initialized")
+        const safeSigner = new SafeEthersSigner(safe, service, new hre.ethers.providers.Web3Provider(hre.network.provider))
+        console.log("Safe initialized")
         return safeSigner
 }
 

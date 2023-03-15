@@ -13,10 +13,13 @@ task("erc20-approve", "Approves ERC20 tokens to the given account")
         async (args, hre) => {
             let { deployer } = await hre.getNamedAccounts();
             const { getTxUrl } = require('../utils/helper');
-            const submitTransactionToGnosisSafe = require("../gnosis/helper");
+            const getGnosisSigner = require("../gnosis/signer");
 
             const Token = await hre.ethers.getContractFactory('ClayToken');
-            const token = await Token.attach(args.token);
+            let token = await Token.attach(args.token);
+            if(args.gnosisSafe){
+                token = token.connect(await getGnosisSigner(args.gnosisSafe))
+            }
 
             const tokenName = await token.name();
             const tokenDecimals = await token.decimals();
@@ -32,7 +35,6 @@ task("erc20-approve", "Approves ERC20 tokens to the given account")
             console.log(`Approving ${tokenName} token`);
             if (amountInWei.gt(allowance)) {
                 try {
-                    if (args.gnosisSafe) return submitTransactionToGnosisSafe(args.gnosisSafe, token, 'approve', args.spender, amountInWei);
                     const tx = await token.approve(args.spender, amountInWei);
                     await tx.wait();
                     const txUrl = getTxUrl(hre.deployments.getNetworkName(), tx.hash);

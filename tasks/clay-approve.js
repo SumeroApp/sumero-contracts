@@ -13,20 +13,21 @@ task("clay-approve", "Approves clay token to given account")
             const { expect } = require('chai');
             const { deployer } = await hre.getNamedAccounts();
             const { getTxUrl } = require('../utils/helper');
-            const submitTransactionToGnosisSafe = require('../gnosis/helper');
 
-            const clayToken = await ethers.getContract("ClayToken", deployer);
+            let clayToken = await ethers.getContract("ClayToken", deployer);
+            const getGnosisSigner = require('../gnosis/signer');
+            if(args.gnosisSafe){
+                clayToken = clayToken.connect(await getGnosisSigner(args.gnosisSafe))
+            }
             console.log("Using ClayToken: ", clayToken.address);
 
-            const clayBalance = await clayToken.balanceOf(args.gnosisSafe || deployer);
+            const clayBalance = await clayToken.balanceOf(clayToken.signer.address);
             console.log("My account's clay balance is : " + ethers.utils.formatEther(clayBalance));
 
             //Convert ether  to wei
             const amountInWei = ethers.utils.parseUnits(args.amount, 'ether');
 
             console.log("Approving CLAY..");
-
-            if (args.gnosisSafe) return submitTransactionToGnosisSafe(args.gnosisSafe, clayToken, 'approve', args.spender, amountInWei);
 
             const tx = await clayToken.approve(args.spender, amountInWei);
             await tx.wait();

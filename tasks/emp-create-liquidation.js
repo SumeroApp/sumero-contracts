@@ -14,12 +14,15 @@ task("emp-create-liquidation", "creates liquidation on sponsor's position")
             const { getTxUrl } = require('../utils/helper');
             const { run } = require('hardhat');
             const colors = require('colors');
-            const submitTransactionToGnosisSafe = require("../gnosis/helper");
+            const getGnosisSigner = require('../gnosis/signer');
 
             console.log(colors.bold("\n==> Running create-liquidation task..."));
 
             const EMP = await hre.ethers.getContractFactory("contracts/UMA/financial-templates/expiring-multiparty/ExpiringMultiParty.sol:ExpiringMultiParty");
-            const emp = await EMP.attach(args.emp);
+            let emp = await EMP.attach(args.emp);
+            if(args.gnosisSafe){
+                emp = emp.connect(await getGnosisSigner(args.gnosisSafe))
+            }
             const tokensOutstanding = await emp.totalTokensOutstanding();
             const rawCollateral = await emp.totalPositionCollateral()
             const positionTokensOutstanding = (await emp.positions(args.sponsor)).tokensOutstanding.rawValue;
@@ -48,17 +51,6 @@ task("emp-create-liquidation", "creates liquidation on sponsor's position")
 
             console.log(colors.blue("\n 3- Liquidating the position: ....."));
             try {
-                if (args.gnosisSafe) {
-                    return submitTransactionToGnosisSafe(
-                        args.gnosisSafe,
-                        emp,
-                        'createLiquidation',
-                        args.sponsor,
-                        { rawValue: "0" },
-                        { rawValue: GCR.toString() },
-                        { rawValue: positionTokensOutstanding.toString() },
-                        expirationTimestamp);
-                }
                 const liquidateTX = await emp.createLiquidation(
                     args.sponsor,
                     { rawValue: "0" },

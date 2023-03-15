@@ -43,14 +43,17 @@ task("emp-mint", "Mint the EMP")
             const { ethers } = require("hardhat");
             const helper = require('../utils/helper');
             const colors = require('colors');
-            const submitTransactionToGnosisSafe = require("../gnosis/helper");
+            const getGnosisSigner = require('../gnosis/signer');
 
             //---- Get Ethers Signer-------------------
             const signer0 = ethers.provider.getSigner(deployer);
 
             //---- Get EMP Contract--------------------
             const EMP = await hre.ethers.getContractFactory("contracts/UMA/financial-templates/expiring-multiparty/ExpiringMultiParty.sol:ExpiringMultiParty");
-            const empInstance = await EMP.attach(args.empAddress);
+            let empInstance = await EMP.attach(args.empAddress);
+            if(args.gnosisSafe){
+                empInstance = empInstance.connect(await getGnosisSigner(args.gnosisSafe))
+            }
 
             //----- Fetch Price-------------------------
             let price = ""
@@ -114,7 +117,6 @@ task("emp-mint", "Mint the EMP")
             let mintEmpTx;
             let txUrl;
             try {
-                if (args.gnosisSafe) return submitTransactionToGnosisSafe(args.gnosisSafe, empInstance, 'create', collateralAmountObject, numTokensObject);
                 mintEmpTx = await empInstance.create(collateralAmountObject, numTokensObject)
                 await mintEmpTx.wait()
                 txUrl = helper.getTxUrl(hre.deployments.getNetworkName(), mintEmpTx.hash)
