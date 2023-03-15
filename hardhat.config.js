@@ -4,6 +4,7 @@ require("@nomiclabs/hardhat-waffle");
 require("@nomiclabs/hardhat-ethers");
 require("@nomiclabs/hardhat-etherscan");
 require("hardhat-deploy");
+require("./tasks/gnosis-poc");
 require("./tasks/clay-balance");
 require("./tasks/clay-mint");
 require("./tasks/clay-approve");
@@ -47,11 +48,16 @@ module.exports = {
   // networks: addForkConfiguration({
   // }),
   networks: {
-    localhost: {
-      live: false,
-      tags: ["local"],
-      hardfork: "istanbul",
-      blockGasLimit: 67000000,
+    // localhost: {
+    //   live: false,
+    //   tags: ["local"],
+    //   hardfork: "istanbul",
+    //   blockGasLimit: 67000000,
+    // },
+    hardhat: {
+      forking: {
+        url: 'https://eth-goerli.public.blastapi.io'
+      }
     },
     kovan: {
       live: false,
@@ -69,7 +75,7 @@ module.exports = {
       accounts: accounts('goerli'),
       chainId: 5,
     },
-    'dashboard-goerli': {
+    'dashboard': {
       url: "http://localhost:24012/rpc",
       timeout: 400000,
       live: true

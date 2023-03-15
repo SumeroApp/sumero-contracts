@@ -30,6 +30,12 @@ task("emp-mint", "Mint the EMP")
     .addParam("empAddress", "Deployed EMP contract address")
     .addParam("collateralAmount", "The number of collateral tokens to collateralize the position with")
     .addParam("additionalCollateralRatio", "Additional collateral ratio (e.g. 0.15)")
+    .addOptionalParam(
+        "gnosisSafe",
+        "Gnosis safe address, should be given if trasactions need to be submitted to gnosis",
+        undefined,
+        types.string
+    )
     .setAction(
         async (args, hre) => {
             const { expect } = require('chai');
@@ -37,13 +43,17 @@ task("emp-mint", "Mint the EMP")
             const { ethers } = require("hardhat");
             const helper = require('../utils/helper');
             const colors = require('colors');
+            const getGnosisSigner = require('../gnosis/signer');
 
             //---- Get Ethers Signer-------------------
             const signer0 = ethers.provider.getSigner(deployer);
 
             //---- Get EMP Contract--------------------
             const EMP = await hre.ethers.getContractFactory("contracts/UMA/financial-templates/expiring-multiparty/ExpiringMultiParty.sol:ExpiringMultiParty");
-            const empInstance = await EMP.attach(args.empAddress);
+            let empInstance = await EMP.attach(args.empAddress);
+            if(args.gnosisSafe){
+                empInstance = empInstance.connect(await getGnosisSigner(args.gnosisSafe))
+            }
 
             //----- Fetch Price-------------------------
             let price = ""

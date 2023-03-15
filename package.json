@@ -25,6 +25,9 @@
   "homepage": "https://github.com/Signo-App/sumero-contracts#readme",
   "dependencies": {
     "@nomicfoundation/hardhat-network-helpers": "^1.0.7",
+    "@safe-global/safe-core-sdk": "^3.3.2",
+    "@safe-global/safe-ethers-adapters": "0.1.0-alpha.16",
+    "@safe-global/safe-ethers-lib": "^1.9.2",
     "babel-polyfill": "^6.26.0",
     "babel-register": "^6.26.0",
     "node-fetch": "2.6.1"
