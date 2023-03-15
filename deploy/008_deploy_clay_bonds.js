@@ -9,7 +9,7 @@ const func = async function (hre) {
     const { deployer } = await getNamedAccounts();
 
     const ClayToken = await deployments.get("ClayToken");
-    const MAX_BOND_REWARDS = ethers.utils.parseEther('300000');
+    const MAX_BOND_REWARDS = ethers.utils.parseEther('50000000');
     console.log("MAX_BOND_REWARDS: ", MAX_BOND_REWARDS.toString());
 
     await deploy("ClayBonds", {

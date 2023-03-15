@@ -3,6 +3,12 @@
 task("clay-grant-role", "Grants role to the given address")
     .addParam("account", "The account address for which role is to be granted")
     .addParam("role", "The role to be assigned")
+    .addOptionalParam(
+        "gnosisSafe",
+        "Gnosis safe address, should be given if trasactions need to be submitted to gnosis",
+        undefined,
+        types.string
+    )
     .setAction(
         async (args, hre) => {
             const { expect } = require('chai');
@@ -10,10 +16,16 @@ task("clay-grant-role", "Grants role to the given address")
             const { ethers } = require("hardhat");
             const { getTxUrl } = require('../utils/helper');
 
-            const clayToken = await ethers.getContract("ClayToken", deployer);
+            let clayToken = await ethers.getContract("ClayToken", deployer);
             console.log("Clay Contract Address: " + clayToken.address);
 
+            const getGnosisSigner = require('../gnosis/signer');
+            if(args.gnosisSafe){
+                clayToken = clayToken.connect(await getGnosisSigner(args.gnosisSafe))
+            }
+
             const roleHash = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(args.role));
+
             const tx = await clayToken.grantRole(roleHash, args.account);
             await tx.wait();
 

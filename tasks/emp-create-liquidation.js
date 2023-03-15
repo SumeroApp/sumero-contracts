@@ -3,16 +3,26 @@
 task("emp-create-liquidation", "creates liquidation on sponsor's position")
     .addParam("emp", "Address of EMP contract")
     .addParam("sponsor", "Address of the sponsor")
+    .addOptionalParam(
+        "gnosisSafe",
+        "Gnosis safe address, should be given if trasactions need to be submitted to gnosis",
+        undefined,
+        types.string
+    )
     .setAction(
         async (args, hre) => {
             const { getTxUrl } = require('../utils/helper');
             const { run } = require('hardhat');
             const colors = require('colors');
+            const getGnosisSigner = require('../gnosis/signer');
 
             console.log(colors.bold("\n==> Running create-liquidation task..."));
 
             const EMP = await hre.ethers.getContractFactory("contracts/UMA/financial-templates/expiring-multiparty/ExpiringMultiParty.sol:ExpiringMultiParty");
-            const emp = await EMP.attach(args.emp);
+            let emp = await EMP.attach(args.emp);
+            if(args.gnosisSafe){
+                emp = emp.connect(await getGnosisSigner(args.gnosisSafe))
+            }
             const tokensOutstanding = await emp.totalTokensOutstanding();
             const rawCollateral = await emp.totalPositionCollateral()
             const positionTokensOutstanding = (await emp.positions(args.sponsor)).tokensOutstanding.rawValue;
@@ -24,6 +34,7 @@ task("emp-create-liquidation", "creates liquidation on sponsor's position")
                 token: await emp.collateralCurrency(),
                 spender: args.emp,
                 amount: ooReward.toString(),
+                gnosisSafe: args.gnosisSafe
             })
 
             console.log(colors.blue("\n 2- Approving collateral tokens: ....."));
@@ -31,6 +42,7 @@ task("emp-create-liquidation", "creates liquidation on sponsor's position")
                 token: await emp.tokenCurrency(),
                 spender: args.emp,
                 amount: positionTokensOutstanding.toString(),
+                gnosisSafe: args.gnosisSafe
             })
 
 
