@@ -117,7 +117,8 @@ task("emp-create", "Deploys the EMP (Expiring Multi Party) Contract using UMA's 
                 const receipt = await createEmpTx.wait();
                 console.log("\nTransaction Receipt: \n", createEmpTx);
 
-                let expiringMultiPartyAddress = receipt.logs[4].topics[1].replace('0x000000000000000000000000', '0x');
+                const createdEmpSignature = hre.ethers.utils.keccak256(hre.ethers.utils.toUtf8Bytes('CreatedExpiringMultiParty(address,address)'))
+                let expiringMultiPartyAddress = (receipt.logs.filter(log=> log.topics.includes(createdEmpSignature)))[0].topics[1].replace('0x000000000000000000000000', '0x');
                 console.log("Expiring Multi Party Address: " + expiringMultiPartyAddress);
 
                 const txUrl = getTxUrl(deployments.getNetworkName(), createEmpTx.hash);
