@@ -1,3 +1,5 @@
+const keccak256 = require('keccak256');
+
 // npx hardhat build-merkle
 task("build-merkle", "builds merkle tree for clay distribution")
     .setAction(
@@ -10,16 +12,16 @@ task("build-merkle", "builds merkle tree for clay distribution")
             let leaves = [];
             console.log(colors.blue("\nBuilding Merkle Tree "));
 
-            for (const address in addressList) {
-                if (ethers.utils.isAddress(address)) {
-                    leaves.push(KECCAK256(address));
+            addressList.forEach(address => {
+                if (!ethers.utils.isAddress(address)) {
+                    throw "Improper address in the address list!"
                 }
-                else {
-                    console.log(colors.red("\nInvalid Address: ", address));
-                    return;
-                }
+            });
 
-            }
+            addressList.forEach(address => {
+                leaves.push(keccak256(address))
+            });
+
             const tree = new MerkleTree(leaves, KECCAK256, { sortPairs: true });
             const root = tree.getHexRoot();
 
