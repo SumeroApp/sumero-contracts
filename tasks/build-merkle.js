@@ -1,5 +1,3 @@
-const keccak256 = require('keccak256');
-
 // npx hardhat build-merkle
 task("build-merkle", "builds merkle tree for clay distribution")
     .setAction(
@@ -31,7 +29,7 @@ task("build-merkle", "builds merkle tree for clay distribution")
                     }
                     else {
                         addresses.push(address.v);
-                        leaves.push(keccak256(address.v))
+                        leaves.push(KECCAK256(address.v))
                     }
                 }
 

@@ -10,33 +10,18 @@ contract ClayDistributor {
     address public immutable token;
     bytes32 public immutable merkleRoot;
     uint256 public immutable dropAmount;
-    uint256 public immutable expirationTimestamp;
-    address public immutable owner;
 
     mapping(address => bool) public isClaimed;
 
-    constructor(
-        address token_,
-        bytes32 merkleRoot_,
-        uint256 dropAmount_,
-        uint256 expirationTimestamp_,
-        address owner_
-    ) {
+    constructor(address token_, bytes32 merkleRoot_, uint256 dropAmount_) {
         token = token_;
         merkleRoot = merkleRoot_;
         dropAmount = dropAmount_;
-        expirationTimestamp = expirationTimestamp_;
-        owner = owner_;
     }
 
     event Claimed(address indexed user);
-    event OwnerClaimed(address indexed owner, uint256 amount);
 
     function claim(bytes32[] calldata merkleProof) public {
-        require(
-            block.timestamp < expirationTimestamp,
-            "Airdrop period has expired!"
-        );
         require(isClaimed[msg.sender] == false, "Already Claimed!");
 
         // Verify the merkle proof.
@@ -52,16 +37,5 @@ contract ClayDistributor {
         IERC20(token).safeTransfer(msg.sender, dropAmount);
 
         emit Claimed(msg.sender);
-    }
-
-    /// @notice Once the expirationTimestamp has passed, any address will be able to transfer the remaining amount to the owner address.
-    function exit() public {
-        require(
-            block.timestamp > expirationTimestamp,
-            "Airdrop period hasn't expired yet!"
-        );
-        uint256 amount = IERC20(token).balanceOf(address(this));
-        IERC20(token).safeTransfer(owner, amount);
-        emit OwnerClaimed(owner, amount);
     }
 }

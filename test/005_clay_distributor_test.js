@@ -1,4 +1,3 @@
-//npx hardhat test ./test/005_clay_distributor_test.js
 const { expect } = require("chai")
 const { ethers } = require("hardhat")
 const hre = require("hardhat")
@@ -12,19 +11,7 @@ let DistributorAddress;
 let TokenAddress;
 let root;
 let tree;
-let dropAmountInWei;
-let liveness;
-let expirationTimestamp;
-let owner;
-
-async function increaseTime(amount) {
-    await hre.network.provider.request({
-        method: 'evm_increaseTime',
-        params: [amount],
-    })
-    await network.provider.send("evm_mine")
-    console.log("EVM time " + amount + " seconds increased!")
-}
+let dropAmountInWei
 
 describe("Clay Distributor", function () {
     before('deploy Clay Token and Clay Distributor', async function () {
@@ -61,14 +48,9 @@ describe("Clay Distributor", function () {
 
         // Deploy ClayDistributor
         const ClayDistributor = await hre.ethers.getContractFactory('ClayDistributor')
-        owner = accounts[5].address;
-        const currentTimestamp = Date.now() / 1000;
-        liveness = 600; // 10 minutes
-        expirationTimestamp = Math.floor(currentTimestamp + liveness);
-        clayDistributor = await ClayDistributor.deploy(TokenAddress, root, dropAmountInWei, expirationTimestamp, owner)
-        DistributorAddress = clayDistributor.address;
-        console.log("Clay Distributor contract deployed at: " + DistributorAddress)
+        clayDistributor = await ClayDistributor.deploy(TokenAddress, root, dropAmountInWei)
 
+        DistributorAddress = clayDistributor.address;
     });
 
     it('Mints 300 CLAY to Distributor', async function () {
@@ -103,21 +85,5 @@ describe("Clay Distributor", function () {
             'Invalid Proof!'
         )
         expect(await clayToken.balanceOf(accounts[1].address)).to.be.equal(0)
-    });
-
-    it('Claims the remaining tokens after the expiration time ', async function () {
-        // account 5 is owner
-        expect(await clayToken.balanceOf(owner)).to.be.equal(0)
-        await expect(clayDistributor.exit()).to.be.revertedWith("Airdrop period hasn't expired yet!")
-        await increaseTime(600)
-
-        // revert claim requests after the expiration
-        const proof = tree.getHexProof(KECCAK256(accounts[2].address))
-        await expect(clayDistributor.connect(accounts[2]).claim(proof)).to.be.revertedWith("Airdrop period has expired!")
-
-        const remainingAmount = await clayToken.balanceOf(DistributorAddress);
-        await clayDistributor.exit()
-        expect(await clayToken.balanceOf(DistributorAddress)).to.be.equal(0)
-        expect(await clayToken.balanceOf(owner)).to.be.equal(remainingAmount)
     });
 });
