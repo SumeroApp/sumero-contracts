@@ -26,6 +26,12 @@ task("emp-create", "Deploys the EMP (Expiring Multi Party) Contract using UMA's 
     .addParam("disputerDisputeReward", "Dispute reward paid to the disputer")
     .addParam("minSponsorTokens", "The minimum number of tokens required in a sponsor position")
     .addParam("ooReward", "How much of the collateral to offer to the Optimistic Oracle system when requesting a price")
+    .addOptionalParam(
+        "gnosisSafe",
+        "Gnosis safe address, should be given if trasactions need to be submitted to gnosis",
+        undefined,
+        types.string
+    )
     .setAction(
         async (args, hre) => {
 
@@ -34,19 +40,22 @@ task("emp-create", "Deploys the EMP (Expiring Multi Party) Contract using UMA's 
 
             const { getTxUrl } = require('../utils/helper');
             const colors = require('colors');
+            const getGnosisSigner = require('../gnosis/signer');
 
             const { ExpiringMultiPartyCreatorEthers__factory } = require('@uma/contracts-node');
 
             console.log(colors.bold("\n==> Running create-emp task..."));
 
-            const emp_creator_instance = await hre.ethers.getContract("ExpiringMultiPartyCreator", deployer);
+            let emp_creator_instance = await hre.ethers.getContract("ExpiringMultiPartyCreator", deployer);
+            if(args.gnosisSafe){
+                emp_creator_instance = emp_creator_instance.connect(await getGnosisSigner(args.gnosisSafe))
+            }
 
             const ExpiringMultiPartyCreator = await deployments.get("ExpiringMultiPartyCreator");
             console.log(colors.green("\nEMPC_ADDRESS: ", ExpiringMultiPartyCreator.address));
             if (!ExpiringMultiPartyCreator || !ExpiringMultiPartyCreator.address) throw new Error("Unable to get deployed EMPC address");
 
 
-            const signer0 = ethers.provider.getSigner(deployer);
             // const emp_creator_instance = ExpiringMultiPartyCreatorEthers__factory.connect(ExpiringMultiPartyCreator.address, signer0);
             const syntheticDecimals = await emp_creator_instance._getSyntheticDecimals(args.collateralAddress);
             const collateralDecimals = syntheticDecimals; // The EMP Solidity code sets these to be the same on every EMP creation.
@@ -108,7 +117,8 @@ task("emp-create", "Deploys the EMP (Expiring Multi Party) Contract using UMA's 
                 const receipt = await createEmpTx.wait();
                 console.log("\nTransaction Receipt: \n", createEmpTx);
 
-                let expiringMultiPartyAddress = receipt.logs[4].topics[1].replace('0x000000000000000000000000', '0x');
+                const createdEmpSignature = hre.ethers.utils.keccak256(hre.ethers.utils.toUtf8Bytes('CreatedExpiringMultiParty(address,address)'))
+                let expiringMultiPartyAddress = (receipt.logs.filter(log=> log.topics.includes(createdEmpSignature)))[0].topics[1].replace('0x000000000000000000000000', '0x');
                 console.log("Expiring Multi Party Address: " + expiringMultiPartyAddress);
 
                 const txUrl = getTxUrl(deployments.getNetworkName(), createEmpTx.hash);
