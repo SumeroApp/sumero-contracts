@@ -26,6 +26,8 @@ require("./tasks/emp-request-withdrawal");
 require("./tasks/add-impl-to-finder");
 require("./tasks/create-lp");
 require("./tasks/setup-finder");
+require("./tasks/build-merkle");
+require("./tasks/clay-claim");
 require("./tasks/transfer-clayToken-ownership");
 require("./tasks/transfer-contract-ownership");
 require("./tasks/transfer-all-ownerships");
