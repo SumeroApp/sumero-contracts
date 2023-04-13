@@ -15,7 +15,7 @@ task("build-merkle", "builds merkle tree for clay distribution")
             let addresses = [];
             let leaves = [];
             if (args.inputFilePath) {
-                addresses = getAddressesFromExcel(args.inputFilePath)
+                addresses = require(args.inputFilePath);
             } else {
                 addresses = getAddresses();
             }
@@ -40,7 +40,7 @@ task("build-merkle", "builds merkle tree for clay distribution")
             // TESTING 2
             console.log(colors.blue("\nTesting with another address "));
 
-            const leaf2 = KECCAK256('0xdD2FD4581271e230360230F9337D5c0430Bf44C0');
+            const leaf2 = KECCAK256('0xB957C7591bf8b8ad1e5B8942dE6FF3b1D22d4951');
             const proof2 = tree.getProof(leaf2);
             console.log('Is the address included in the leaves array:', tree.verify(proof2, leaf2, root));
         }
@@ -48,38 +48,4 @@ task("build-merkle", "builds merkle tree for clay distribution")
 
 function getAddresses() {
     return ["0xbDA5747bFD65F08deb54cb465eB87D40e51B197E", "0xdD2FD4581271e230360230F9337D5c0430Bf44C0", "0x8626f6940E2eb28930eFb4CeF49B2d1F2C9C1199"]
-}
-
-function getAddressesFromExcel(filePath) {
-    const XLSX = require('xlsx');
-    const colors = require('colors');
-
-    const workbook = XLSX.readFile(filePath);
-    const sheetName = workbook.SheetNames[0];
-    console.log("Sheet Name:", sheetName);
-    const worksheet = workbook.Sheets[sheetName];
-
-
-    // EXTRACTING THE VALUES
-    console.log(colors.blue("\nExtracting Addresses "));
-
-    const addresses = [];
-    const improperAddresses = [];
-    let start = 5;
-    let end = 1503;
-    for (let i = start; i < end; i++) {
-        const address = worksheet[`H${i}`];
-        if (address !== undefined && address !== null) {
-            if (!ethers.utils.isAddress(address.v)) {
-                improperAddresses.push(address.v);
-            }
-            else {
-                addresses.push(address.v);
-            }
-        }
-
-    }
-    console.log(colors.red("\nImproper Addresses: ", improperAddresses));
-    console.log(colors.green("\nExtracting Addresses Completed!"));
-    return addresses;
 }
