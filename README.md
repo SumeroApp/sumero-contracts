@@ -184,3 +184,10 @@ It has 3 types of assets
 The asset can be either be in status Closed, Paused or Open.
 
 The Sumero UI gets the verified assets by using this contract. It queries `idToVerifiedEmps`, `idToVerifiedSwapPairs` and `idToVerifiedStakingRewards` to get the asset details.
+
+## Steps for generating UML Diagrams
+1- Install “Solidity Visual Developer” extension in VSCode
+2- Open the contract file, click the uml button at the top
+3- Copy everything in the @startuml file
+4- Go to “http://www.plantuml.com/plantuml/uml/”,paste the copied content and submit
+5- After generating the UML diagram you can download the image via right-click -> save image as
