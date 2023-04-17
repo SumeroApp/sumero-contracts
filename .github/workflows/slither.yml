@@ -10,9 +10,6 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Run Slither analysis
+      - name: Run Slither
         uses: crytic/slither-action@v0.2.0
-        with:
-          version: 'latest'
-          runs-on: 'ubuntu-latest'
-          entrypoint: 'slither . --exclude "contracts/UMA/"'
+        id: slither
