@@ -13,20 +13,12 @@ const func = async function (hre) {
 
     const TokenFactory = await deployments.get("TokenFactory");
 
-    let Timer;
-    if (live === false) {
-        Timer = await deployments.get("Timer");
-
-    } else {
-        Timer = { address: "0x0000000000000000000000000000000000000000" };
-    }
-
     // skipIfAlreadyDeployed is true, make it false if you want to force a re-deployment of EMPLib
     const EMPLib = await deploy("ExpiringMultiPartyLib", { from: deployer, log: true, skipIfAlreadyDeployed: true });
 
     await deploy("ExpiringMultiPartyCreator", {
         from: deployer,
-        args: [Finder.address, TokenFactory.address, Timer.address],
+        args: [Finder.address, TokenFactory.address],
         libraries: { ExpiringMultiPartyLib: EMPLib.address },
         log: true,
         skipIfAlreadyDeployed: false,
@@ -35,6 +27,6 @@ const func = async function (hre) {
 module.exports = func;
 func.tags = ["ExpiringMultiPartyCreator"];
 // When deploying our own finder, uncomment below
-// func.dependencies = ["Finder", "TokenFactory", "Timer"];
-func.dependencies = ["TokenFactory", "Timer"];
+// func.dependencies = ["Finder", "TokenFactory"];
+func.dependencies = ["TokenFactory"];
 

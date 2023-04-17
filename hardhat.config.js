@@ -4,8 +4,8 @@ require("@nomiclabs/hardhat-waffle");
 require("@nomiclabs/hardhat-ethers");
 require("@nomiclabs/hardhat-etherscan");
 require("hardhat-deploy");
+require("./tasks/gnosis-poc");
 require("./tasks/clay-balance");
-require("./tasks/create-liquidation");
 require("./tasks/clay-mint");
 require("./tasks/clay-approve");
 require("./tasks/clay-get-allowance");
@@ -21,10 +21,16 @@ require("./tasks/emp-create");
 require("./tasks/emp-mint");
 require("./tasks/emp-expire");
 require("./tasks/emp-settle");
+require("./tasks/emp-create-liquidation");
 require("./tasks/emp-request-withdrawal");
 require("./tasks/add-impl-to-finder");
 require("./tasks/create-lp");
 require("./tasks/setup-finder");
+require("./tasks/build-merkle");
+require("./tasks/clay-claim");
+require("./tasks/transfer-clayToken-ownership");
+require("./tasks/transfer-contract-ownership");
+require("./tasks/transfer-all-ownerships");
 require("hardhat-gas-reporter");
 
 const solcVersion = "0.8.0";
@@ -44,11 +50,16 @@ module.exports = {
   // networks: addForkConfiguration({
   // }),
   networks: {
-    localhost: {
-      live: false,
-      tags: ["local"],
-      hardfork: "istanbul",
-      blockGasLimit: 67000000,
+    // localhost: {
+    //   live: false,
+    //   tags: ["local"],
+    //   hardfork: "istanbul",
+    //   blockGasLimit: 67000000,
+    // },
+    hardhat: {
+      forking: {
+        url: 'https://eth-goerli.public.blastapi.io'
+      }
     },
     kovan: {
       live: false,

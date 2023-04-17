@@ -1,12 +1,13 @@
 const hre = require("hardhat");
 const { ethers } = require("hardhat");
 const fetch = require('node-fetch');
+const colors = require('colors');
 
 function getEpochFromDate(date) {
     if (!(date instanceof Date)) {
         throw new Error("getEpochFromDate(): given value is not a date object");
     }
-    return Math.round(new Date(date).getTime()/1000)
+    return Math.round(new Date(date).getTime() / 1000)
 }
 
 // Network Helpers
@@ -36,7 +37,7 @@ function matchesForkedNetwork(name) {
 
 // Transaction Helper
 function getTxUrl(networkName, txHash) {
-    if (!isLocalNetwork() && !isForkedNetwork()) {
+    if (!isLocalNetwork() && !isForkedNetwork() && txHash) {
         let txLink = "https://" + networkName + ".etherscan.io/tx/" + txHash
         return "Etherscan URL: " + txLink;
     }
@@ -54,9 +55,10 @@ async function iterateAssets(numOfAssets, mappingName, contract) {
 
 // Contracts Address Helper
 function getWethAddressOrThrow(network) {
+    return '0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6'
     if (network.name === 'kovan') {
         return "0xd0A1E359811322d97991E03f863a0C30C2cF029C";
-    } else if (network.name === "goerli" || network.name === "dashboard") {
+    } else if (network.name === "goerli" || network.name === "dashboard-goerli") {
         return "0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6";
     }
     else {
@@ -65,9 +67,10 @@ function getWethAddressOrThrow(network) {
 }
 
 function getUsdcOrThrow(network) {
+    return '0x07865c6E87B9F70255377e024ace6630C1Eaa37F'
     if (network.name === 'kovan') {
         return "0xb7a4F3E9097C08dA09517b5aB877F7a917224ede";
-    } else if (network.name === "goerli") {
+    } else if (network.name === "goerli" || network.name === "dashboard-goerli") {
         return "0x07865c6E87B9F70255377e024ace6630C1Eaa37F";
     }
     else {

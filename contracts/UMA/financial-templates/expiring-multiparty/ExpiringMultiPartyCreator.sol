@@ -5,7 +5,6 @@ pragma solidity ^0.8.0;
 import "../../common/interfaces/ExpandedIERC20.sol";
 import "../../common/interfaces/IERC20Standard.sol";
 import "../../oracle/implementation/ContractCreator.sol";
-import "../../common/implementation/Testable.sol";
 import "../../common/implementation/AddressWhitelist.sol";
 import "../../common/implementation/Lockable.sol";
 import "../common/TokenFactory.sol";
@@ -16,7 +15,6 @@ import "./ExpiringMultiPartyLib.sol";
 ExpandedIERC20
 IERC20Standard
 ContractCreator
-Testable
 Lockable
 TokenFactory
 ExpandedERC20
@@ -34,7 +32,6 @@ Constants
 AddressWhitelist
 AddressWhitelistInterface
 
-Timer
 
 ExpiringMultiPartyLib
 ExpiringMultiParty
@@ -52,7 +49,7 @@ AdministrateeInterface
 FinancialProductLibrary
  */
 
-/**
+/**f
  * @title Expiring Multi Party Contract creator.
  * @notice Factory contract to create and register new instances of expiring multiparty contracts.
  * Responsible for constraining the parameters used to construct a new EMP. This creator contains a number of constraints
@@ -62,7 +59,7 @@ FinancialProductLibrary
  * to be the only way to create valid financial contracts that are registered with the DVM (via _registerContract),
   we can enforce deployment configurations here.
  */
-contract ExpiringMultiPartyCreator is ContractCreator, Testable, Lockable {
+contract ExpiringMultiPartyCreator is ContractCreator, Lockable {
     using FixedPoint for FixedPoint.Unsigned;
 
     /****************************************
@@ -98,13 +95,11 @@ contract ExpiringMultiPartyCreator is ContractCreator, Testable, Lockable {
      * @notice Constructs the ExpiringMultiPartyCreator contract.
      * @param _finderAddress UMA protocol Finder used to discover other protocol contracts.
      * @param _tokenFactoryAddress ERC20 token factory used to deploy synthetic token instances.
-     * @param _timerAddress Contract that stores the current time in a testing environment.
      */
-    constructor(
-        address _finderAddress,
-        address _tokenFactoryAddress,
-        address _timerAddress
-    ) ContractCreator(_finderAddress) Testable(_timerAddress) nonReentrant() {
+    constructor(address _finderAddress, address _tokenFactoryAddress)
+        ContractCreator(_finderAddress)
+        nonReentrant()
+    {
         tokenFactoryAddress = _tokenFactoryAddress;
     }
 
@@ -171,8 +166,7 @@ contract ExpiringMultiPartyCreator is ContractCreator, Testable, Lockable {
     {
         // Known from creator deployment.
         constructorParams.finderAddress = finderAddress;
-        constructorParams.timerAddress = timerAddress;
-
+        constructorParams.owner = msg.sender;
         // Enforce configuration constraints.
         require(
             params.withdrawalLiveness != 0,

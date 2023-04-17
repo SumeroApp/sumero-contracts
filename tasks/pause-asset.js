@@ -6,13 +6,23 @@
 task("pause-asset", "Pauses assets on asset manager")
     .addParam("type", "Asset Type: emp,swap-pair or staking-reward")
     .addParam("id", "Asset id")
+    .addOptionalParam(
+        "gnosisSafe",
+        "Gnosis safe address, should be given if trasactions need to be submitted to gnosis",
+        undefined,
+        types.string
+    )
     .setAction(
         async (args, hre) => {
             const { expect } = require('chai');
             const { deployer } = await hre.getNamedAccounts();
             const { getTxUrl } = require('../utils/helper');
+            const getGnosisSigner = require("../gnosis/signer");
 
-            const assetManager = await ethers.getContract("AssetManager", deployer);
+            let assetManager = await ethers.getContract("AssetManager", deployer);
+            if(args.gnosisSafe){
+                assetManager = assetManager.connect(await getGnosisSigner(args.gnosisSafe))
+            }
 
             let tx;
             let txUrl;

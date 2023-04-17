@@ -3,14 +3,24 @@
 task("emp-settle", "Settles emps")
     .addParam("empAddress", "Address of EMP contract")
     .addParam("synthAddress", "Address of the synthetic token contract")
+    .addOptionalParam(
+        "gnosisSafe",
+        "Gnosis safe address, should be given if trasactions need to be submitted to gnosis",
+        undefined,
+        types.string
+    )
     .setAction(
         async (args, hre) => {
             const { deployer } = await hre.getNamedAccounts();
             const { getTxUrl } = require('../utils/helper');
             const colors = require('colors');
+            const getGnosisSigner = require("../gnosis/signer");
 
             const EMP = await hre.ethers.getContractFactory("contracts/UMA/financial-templates/expiring-multiparty/ExpiringMultiParty.sol:ExpiringMultiParty");
-            const emp = await EMP.attach(args.empAddress);
+            let emp = await EMP.attach(args.empAddress);
+            if(args.gnosisSafe){
+                emp = emp.connect(await getGnosisSigner(args.gnosisSafe))
+            }
 
             const SYNTH = await hre.ethers.getContractFactory("contracts/UMA/common/implementation/ExpandedERC20.sol:ExpandedERC20");
             const synth = await SYNTH.attach(args.synthAddress);
