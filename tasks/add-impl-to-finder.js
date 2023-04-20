@@ -6,7 +6,7 @@ task("add-impl-to-finder", "Adds assets to Asset Manager")
     .addFlag("skipIfImplementationExists", "boolean value to skip changing implementation if it already exists")
     .addOptionalParam(
         "gnosisSafe",
-        "Gnosis safe address, should be given if trasactions need to be submitted to gnosis",
+        "Gnosis safe address, should be given if transactions need to be submitted to gnosis",
         undefined,
         types.string
     )
@@ -19,10 +19,10 @@ task("add-impl-to-finder", "Adds assets to Asset Manager")
             const getGnosisSigner = require("../gnosis/signer");
 
             let finder = await hre.ethers.getContract("Finder", deployer);
-            if(args.gnosisSafe){
+            if (args.gnosisSafe) {
                 finder = finder.connect(await getGnosisSigner(args.gnosisSafe))
             }
-            
+
             console.log(colors.green("\nFINDER CONTRACT ADDRESS:", finder.address));
 
             const bytes32Name = hre.ethers.utils.formatBytes32String(args.name);

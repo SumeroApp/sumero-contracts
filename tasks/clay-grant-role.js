@@ -5,7 +5,7 @@ task("clay-grant-role", "Grants role to the given address")
     .addParam("role", "The role to be assigned")
     .addOptionalParam(
         "gnosisSafe",
-        "Gnosis safe address, should be given if trasactions need to be submitted to gnosis",
+        "Gnosis safe address, should be given if transactions need to be submitted to gnosis",
         undefined,
         types.string
     )
@@ -20,7 +20,7 @@ task("clay-grant-role", "Grants role to the given address")
             console.log("Clay Contract Address: " + clayToken.address);
 
             const getGnosisSigner = require('../gnosis/signer');
-            if(args.gnosisSafe){
+            if (args.gnosisSafe) {
                 clayToken = clayToken.connect(await getGnosisSigner(args.gnosisSafe))
             }
 

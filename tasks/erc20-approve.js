@@ -5,7 +5,7 @@ task("erc20-approve", "Approves ERC20 tokens to the given account")
     .addParam("amount", "The amount to be approved")
     .addOptionalParam(
         "gnosisSafe",
-        "Gnosis safe address, should be given if trasactions need to be submitted to gnosis",
+        "Gnosis safe address, should be given if transactions need to be submitted to gnosis",
         undefined,
         types.string
     )
@@ -17,7 +17,7 @@ task("erc20-approve", "Approves ERC20 tokens to the given account")
 
             const Token = await hre.ethers.getContractFactory('ClayToken');
             let token = await Token.attach(args.token);
-            if(args.gnosisSafe){
+            if (args.gnosisSafe) {
                 token = token.connect(await getGnosisSigner(args.gnosisSafe))
             }
 
