@@ -28,7 +28,7 @@ task("emp-create", "Deploys the EMP (Expiring Multi Party) Contract using UMA's 
     .addParam("ooReward", "How much of the collateral to offer to the Optimistic Oracle system when requesting a price")
     .addOptionalParam(
         "gnosisSafe",
-        "Gnosis safe address, should be given if trasactions need to be submitted to gnosis",
+        "Gnosis safe address, should be given if transactions need to be submitted to gnosis",
         undefined,
         types.string
     )
@@ -47,7 +47,7 @@ task("emp-create", "Deploys the EMP (Expiring Multi Party) Contract using UMA's 
             console.log(colors.bold("\n==> Running create-emp task..."));
 
             let emp_creator_instance = await hre.ethers.getContract("ExpiringMultiPartyCreator", deployer);
-            if(args.gnosisSafe){
+            if (args.gnosisSafe) {
                 emp_creator_instance = emp_creator_instance.connect(await getGnosisSigner(args.gnosisSafe))
             }
 
@@ -118,7 +118,7 @@ task("emp-create", "Deploys the EMP (Expiring Multi Party) Contract using UMA's 
                 console.log("\nTransaction Receipt: \n", createEmpTx);
 
                 const createdEmpSignature = hre.ethers.utils.keccak256(hre.ethers.utils.toUtf8Bytes('CreatedExpiringMultiParty(address,address)'))
-                let expiringMultiPartyAddress = (receipt.logs.filter(log=> log.topics.includes(createdEmpSignature)))[0].topics[1].replace('0x000000000000000000000000', '0x');
+                let expiringMultiPartyAddress = (receipt.logs.filter(log => log.topics.includes(createdEmpSignature)))[0].topics[1].replace('0x000000000000000000000000', '0x');
                 console.log("Expiring Multi Party Address: " + expiringMultiPartyAddress);
 
                 const txUrl = getTxUrl(deployments.getNetworkName(), createEmpTx.hash);

@@ -8,7 +8,7 @@ task("unpause-asset", "Unpauses assets on asset manager")
     .addParam("id", "Asset id")
     .addOptionalParam(
         "gnosisSafe",
-        "Gnosis safe address, should be given if trasactions need to be submitted to gnosis",
+        "Gnosis safe address, should be given if transactions need to be submitted to gnosis",
         undefined,
         types.string
     )
@@ -19,7 +19,7 @@ task("unpause-asset", "Unpauses assets on asset manager")
             const { getTxUrl } = require('../utils/helper');
             let assetManager = await ethers.getContract("AssetManager", deployer);
             const getGnosisSigner = require("../gnosis/signer");
-            if(args.gnosisSafe){
+            if (args.gnosisSafe) {
                 assetManager = assetManager.connect(await getGnosisSigner(args.gnosisSafe))
             }
 

@@ -17,8 +17,15 @@ task("transfer-clayToken-ownership", "Transfers a defined role of ClayToken cont
             console.log("ClayToken Deployer Address: " + deployer)
             console.log("ClayToken Contract Address: " + clayToken.address);
 
-            // transfers role to the target address (DEFAULT_ADMIN_ROLE / MINTER_ROLE BURNER_ROLE)
-            const roleHash = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(args.role));
+            // transfers role to the target address (DEFAULT_ADMIN_ROLE / MINTER_ROLE / BURNER_ROLE)
+            let roleHash;
+            if (args.role == "DEFAULT_ADMIN_ROLE") {
+                roleHash = "0x0000000000000000000000000000000000000000000000000000000000000000";
+            } else {
+                roleHash = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(args.role));
+            }
+            console.log("roleHash: ", roleHash);
+
             const grantAdminTx = await clayToken.grantRole(roleHash, (args.address));
             await grantAdminTx.wait();
             const correctRoleAddress = await clayToken.hasRole(roleHash, (args.address));

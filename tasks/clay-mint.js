@@ -4,7 +4,7 @@ task("clay-mint", "Mints clay token to the given address")
     .addParam("amount", "The amount to be minted")
     .addOptionalParam(
         "gnosisSafe",
-        "Gnosis safe address, should be given if trasactions need to be submitted to gnosis",
+        "Gnosis safe address, should be given if transactions need to be submitted to gnosis",
         undefined,
         types.string
     )
@@ -15,7 +15,7 @@ task("clay-mint", "Mints clay token to the given address")
             let clayToken = await ethers.getContract("ClayToken", deployer);
             const { getTxUrl } = require('../utils/helper');
             const getGnosisSigner = require('../gnosis/signer');
-            if(args.gnosisSafe){
+            if (args.gnosisSafe) {
                 clayToken = clayToken.connect(await getGnosisSigner(args.gnosisSafe))
             }
             console.log("Clay Contract Address: " + clayToken.address);

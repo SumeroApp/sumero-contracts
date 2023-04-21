@@ -10,7 +10,7 @@ task("transfer-contract-ownership", "Transfers ownership of specified contract t
             const { deployer } = await hre.getNamedAccounts();
             const { expect } = require('chai');
             const colors = require('colors');
-            console.log(colors.blue(`\nTransfering ${args.contract}'s ownerhship to: ${args.address}`));
+            console.log(colors.blue(`\nTransferring ${args.contract}'s ownership to: ${args.address}`));
 
             const ownableContract = await ethers.getContract(args.contract, deployer);
 
