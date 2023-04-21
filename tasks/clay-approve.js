@@ -4,7 +4,7 @@ task("clay-approve", "Approves clay token to given account")
     .addParam("amount", "The amount to be approved")
     .addOptionalParam(
         "gnosisSafe",
-        "Gnosis safe address, should be given if trasactions need to be submitted to gnosis",
+        "Gnosis safe address, should be given if transactions need to be submitted to gnosis",
         undefined,
         types.string
     )
@@ -16,7 +16,7 @@ task("clay-approve", "Approves clay token to given account")
 
             let clayToken = await ethers.getContract("ClayToken", deployer);
             const getGnosisSigner = require('../gnosis/signer');
-            if(args.gnosisSafe){
+            if (args.gnosisSafe) {
                 clayToken = clayToken.connect(await getGnosisSigner(args.gnosisSafe))
             }
             console.log("Using ClayToken: ", clayToken.address);
