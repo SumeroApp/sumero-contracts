@@ -32,6 +32,7 @@ require("./tasks/clay-claim");
 require("./tasks/transfer-clayToken-ownership");
 require("./tasks/transfer-contract-ownership");
 require("./tasks/transfer-all-ownerships");
+require("./tasks/deploy-stakingrewards.js");
 require("hardhat-gas-reporter");
 
 const solcVersion = "0.8.0";
