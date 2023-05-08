@@ -1,4 +1,4 @@
-// npx hardhat transfer-all-ownerships --emp <address> --sponsor <address> --network <network-name>
+// npx hardhat transfer-all-ownerships --address gnosis-safe --network <network-name>
 
 task("transfer-all-ownerships", "Transfer all ownership/admin roles to target eth address")
     .addParam("address", "Address of the intended new owner")

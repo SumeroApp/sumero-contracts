@@ -4,7 +4,7 @@ task("emp-request-withdrawal", "Requests withdrawal")
     .addParam("collateralAmount", "The number of collateral tokens to collateralize the position with")
     .addOptionalParam(
         "gnosisSafe",
-        "Gnosis safe address, should be given if trasactions need to be submitted to gnosis",
+        "Gnosis safe address, should be given if transactions need to be submitted to gnosis",
         undefined,
         types.string
     )
@@ -22,7 +22,7 @@ task("emp-request-withdrawal", "Requests withdrawal")
             //---- Get EMP Contract--------------------
             const EMP = await hre.ethers.getContractFactory("contracts/UMA/financial-templates/expiring-multiparty/ExpiringMultiParty.sol:ExpiringMultiParty");
             let empInstance = await EMP.attach(args.empAddress);
-            if(args.gnosisSafe){
+            if (args.gnosisSafe) {
                 empInstance = empInstance.connect(await getGnosisSigner(args.gnosisSafe))
             }
 

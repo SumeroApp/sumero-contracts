@@ -27,6 +27,7 @@ require("./tasks/add-impl-to-finder");
 require("./tasks/create-lp");
 require("./tasks/setup-finder");
 require("./tasks/build-merkle");
+require("./tasks/get-addresses-from-excel");
 require("./tasks/clay-claim");
 require("./tasks/transfer-clayToken-ownership");
 require("./tasks/transfer-contract-ownership");

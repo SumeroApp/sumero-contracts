@@ -5,7 +5,7 @@ task("emp-settle", "Settles emps")
     .addParam("synthAddress", "Address of the synthetic token contract")
     .addOptionalParam(
         "gnosisSafe",
-        "Gnosis safe address, should be given if trasactions need to be submitted to gnosis",
+        "Gnosis safe address, should be given if transactions need to be submitted to gnosis",
         undefined,
         types.string
     )
@@ -18,7 +18,7 @@ task("emp-settle", "Settles emps")
 
             const EMP = await hre.ethers.getContractFactory("contracts/UMA/financial-templates/expiring-multiparty/ExpiringMultiParty.sol:ExpiringMultiParty");
             let emp = await EMP.attach(args.empAddress);
-            if(args.gnosisSafe){
+            if (args.gnosisSafe) {
                 emp = emp.connect(await getGnosisSigner(args.gnosisSafe))
             }
 

@@ -8,7 +8,7 @@ task("add-asset", "Adds assets to Asset Manager")
     .addParam("address", "The address of the asset")
     .addOptionalParam(
         "gnosisSafe",
-        "Gnosis safe address, should be given if trasactions need to be submitted to gnosis",
+        "Gnosis safe address, should be given if transactions need to be submitted to gnosis",
         undefined,
         types.string
     )
@@ -18,7 +18,7 @@ task("add-asset", "Adds assets to Asset Manager")
             const { getTxUrl } = require('../utils/helper');
             let assetManager = await ethers.getContract("AssetManager", deployer);
             const getGnosisSigner = require('../gnosis/signer');
-            if(args.gnosisSafe){
+            if (args.gnosisSafe) {
                 assetManager = assetManager.connect(await getGnosisSigner(args.gnosisSafe))
             }
             const colors = require('colors');
