@@ -1,3 +1,4 @@
+const { Wallet } = require('ethers');
 const { node_url, accounts, addForkConfiguration } = require('./utils/network');
 // requiring these here, automatically adds ethers, deploy to HRE (Hardhat Runtime Env.)
 require("@nomiclabs/hardhat-waffle");
@@ -33,6 +34,7 @@ require("./tasks/transfer-clayToken-ownership");
 require("./tasks/transfer-contract-ownership");
 require("./tasks/transfer-all-ownerships");
 require("hardhat-gas-reporter");
+const { setupSafeDeployer } = require("hardhat-safe-deployer");
 
 const solcVersion = "0.8.0";
 
@@ -40,6 +42,16 @@ const LARGE_CONTRACT_COMPILER_SETTINGS = {
   version: solcVersion,
   settings: { optimizer: { enabled: true, runs: 200 } },
 };
+
+const { DEPLOYER_SAFE, SAFE_SERVICE_URL, PRIV_KEY } = process.env
+if (DEPLOYER_SAFE && SAFE_SERVICE_URL && PRIV_KEY) {
+  console.log("Setting up gnosis safe with provided account as signer")
+  setupSafeDeployer({
+    signer: new Wallet(PRIV_KEY),
+    safe: DEPLOYER_SAFE,
+    serivceUrl: SAFE_SERVICE_URL
+  })
+}
 
 /**
  * @type import('hardhat/config').HardhatUserConfig
