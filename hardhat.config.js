@@ -35,6 +35,7 @@ require("./tasks/transfer-contract-ownership");
 require("./tasks/transfer-all-ownerships");
 require("hardhat-gas-reporter");
 const { setupSafeDeployer } = require("hardhat-safe-deployer");
+const { chainIdToServiceUrl } = require("./utils/helper")
 
 const solcVersion = "0.8.0";
 
@@ -43,13 +44,15 @@ const LARGE_CONTRACT_COMPILER_SETTINGS = {
   settings: { optimizer: { enabled: true, runs: 200 } },
 };
 
-const { DEPLOYER_SAFE, SAFE_SERVICE_URL, PRIV_KEY } = process.env
-if (DEPLOYER_SAFE && SAFE_SERVICE_URL && PRIV_KEY) {
+const { DEPLOYER_SAFE, SAFE_CHAIN_ID, PRIV_KEY } = process.env
+const chainConfig = {};
+if (DEPLOYER_SAFE && SAFE_CHAIN_ID && PRIV_KEY) {
   console.log("Setting up gnosis safe with provided account as signer")
+  chainConfig.chainId = SAFE_CHAIN_ID
   setupSafeDeployer({
     signer: new Wallet(PRIV_KEY),
     safe: DEPLOYER_SAFE,
-    serivceUrl: SAFE_SERVICE_URL
+    serivceUrl: chainIdToServiceUrl[SAFE_CHAIN_ID]
   })
 }
 
@@ -93,7 +96,8 @@ module.exports = {
     'dashboard': {
       url: "http://localhost:24012/rpc",
       timeout: 400000,
-      live: true
+      live: true,
+      ...chainConfig
     }
   },
   solidity: {

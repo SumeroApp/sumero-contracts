@@ -80,7 +80,7 @@ devDependencies:
     version: 1.0.9(hardhat@2.14.0)
   hardhat-safe-deployer:
     specifier: github:ShubhamChndrvnshi/hardhat-safe-deployer#main
-    version: github.com/ShubhamChndrvnshi/hardhat-safe-deployer/bf8657b0557b5f4e3d1b2ad22145815e4d145f1e(@nomiclabs/hardhat-ethers@2.0.0)(hardhat@2.14.0)
+    version: github.com/ShubhamChndrvnshi/hardhat-safe-deployer/7442a7e7dd348b619d1567438a4159d44221afe1(@nomiclabs/hardhat-ethers@2.0.0)(hardhat@2.14.0)
   prettier:
     specifier: ^2.6.2
     version: 2.6.2
@@ -9280,9 +9280,9 @@ packages:
       ethers: 5.7.0
     dev: true
 
-  github.com/ShubhamChndrvnshi/hardhat-safe-deployer/bf8657b0557b5f4e3d1b2ad22145815e4d145f1e(@nomiclabs/hardhat-ethers@2.0.0)(hardhat@2.14.0):
-    resolution: {tarball: https://codeload.github.com/ShubhamChndrvnshi/hardhat-safe-deployer/tar.gz/bf8657b0557b5f4e3d1b2ad22145815e4d145f1e}
-    id: github.com/ShubhamChndrvnshi/hardhat-safe-deployer/bf8657b0557b5f4e3d1b2ad22145815e4d145f1e
+  github.com/ShubhamChndrvnshi/hardhat-safe-deployer/7442a7e7dd348b619d1567438a4159d44221afe1(@nomiclabs/hardhat-ethers@2.0.0)(hardhat@2.14.0):
+    resolution: {tarball: https://codeload.github.com/ShubhamChndrvnshi/hardhat-safe-deployer/tar.gz/7442a7e7dd348b619d1567438a4159d44221afe1}
+    id: github.com/ShubhamChndrvnshi/hardhat-safe-deployer/7442a7e7dd348b619d1567438a4159d44221afe1
     name: hardhat-safe-deployer
     version: 1.0.0
     prepare: true
