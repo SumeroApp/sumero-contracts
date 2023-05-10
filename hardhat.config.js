@@ -35,7 +35,7 @@ require("./tasks/transfer-contract-ownership");
 require("./tasks/transfer-all-ownerships");
 require("hardhat-gas-reporter");
 const { setupSafeDeployer } = require("hardhat-safe-deployer");
-const { chainIdToServiceUrl } = require("./utils/helper")
+const { chainIdToServiceUrl } = require("./utils/network")
 
 const solcVersion = "0.8.0";
 
@@ -48,7 +48,7 @@ const { DEPLOYER_SAFE, SAFE_CHAIN_ID, PRIV_KEY } = process.env
 const chainConfig = {};
 if (DEPLOYER_SAFE && SAFE_CHAIN_ID && PRIV_KEY) {
   console.log("Setting up gnosis safe with provided account as signer")
-  chainConfig.chainId = SAFE_CHAIN_ID
+  chainConfig.chainId = Number(SAFE_CHAIN_ID)
   setupSafeDeployer({
     signer: new Wallet(PRIV_KEY),
     safe: DEPLOYER_SAFE,

@@ -1,7 +1,7 @@
 const Safe = require('@safe-global/safe-core-sdk')
 const { SafeEthersSigner, SafeService } = require('@safe-global/safe-ethers-adapters')
 const ethAdapter = require('./adapter')
-const { chainIdToServiceUrl } = require("../utils/helper")
+const { chainIdToServiceUrl } = require("../utils/network")
 
 async function getGnosisSigner(deployerSafeAddress){
         if (!ethers.utils.isAddress(deployerSafeAddress)) throw new Error("Invalid safe address")

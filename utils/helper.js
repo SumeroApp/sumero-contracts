@@ -156,11 +156,6 @@ async function getPriceFromIdentifier(hexlifiedPriceIdentifier, hexlifiedAncilla
     return price;
 }
 
-const chainIdToServiceUrl = {
-    1: 'https://safe-transaction-mainnet.safe.global',
-    5: 'https://safe-transaction-goerli.safe.global',
-  }
-
 module.exports = {
     isLocalNetwork,
     isForkedNetwork,
@@ -173,5 +168,4 @@ module.exports = {
     getAddressUrl,
     getPriceFromIdentifier,
     getEpochFromDate,
-    chainIdToServiceUrl,
 }

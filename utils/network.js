@@ -92,9 +92,14 @@ function addForkConfiguration(networks) {
     };
     return newNetworks;
 }
+const chainIdToServiceUrl = {
+    1: 'https://safe-transaction-mainnet.safe.global',
+    5: 'https://safe-transaction-goerli.safe.global',
+  }
 
 module.exports = {
     node_url,
     accounts,
-    addForkConfiguration
+    addForkConfiguration,
+    chainIdToServiceUrl,
 }
