@@ -22,6 +22,10 @@ const HOUR = 60 * 60
 const DAY = HOUR * 24
 const MONTH = 30 * DAY;
 const YEAR = DAY * 365;
+let rewardRateBeforeUpdateMaxReward = BigNumber.from(0)
+let deployTimestamp = 0;
+let postMaxrewardsUpdatedTimestamp = 0;
+let expiry = 0
 
 const wait = (seconds) => new Promise((resolve) => {
     setTimeout(() => { resolve() }, seconds * 1000)
@@ -66,12 +70,13 @@ describe("Staking Rewards Contract", function () {
 
         // Deploy Staking Contract
         const blockNumber = await ethers.provider.getBlockNumber();
-        const expiry = getEpochFromDate(new Date((await ethers.provider.getBlock(blockNumber)).timestamp * 1000 + DAY * 1000 * 30 * 2))
+        expiry = getEpochFromDate(new Date((await ethers.provider.getBlock(blockNumber)).timestamp * 1000 + DAY * 1000 * 30 * 2))
         const maxReward = BigNumber.from(10).pow(20);
         const StakingRewards = await hre.ethers.getContractFactory('ClayStakingRewards')
         stakingRewards = await StakingRewards.deploy(LpTokenAddress, TokenAddress, BigNumber.from(expiry), maxReward)
         StakingRewardsAddress = stakingRewards.address
         await stakingRewards.deployed()
+        deployTimestamp = (await ethers.provider.getBlock(stakingRewards.deployTransaction.blockNumber)).timestamp
         console.log("Staking Rewards contract deployed at: " + StakingRewardsAddress)
         rewardRate = BigNumber.from(await stakingRewards.rewardRate());
         console.log(`
@@ -86,13 +91,6 @@ describe("Staking Rewards Contract", function () {
         await clayToken.grantRole(roleHash, StakingRewardsAddress)
         expect(await clayToken.hasRole(roleHash, StakingRewardsAddress)).eq(true)
 
-    });
-
-    it('Can update max reward', async function () {
-        await expect(stakingRewards.connect(accounts[2]).updateMaxReward(BigNumber.from(10).pow(21))).to.be.reverted
-        await expect(stakingRewards.updateMaxReward(BigNumber.from(10).pow(21))).to.emit(stakingRewards, "RewardRateUpdated")
-        expect(await stakingRewards.maxReward()).to.eq(BigNumber.from(10).pow(21))
-        rewardRate = await stakingRewards.rewardRate();
     });
 
     it('Mints staking token to Account 1', async function () {
@@ -126,6 +124,32 @@ describe("Staking Rewards Contract", function () {
         let updatedRewardPerToken = ethers.BigNumber.from(BigNumber.from(rewardRate).mul(timestamp - lastUpdateTime).mul(multiplier).div(totalSupply))
         expect(await stakingRewards.rewardPerToken()).to.be.eq(updatedRewardPerToken)
     });
+
+    it('Can update max reward', async function () {
+        rewardRateBeforeUpdateMaxReward = rewardRate;
+        await expect(stakingRewards.connect(accounts[2]).updateMaxReward(BigNumber.from(10).pow(21))).to.be.reverted
+        await expect(stakingRewards.updateMaxReward(BigNumber.from(10).pow(21))).to.emit(stakingRewards, "RewardRateUpdated")
+        postMaxrewardsUpdatedTimestamp = (await ethers.provider.getBlock('latest')).timestamp
+        expect(await stakingRewards.maxReward()).to.eq(BigNumber.from(10).pow(21))
+        rewardRate = await stakingRewards.rewardRate();
+    });
+
+    it("Rewards to be generated over contract lifetime should be less than max rewards",async ()=>{
+        const rewardsGeneratedFromDeploymentTillUpdatedMaxReward = BigNumber.from(postMaxrewardsUpdatedTimestamp - deployTimestamp).mul(rewardRateBeforeUpdateMaxReward)
+
+        const rewardsWillBeEmittedTillExpiryPerNewRewardsRate = BigNumber.from(expiry - postMaxrewardsUpdatedTimestamp).mul(rewardRate)
+
+        const rewardsCalculatedObj = {
+            rewardsGeneratedFromDeploymentTillUpdatedMaxReward: rewardsGeneratedFromDeploymentTillUpdatedMaxReward,
+            rewardsWillBeEmittedTillExpiryPerNewRewardsRate: rewardsWillBeEmittedTillExpiryPerNewRewardsRate,
+            sumOverLifeTime: rewardsGeneratedFromDeploymentTillUpdatedMaxReward.add(rewardsWillBeEmittedTillExpiryPerNewRewardsRate),
+            maxReward: (await stakingRewards.maxReward()),
+            diff: rewardsGeneratedFromDeploymentTillUpdatedMaxReward.add(rewardsWillBeEmittedTillExpiryPerNewRewardsRate).sub(await stakingRewards.maxReward()),
+        }
+
+        expect(rewardsCalculatedObj.sumOverLifeTime.lt(rewardsCalculatedObj.maxReward)).to.be.true
+    })
+
     // todo: Withdraw partial amount
     it('Withdraws(Unstakes) LP tokens', async function () {
         const amount = ethers.utils.parseUnits('10.0', 'ether')
