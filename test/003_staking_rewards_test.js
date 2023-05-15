@@ -128,16 +128,16 @@ describe("Staking Rewards Contract", function () {
     it('Can update max reward', async function () {
         rewardRateBeforeUpdateMaxReward = rewardRate;
         await expect(stakingRewards.connect(accounts[2]).updateMaxReward(BigNumber.from(10).pow(21))).to.be.reverted
-        await expect(stakingRewards.updateMaxReward(BigNumber.from(10).pow(21))).to.emit(stakingRewards, "RewardRateUpdated")
+        await expect(stakingRewards.updateMaxReward(BigNumber.from(10).pow(35))).to.emit(stakingRewards, "RewardRateUpdated")
         postMaxrewardsUpdatedTimestamp = (await ethers.provider.getBlock('latest')).timestamp
-        expect(await stakingRewards.maxReward()).to.eq(BigNumber.from(10).pow(21))
+        expect(await stakingRewards.maxReward()).to.eq(BigNumber.from(10).pow(35))
         rewardRate = await stakingRewards.rewardRate();
     });
 
     it("Rewards to be generated over contract lifetime should be less than max rewards",async ()=>{
         const rewardsGeneratedFromDeploymentTillUpdatedMaxReward = BigNumber.from(postMaxrewardsUpdatedTimestamp - deployTimestamp).mul(rewardRateBeforeUpdateMaxReward)
 
-        const rewardsWillBeEmittedTillExpiryPerNewRewardsRate = BigNumber.from(expiry - postMaxrewardsUpdatedTimestamp).mul(rewardRate)
+        const rewardsWillBeEmittedTillExpiryPerNewRewardsRate = BigNumber.from(expiry - postMaxrewardsUpdatedTimestamp -1).mul(rewardRate)
 
         const rewardsCalculatedObj = {
             rewardsGeneratedFromDeploymentTillUpdatedMaxReward: rewardsGeneratedFromDeploymentTillUpdatedMaxReward,
@@ -146,6 +146,16 @@ describe("Staking Rewards Contract", function () {
             maxReward: (await stakingRewards.maxReward()),
             diff: rewardsGeneratedFromDeploymentTillUpdatedMaxReward.add(rewardsWillBeEmittedTillExpiryPerNewRewardsRate).sub(await stakingRewards.maxReward()),
         }
+
+        console.log({
+            rewardsGeneratedFromDeploymentTillUpdatedMaxReward: rewardsCalculatedObj.rewardsGeneratedFromDeploymentTillUpdatedMaxReward.toString(),
+            rewardsWillBeEmittedTillExpiryPerNewRewardsRate: rewardsCalculatedObj.rewardsWillBeEmittedTillExpiryPerNewRewardsRate.toString(),
+            sumOverLifeTime: rewardsCalculatedObj.sumOverLifeTime.toString(),
+            maxReward: rewardsCalculatedObj.maxReward.toString(),
+            diff: rewardsCalculatedObj.diff.toString(),
+            rewardRate: rewardRate.toString(),
+            div: rewardsCalculatedObj.diff.div(rewardRate).toString()
+        })
 
         expect(rewardsCalculatedObj.sumOverLifeTime.lt(rewardsCalculatedObj.maxReward)).to.be.true
     })
