@@ -141,7 +141,7 @@ contract ClayBonds is ERC20("zClay Token", "zCLAY"), Ownable {
         totalBondDeposits = totalBondDeposits + bondAmount;
 
         require(
-            totalBondDeposits < maximumBondRewards,
+            totalBondDeposits <= maximumBondRewards,
             "ClayBonds: MAX_BOND_REWARD_POOL_REACHED"
         );
 
