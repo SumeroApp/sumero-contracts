@@ -23,6 +23,7 @@ const DAY = HOUR * 24
 const MONTH = 30 * DAY;
 const YEAR = DAY * 365;
 let rewardRateBeforeUpdateMaxReward = BigNumber.from(0)
+let rewardRateAfterUpdateMaxReward = BigNumber.from(0)
 let deployTimestamp = 0;
 let postMaxrewardsUpdatedTimestamp = 0;
 let expiry = 0
@@ -127,24 +128,44 @@ describe("Staking Rewards Contract", function () {
 
     it('Can update max reward', async function () {
         rewardRateBeforeUpdateMaxReward = rewardRate;
-        await expect(stakingRewards.connect(accounts[2]).updateMaxReward(BigNumber.from(10).pow(21))).to.be.reverted
-        await expect(stakingRewards.updateMaxReward(BigNumber.from(10).pow(35))).to.emit(stakingRewards, "RewardRateUpdated")
-        postMaxrewardsUpdatedTimestamp = (await ethers.provider.getBlock('latest')).timestamp
+        await expect(stakingRewards.connect(accounts[2]).updateMaxReward(BigNumber.from(10).pow(21))).to.be.reverted;
+        const updateMaxRewardTxn = await stakingRewards.updateMaxReward(BigNumber.from(10).pow(35));
+        console.log("updateMaxRewardTxn: ", updateMaxRewardTxn)
+        const updateMaxRewardReceipt = await updateMaxRewardTxn.wait();
+        console.log("waiting for txn to mine / receipt : ", updateMaxRewardReceipt);
+        await expect(updateMaxRewardTxn).to.emit(stakingRewards, "RewardRateUpdated");
+        // 
+        // postMaxrewardsUpdatedTimestamp = (await ethers.provider.getBlock('latest')).timestamp
+        postMaxrewardsUpdatedTimestamp = (await ethers.provider.getBlock(updateMaxRewardReceipt.blockNumber)).timestamp
         expect(await stakingRewards.maxReward()).to.eq(BigNumber.from(10).pow(35))
-        rewardRate = await stakingRewards.rewardRate();
+        rewardRateAfterUpdateMaxReward = await stakingRewards.rewardRate();
     });
 
     it("Rewards to be generated over contract lifetime should be less than max rewards",async ()=>{
-        const rewardsGeneratedFromDeploymentTillUpdatedMaxReward = BigNumber.from(postMaxrewardsUpdatedTimestamp - deployTimestamp + 1).mul(rewardRateBeforeUpdateMaxReward) // added total time by 1 as the new reward rate will take effect after that mined block
+        // t=1 deployment time
+        // t=9 updateMaxReward
+        const secondsElapsed1 = BigNumber.from(postMaxrewardsUpdatedTimestamp).sub(deployTimestamp).add(1);
+        console.log("secondsElapsed1 ", secondsElapsed1.toString());
+        const rewardsGeneratedFromDeploymentTillUpdatedMaxReward = BigNumber.from(secondsElapsed1).mul(rewardRateBeforeUpdateMaxReward) // added total time by 1 as the new reward rate will take effect after that mined block
+        console.log("rewardsGeneratedFromDeploymentTillUpdatedMaxReward ", rewardsGeneratedFromDeploymentTillUpdatedMaxReward.toString());
+        // const rewardsGeneratedFromDeploymentTillUpdatedMaxReward = BigNumber.from(postMaxrewardsUpdatedTimestamp - deployTimestamp) + 1).mul(rewardRateBeforeUpdateMaxReward) // added total time by 1 as the new reward rate will take effect after that mined block
 
-        const rewardsWillBeEmittedTillExpiryPerNewRewardsRate = BigNumber.from(expiry - postMaxrewardsUpdatedTimestamp -1).mul(rewardRate) // subtracted total time by 1 as the new reward rate will take effect after that mined block
+        // t=1 deployment time
+        // t=9 updateMaxReward
+        // t=15 expiry
+        const secondsElapsed2 = BigNumber.from(expiry).sub(postMaxrewardsUpdatedTimestamp);
+        console.log("secondsElapsed2 ", secondsElapsed2.toString());
+        const rewardsWillBeEmittedTillExpiryPerNewRewardsRate = BigNumber.from(secondsElapsed2).mul(rewardRateAfterUpdateMaxReward) // subtracted total time by 1 as the new reward rate will take effect after that mined block
+        console.log("rewardsWillBeEmittedTillExpiryPerNewRewardsRate ", rewardsWillBeEmittedTillExpiryPerNewRewardsRate.toString());
 
+        const sumOverLifeTime = rewardsGeneratedFromDeploymentTillUpdatedMaxReward.add(rewardsWillBeEmittedTillExpiryPerNewRewardsRate);
+        const maxReward = await stakingRewards.maxReward()
         const rewardsCalculatedObj = {
-            rewardsGeneratedFromDeploymentTillUpdatedMaxReward: rewardsGeneratedFromDeploymentTillUpdatedMaxReward,
-            rewardsWillBeEmittedTillExpiryPerNewRewardsRate: rewardsWillBeEmittedTillExpiryPerNewRewardsRate,
-            sumOverLifeTime: rewardsGeneratedFromDeploymentTillUpdatedMaxReward.add(rewardsWillBeEmittedTillExpiryPerNewRewardsRate),
-            maxReward: (await stakingRewards.maxReward()),
-            diff: rewardsGeneratedFromDeploymentTillUpdatedMaxReward.add(rewardsWillBeEmittedTillExpiryPerNewRewardsRate).sub(await stakingRewards.maxReward()),
+            rewardsGeneratedFromDeploymentTillUpdatedMaxReward,
+            rewardsWillBeEmittedTillExpiryPerNewRewardsRate,
+            sumOverLifeTime,
+            maxReward,
+            diff: sumOverLifeTime.sub(maxReward),
         }
 
         console.log({
@@ -153,9 +174,11 @@ describe("Staking Rewards Contract", function () {
             sumOverLifeTime: rewardsCalculatedObj.sumOverLifeTime.toString(),
             maxReward: rewardsCalculatedObj.maxReward.toString(),
             diff: rewardsCalculatedObj.diff.toString(),
-            rewardRate: rewardRate.toString(),
-            div: rewardsCalculatedObj.diff.div(rewardRate).toString()
+            rewardRateAfterUpdateMaxReward: rewardRateAfterUpdateMaxReward.toString(),
+            div: rewardsCalculatedObj.diff.div(rewardRateAfterUpdateMaxReward).toString()
         })
+
+        expect(checkPrecisionWithinLimit(rewardsCalculatedObj.maxReward, rewardsCalculatedObj.sumOverLifeTime)).to.be.true;
 
         expect(rewardsCalculatedObj.sumOverLifeTime.lt(rewardsCalculatedObj.maxReward)).to.be.true
     })
@@ -691,8 +714,9 @@ function checkPrecisionWithinLimit(val1, val2, allowedPrecisionPercentNumber = M
     const value2 = val1.gt(val2) ? val2: val1;
    
     const difference = sub(value1, value2);
-
+    console.log(difference.toString())
     const precisionBalancedErrorPercent = difference.mul(multiplier).div(value1).mul(100);       // multiplied by 1e18 to maintain precision
+    console.log(precisionBalancedErrorPercent.toString())
 
     console.log( `Precision off by ${addDecimalPlaces(precisionBalancedErrorPercent.toString(), 18)} %` )
 
