@@ -27,6 +27,7 @@ let rewardRateAfterUpdateMaxReward = BigNumber.from(0)
 let deployTimestamp = 0;
 let postMaxrewardsUpdatedTimestamp = 0;
 let expiry = 0
+let timestampFirstStake = 0
 
 const wait = (seconds) => new Promise((resolve) => {
     setTimeout(() => { resolve() }, seconds * 1000)
@@ -107,7 +108,7 @@ describe("Staking Rewards Contract", function () {
         expect(await getLpTokenBalance(accounts[1])).to.equal(amount)
         await sumeroLpToken.connect(accounts[1]).approve(StakingRewardsAddress, amount)
         expect(await sumeroLpToken.allowance(accounts[1].address, StakingRewardsAddress)).to.eq(amount)
-        await stakeAndReturnTimestamp(accounts[1], amount)
+        timestampFirstStake = await stakeAndReturnTimestamp(accounts[1], amount)
         expect(await getUserStakedBalance(accounts[1])).to.eq(amount)
         expect(await stakingRewards.totalSupply()).to.eq(amount)
 
@@ -128,11 +129,12 @@ describe("Staking Rewards Contract", function () {
 
     it('Can update max reward', async function () {
         rewardRateBeforeUpdateMaxReward = rewardRate;
+        await increaseTime(4 * DAY)
         await expect(stakingRewards.connect(accounts[2]).updateMaxReward(BigNumber.from(10).pow(21))).to.be.reverted;
         const updateMaxRewardTxn = await stakingRewards.updateMaxReward(BigNumber.from(10).pow(35));
-        console.log("updateMaxRewardTxn: ", updateMaxRewardTxn)
+        // console.log("updateMaxRewardTxn: ", updateMaxRewardTxn)
         const updateMaxRewardReceipt = await updateMaxRewardTxn.wait();
-        console.log("waiting for txn to mine / receipt : ", updateMaxRewardReceipt);
+        // console.log("waiting for txn to mine / receipt : ", updateMaxRewardReceipt);
         await expect(updateMaxRewardTxn).to.emit(stakingRewards, "RewardRateUpdated");
         // 
         // postMaxrewardsUpdatedTimestamp = (await ethers.provider.getBlock('latest')).timestamp
@@ -144,7 +146,7 @@ describe("Staking Rewards Contract", function () {
     it("Rewards to be generated over contract lifetime should be less than max rewards",async ()=>{
         // t=1 deployment time
         // t=9 updateMaxReward
-        const secondsElapsed1 = BigNumber.from(postMaxrewardsUpdatedTimestamp).sub(deployTimestamp).add(1);
+        const secondsElapsed1 = BigNumber.from(postMaxrewardsUpdatedTimestamp).sub(timestampFirstStake);
         console.log("secondsElapsed1 ", secondsElapsed1.toString());
         const rewardsGeneratedFromDeploymentTillUpdatedMaxReward = BigNumber.from(secondsElapsed1).mul(rewardRateBeforeUpdateMaxReward) // added total time by 1 as the new reward rate will take effect after that mined block
         console.log("rewardsGeneratedFromDeploymentTillUpdatedMaxReward ", rewardsGeneratedFromDeploymentTillUpdatedMaxReward.toString());
