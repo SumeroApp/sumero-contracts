@@ -168,7 +168,7 @@ contract ClayStakingRewards is Ownable, ReentrancyGuard, Pausable {
     function updateMaxReward(uint256 _maxReward) external onlyOwner notExpired {
         rewardPerTokenStored = rewardPerToken();
         require(
-            rewardPerTokenStored < _maxReward,
+            (rewardPerTokenStored * _totalSupply) < _maxReward,
             "ClayStakingRewards: INVALID_MAX_REWARD_AMOUNT"
         );
         lastUpdateTime = block.timestamp;
