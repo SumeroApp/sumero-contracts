@@ -141,7 +141,7 @@ function getConvertedPriceIdentifier(hexlifiedPriceIdentifier, hexlifiedAncillar
 
 async function getPriceFromIdentifier(hexlifiedPriceIdentifier, hexlifiedAncillaryData) {
     let price = "";
-    const fetchUrl = "http://18.219.111.187/prices.json";
+    const fetchUrl = "https://prices.sumero.finance/prices.json";
     const loweredIdentifier = getConvertedPriceIdentifier(hexlifiedPriceIdentifier, hexlifiedAncillaryData);
 
     console.log("Fetching Price from Feed: ");
