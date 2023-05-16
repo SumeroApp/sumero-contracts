@@ -135,7 +135,7 @@ describe("Staking Rewards Contract", function () {
     });
 
     it("Rewards to be generated over contract lifetime should be less than max rewards",async ()=>{
-        const rewardsGeneratedFromDeploymentTillUpdatedMaxReward = BigNumber.from(postMaxrewardsUpdatedTimestamp - deployTimestamp).mul(rewardRateBeforeUpdateMaxReward)
+        const rewardsGeneratedFromDeploymentTillUpdatedMaxReward = BigNumber.from(postMaxrewardsUpdatedTimestamp - deployTimestamp + 1).mul(rewardRateBeforeUpdateMaxReward) // added total time by 1 as the new reward rate will take effect after that mined block
 
         const rewardsWillBeEmittedTillExpiryPerNewRewardsRate = BigNumber.from(expiry - postMaxrewardsUpdatedTimestamp -1).mul(rewardRate) // subtracted total time by 1 as the new reward rate will take effect after that mined block
 
