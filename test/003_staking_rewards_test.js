@@ -146,19 +146,13 @@ describe("Staking Rewards Contract", function () {
     it("Rewards to be generated over contract lifetime should be less than max rewards",async ()=>{
         // t=1 deployment time
         // t=9 updateMaxReward
+        // The rewards calculation should start from time of 1st stake/when updateReward is called.
+        // So we are using timestampFirstStake instead of deployment time
         const secondsElapsed1 = BigNumber.from(postMaxrewardsUpdatedTimestamp).sub(timestampFirstStake);
-        console.log("secondsElapsed1 ", secondsElapsed1.toString());
-        const rewardsGeneratedFromDeploymentTillUpdatedMaxReward = BigNumber.from(secondsElapsed1).mul(rewardRateBeforeUpdateMaxReward) // added total time by 1 as the new reward rate will take effect after that mined block
-        console.log("rewardsGeneratedFromDeploymentTillUpdatedMaxReward ", rewardsGeneratedFromDeploymentTillUpdatedMaxReward.toString());
-        // const rewardsGeneratedFromDeploymentTillUpdatedMaxReward = BigNumber.from(postMaxrewardsUpdatedTimestamp - deployTimestamp) + 1).mul(rewardRateBeforeUpdateMaxReward) // added total time by 1 as the new reward rate will take effect after that mined block
+        const rewardsGeneratedFromDeploymentTillUpdatedMaxReward = BigNumber.from(secondsElapsed1).mul(rewardRateBeforeUpdateMaxReward)
 
-        // t=1 deployment time
-        // t=9 updateMaxReward
-        // t=15 expiry
         const secondsElapsed2 = BigNumber.from(expiry).sub(postMaxrewardsUpdatedTimestamp);
-        console.log("secondsElapsed2 ", secondsElapsed2.toString());
-        const rewardsWillBeEmittedTillExpiryPerNewRewardsRate = BigNumber.from(secondsElapsed2).mul(rewardRateAfterUpdateMaxReward) // subtracted total time by 1 as the new reward rate will take effect after that mined block
-        console.log("rewardsWillBeEmittedTillExpiryPerNewRewardsRate ", rewardsWillBeEmittedTillExpiryPerNewRewardsRate.toString());
+        const rewardsWillBeEmittedTillExpiryPerNewRewardsRate = BigNumber.from(secondsElapsed2).mul(rewardRateAfterUpdateMaxReward)
 
         const sumOverLifeTime = rewardsGeneratedFromDeploymentTillUpdatedMaxReward.add(rewardsWillBeEmittedTillExpiryPerNewRewardsRate);
         const maxReward = await stakingRewards.maxReward()
