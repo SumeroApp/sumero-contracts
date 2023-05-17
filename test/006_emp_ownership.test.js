@@ -20,9 +20,9 @@ describe("ExpiringMultiParty Contract", function () {
             // hre.network
         );
 
-        console.log("Account 1 balance:", (await accounts[2].getBalance()).toString())
-        console.log("Running all deployments")
-        await hre.deployments.fixture()
+        console.log("Account 1 balance:", (await accounts[2].getBalance()).toString());
+        console.log("Running all deployments");
+        await hre.deployments.fixture('ExpiringMultiPartyCreator');
 
         const blockNumber = await ethers.provider.getBlockNumber();
         const expiry = Math.round(new Date((await ethers.provider.getBlock(blockNumber)).timestamp * 1000 + DAY * 1000 * 30 * 2).getTime() / 1000)
