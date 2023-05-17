@@ -124,6 +124,7 @@ task("emp-create", "Deploys the EMP (Expiring Multi Party) Contract using UMA's 
                 if (txUrl != null) {
                     console.log(txUrl);
                 }
+                return expiringMultiPartyAddress
             } catch (error) {
                 console.log("createExpiringMultiParty failed!");
                 console.log(error);
