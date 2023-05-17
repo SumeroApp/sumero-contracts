@@ -775,7 +775,7 @@ contract PricelessPositionManager is Lockable {
      * Can only be called by the current owner.
      */
     function transferOwnership(address newOwner) external onlyOwner {
-        require(newOwner != address(0), "Ownable: new owner is the zero address");
+        require(newOwner != address(0), "new owner is the zero address");
         _transferOwnership(newOwner);
     }
 

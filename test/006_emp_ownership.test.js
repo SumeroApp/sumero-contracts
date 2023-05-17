@@ -21,7 +21,7 @@ describe("ExpiringMultiParty Contract", function () {
         );
 
         console.log("Account 1 balance:", (await accounts[1].getBalance()).toString());
-        console.log("Running all deployments");
+        console.log("Running deployment fixture for EMPC...");
         await hre.deployments.fixture('ExpiringMultiPartyCreator');
 
         const blockNumber = await ethers.provider.getBlockNumber();
@@ -55,7 +55,7 @@ describe("ExpiringMultiParty Contract", function () {
         let ownerAddress = await emp.owner()
         await ethers.provider.send("hardhat_impersonateAccount", [ownerAddress]);
         owner = await ethers.getSigner(ownerAddress);
-        
+
         await expect(emp.connect(owner).transferOwnership(accounts[2].address)).to.emit(emp, 'OwnershipTransferred')
     });
 
@@ -70,14 +70,14 @@ describe("ExpiringMultiParty Contract", function () {
 
         const transferTxForNextStep = await usdc.transfer(accounts[0].address, '1000000000')
         await transferTxForNextStep.wait()
-        
+
         const allowanceTx = await usdc.connect(accounts[2]).approve(expiringMultiPartyAddress, '100000000')
         await allowanceTx.wait()
 
         await expect(emp.connect(accounts[2]).emergencyShutdown()).to.emit(emp, 'EmergencyShutdown')
     });
 
-    it("should not be able to mint a position on emp after shutdown", async ()=>{
+    it("should not be able to mint a position on emp after shutdown", async () => {
 
         expect(await hre.run('emp-mint', {
             empAddress: expiringMultiPartyAddress,
