@@ -3,7 +3,7 @@
 const { expect } = require("chai")
 const { ethers } = require("hardhat")
 const { time } = require("@nomicfoundation/hardhat-network-helpers");
-const { BigNumber } = require("ethers");
+const { BigNumber, constants } = require("ethers");
 const hre = require("hardhat")
 const { getEpochFromDate } = require("../utils/helper")
 
@@ -80,6 +80,17 @@ describe("Staking Rewards Contract", function () {
         `);
 
     });
+
+    it("should fail to deploy a staking rewrad contract with zero address for lptoken/clayToken",async ()=>{
+        const blockNumber = await ethers.provider.getBlockNumber();
+        const expiry = getEpochFromDate(new Date((await ethers.provider.getBlock(blockNumber)).timestamp * 1000 + DAY * 1000 * 30 * 2))
+        const maxReward = BigNumber.from(10).pow(20);
+        const StakingRewards = await hre.ethers.getContractFactory('ClayStakingRewards')
+
+        await expect(StakingRewards.deploy(constants.AddressZero, constants.AddressZero, BigNumber.from(expiry), maxReward)).to.be.revertedWith("ClayStakingRewards: ZERO_ADDRESS")
+        await expect(StakingRewards.deploy(constants.AddressZero, "0x07865c6E87B9F70255377e024ace6630C1Eaa37F", BigNumber.from(expiry), maxReward)).to.be.revertedWith("ClayStakingRewards: ZERO_ADDRESS")
+        await expect(StakingRewards.deploy('0x07865c6E87B9F70255377e024ace6630C1Eaa37F', constants.AddressZero, BigNumber.from(expiry), maxReward)).to.be.revertedWith("ClayStakingRewards: ZERO_ADDRESS")
+    })
 
     it('Gives minting access to staking contract', async function () {
         const roleHash = ethers.utils.keccak256(ethers.utils.toUtf8Bytes("MINTER_ROLE"))
