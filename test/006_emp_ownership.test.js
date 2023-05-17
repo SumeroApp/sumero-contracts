@@ -20,7 +20,7 @@ describe("ExpiringMultiParty Contract", function () {
             // hre.network
         );
 
-        console.log("Account 1 balance:", (await accounts[2].getBalance()).toString());
+        console.log("Account 1 balance:", (await accounts[1].getBalance()).toString());
         console.log("Running all deployments");
         await hre.deployments.fixture('ExpiringMultiPartyCreator');
 
@@ -88,4 +88,3 @@ describe("ExpiringMultiParty Contract", function () {
     })
 
 });
-100000
