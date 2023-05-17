@@ -716,9 +716,7 @@ function checkPrecisionWithinLimit(val1, val2, allowedPrecisionPercentNumber = M
     const value2 = val1.gt(val2) ? val2: val1;
    
     const difference = sub(value1, value2);
-    console.log(difference.toString())
     const precisionBalancedErrorPercent = difference.mul(multiplier).div(value1).mul(100);       // multiplied by 1e18 to maintain precision
-    console.log(precisionBalancedErrorPercent.toString())
 
     console.log( `Precision off by ${addDecimalPlaces(precisionBalancedErrorPercent.toString(), 18)} %` )
 
