@@ -52,6 +52,12 @@ describe("Clay Bonds Contract", function () {
         expect(await clayBonds.symbol()).to.be.eq("zCLAY")
 
     });
+
+    it("should fail to deploy a Clay Bond Contract with zero address for ClayToken", async () => {
+        const ClayBonds = await hre.ethers.getContractFactory('ClayBonds')
+        await expect(ClayBonds.deploy(ethers.constants.AddressZero, ethers.utils.parseUnits('100.0', 'ether'))).to.be.revertedWith("ClayBonds: ZERO_ADDRESS");
+    })
+
     it('Gives minting & burning access to Clay Bonds contract', async function () {
         console.log("\nGiving access to Clay Bonds contract for minting & burning Clay  : .....")
         const minterRoleHash = ethers.utils.keccak256(ethers.utils.toUtf8Bytes("MINTER_ROLE"))
@@ -97,10 +103,14 @@ describe("Clay Bonds Contract", function () {
         let multiplier = ethers.BigNumber.from("1000000000000000000")
         let dailyYield = multiplier.mul(apy_percent).div(365)
 
-        // 21 days in seconds: 1814400
-        expect(maturationDate.sub(depositStartDate)).to.be.eq(1814400)
-        // 7 days in seconds: 604800 
-        expect(depositCloseDate.sub(depositStartDate)).to.be.eq(604800)
+        // 1 day in seconds => 86400
+        // 1 year in seconds => 86400 * 365 => 31536000
+        // 2 year in seconds: 31536000 * 2 => 63072000
+        // adding 1 day extra for leap year 2024 => 63072001
+        expect(maturationDate.sub(depositStartDate)).to.be.eq(63072001)
+
+        // 180 days in seconds => 86400 * 180 => 15552000
+        expect(depositCloseDate.sub(depositStartDate)).to.be.eq(15552000)
         expect(dailyYield).to.be.eq(dailyYieldPercent)
     });
     it("Issues zCLAY bonds ", async () => {

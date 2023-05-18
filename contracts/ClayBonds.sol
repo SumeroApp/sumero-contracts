@@ -8,25 +8,21 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 /**
     You can deposit CLAY (ERC20 token native to Sumero) to get zCLAY Bonds (a new ERC20 representing the bond).
 
-    These zCLAY Bonds can be minted upto a year from depositStartDate.
-    The bonds will mature after a period of 3 years from the depositStartDate.
+    These zCLAY Bonds can be minted upto 180 days from depositStartDate.
+    The bonds will mature after a period of 2 years (i.e. 731 days, taking into account extra leap day for 2024) from the depositStartDate.
 
-    There is a "Fixed APY" (Annual Percentage Yield) of 40% on the zCLAY Bonds and a "Bonus APY" of additional 20% that is constantly decreasing as the deposit close date is nearing (i.e. from a maximum of 20% to 0%).
-    In total giving a maximum of 60% APY if a user creates bonds at Day 1 of bond start date.
-
-    - FIXED_APY = 40%
-    - BONUS_APY = 20% (decreases as deposit close date nears)
+    There is a "APY" (Annual Percentage Yield) of 50% on the zCLAY Bonds that is constantly decreasing as the deposit 
+    close date is nearing (i.e. from a maximum of 50% to 0%).
 
     Example:
 
     - User deposits 1 Clay and issues a zCLAY Bond on Day 1 of bond start date
-    - [(deposit close timestamp - block timestamp) / (1 year in seconds) * Bonus_APY]
-    - Total APY = APY + Bonus APY = 60%
-    - User get 2.8 zCLAY Bond (Total APY (60%) for next 3 years i.e 180% total interest)
-    - 1 + (180% of 1) => 1 + 1.8 => 2.8
+    - [(deposit close timestamp - block timestamp) / (1 year in seconds) * APY]
+    - User gets 2 zCLAY Bond (APY (50%) for next 2 years i.e 100% total interest)
+    - 1 + (100% of 1) => 1 + 1 => 2
     
     The user can claim the zCLAY Bonds for equivalent value of CLAY after the maturation date.
-    The user has to lock his CLAY in to zCLAY bonds for atleast 3 years. They are open to trade these bonds on a secondary market (i.e. via LP pools on Sumero)
+    The user has to lock his CLAY in to zCLAY bonds for atleast 2 years. They are open to trade these bonds on a secondary market (i.e. via LP pools on Sumero)
  */
 contract ClayBonds is ERC20("zClay Token", "zCLAY"), Ownable {
     IClayToken public clay;
@@ -42,30 +38,24 @@ contract ClayBonds is ERC20("zClay Token", "zCLAY"), Ownable {
 
     uint256 public immutable dailyYieldPercent;
 
-    // TODO: test an APY of 36%
-    uint256 public constant APY_PERCENT = 36;
+    uint256 public constant APY_PERCENT = 50;
 
-    // UNCOMMENT BELOW BEFORE PROD
-    // uint256 public constant BONDS_ISSUANCE_PERIOD = 1 days * 365;
-    // uint256 public constant MATURATION_PERIOD = (1 days * 365) * 3;
-
-    // TODO: test claybonds for short duration
-    uint256 public constant BONDS_ISSUANCE_PERIOD = 1 days * 7;
-    uint256 public constant MATURATION_PERIOD = 1 days * 21;
+    uint256 public constant BONDS_ISSUANCE_PERIOD = 180 days;
+    // Adding an extra day to account for extra day in leap year 2024
+    uint256 public constant MATURATION_PERIOD = ((1 days * 365) * 2) + 1;
 
     // minimum staking amount must be 100 wei
     uint256 public constant MIN_ISSUANCE_AMOUNT = 100;
 
     constructor(IClayToken _clay, uint256 _maximumBondRewards) {
+        require(address(_clay) != address(0), "ClayBonds: ZERO_ADDRESS");
         clay = _clay;
         maximumBondRewards = _maximumBondRewards;
         depositStartDate = block.timestamp;
 
-        // TODO: take into consideration leap year?
-
-        // deposit close date is 1 year in future
+        // deposit close date is 180 days in future
         depositCloseDate = block.timestamp + BONDS_ISSUANCE_PERIOD;
-        // maturation date of bond is 3 years in future
+        // maturation date of bond is 2 years in future
         maturationDate = block.timestamp + MATURATION_PERIOD;
 
         // calculate daily yield
