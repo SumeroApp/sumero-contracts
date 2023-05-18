@@ -3,6 +3,7 @@ const { node_url, accounts, addForkConfiguration } = require('./utils/network');
 require("@nomiclabs/hardhat-waffle");
 require("@nomiclabs/hardhat-ethers");
 require("@nomiclabs/hardhat-etherscan");
+require("hardhat-safe-deployer");
 require("hardhat-deploy");
 require("./tasks/gnosis-poc");
 require("./tasks/clay-balance");
@@ -81,7 +82,8 @@ module.exports = {
     'dashboard': {
       url: "http://localhost:24012/rpc",
       timeout: 400000,
-      live: true
+      live: true,
+      chainId: 5,
     }
   },
   solidity: {
