@@ -53,6 +53,13 @@ describe("Clay Distributor", function () {
         DistributorAddress = clayDistributor.address;
     });
 
+    it("should fail to deploy a clay distributer contract with zero address for airdrop token", async () => {
+        
+        const ClayDistributor = await hre.ethers.getContractFactory('ClayDistributor')
+
+        await expect(ClayDistributor.deploy(ethers.constants.AddressZero, root, dropAmountInWei)).to.be.revertedWith("ClayDistributor: ZERO_ADDRESS");
+    })
+
     it('Mints 300 CLAY to Distributor', async function () {
         const amount = ethers.utils.parseUnits('300.0', 'ether')
         expect(await clayToken.balanceOf(DistributorAddress)).to.equal(0)
