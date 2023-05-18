@@ -42,6 +42,11 @@ contract ClayStakingRewards is Ownable, ReentrancyGuard, Pausable {
         uint256 _periodFinish,
         uint256 _maxReward
     ) {
+        require(
+            _stakedToken != address(0) &&
+            _clayToken != address(0),
+            "ClayStakingRewards: ZERO_ADDRESS"
+        );
         stakingToken = IERC20(_stakedToken);
         clayToken = IClayToken(_clayToken);
         periodFinish = _periodFinish;
