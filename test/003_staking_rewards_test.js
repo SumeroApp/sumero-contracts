@@ -88,15 +88,15 @@ describe("Staking Rewards Contract", function () {
 
     });
 
-    it("should fail to deploy a staking rewrad contract with zero address for lptoken/clayToken",async ()=>{
+    it("should fail to deploy a staking rewrad contract with zero address for lptoken/clayToken", async () => {
         const blockNumber = await ethers.provider.getBlockNumber();
-        const expiry = getEpochFromDate(new Date((await ethers.provider.getBlock(blockNumber)).timestamp * 1000 + DAY * 1000 * 30 * 2))
+        const expiry = getEpochFromDate(new Date((await ethers.provider.getBlock(blockNumber)).timestamp * 1000 + DAY * 1000 * 30 * 2));
         const maxReward = BigNumber.from(10).pow(20);
-        const StakingRewards = await hre.ethers.getContractFactory('ClayStakingRewards')
+        const StakingRewards = await hre.ethers.getContractFactory('ClayStakingRewards');
 
-        await expect(StakingRewards.deploy(constants.AddressZero, constants.AddressZero, BigNumber.from(expiry), maxReward)).to.be.revertedWith("ClayStakingRewards: ZERO_ADDRESS")
-        await expect(StakingRewards.deploy(constants.AddressZero, "0x07865c6E87B9F70255377e024ace6630C1Eaa37F", BigNumber.from(expiry), maxReward)).to.be.revertedWith("ClayStakingRewards: ZERO_ADDRESS")
-        await expect(StakingRewards.deploy('0x07865c6E87B9F70255377e024ace6630C1Eaa37F', constants.AddressZero, BigNumber.from(expiry), maxReward)).to.be.revertedWith("ClayStakingRewards: ZERO_ADDRESS")
+        await expect(StakingRewards.deploy(constants.AddressZero, constants.AddressZero, BigNumber.from(expiry), maxReward)).to.be.revertedWith("ClayStakingRewards: ZERO_ADDRESS");
+        await expect(StakingRewards.deploy(constants.AddressZero, "0x07865c6E87B9F70255377e024ace6630C1Eaa37F", BigNumber.from(expiry), maxReward)).to.be.revertedWith("ClayStakingRewards: ZERO_ADDRESS");
+        await expect(StakingRewards.deploy('0x07865c6E87B9F70255377e024ace6630C1Eaa37F', constants.AddressZero, BigNumber.from(expiry), maxReward)).to.be.revertedWith("ClayStakingRewards: ZERO_ADDRESS");
     })
 
     it('Gives minting access to staking contract', async function () {
@@ -154,7 +154,7 @@ describe("Staking Rewards Contract", function () {
         rewardRateAfterUpdateMaxReward = await stakingRewards.rewardRate();
     });
 
-    it("Rewards to be generated over contract lifetime should be less than max rewards",async ()=>{
+    it("Rewards to be generated over contract lifetime should be less than max rewards", async () => {
         // t=1 deployment time
         // t=9 updateMaxReward
         // The rewards calculation should start from time of 1st stake/when updateReward is called.
@@ -717,13 +717,13 @@ const logEventsFromTx = async (tx) => {
 */
 function checkPrecisionWithinLimit(val1, val2, allowedPrecisionPercentNumber = MAX_PRECISION_ERR_PCT) {
 
-    const value1 = val1.gt(val2) ? val1: val2;
-    const value2 = val1.gt(val2) ? val2: val1;
-   
+    const value1 = val1.gt(val2) ? val1 : val2;
+    const value2 = val1.gt(val2) ? val2 : val1;
+
     const difference = sub(value1, value2);
     const precisionBalancedErrorPercent = difference.mul(multiplier).div(value1).mul(100);       // multiplied by 1e18 to maintain precision
 
-    console.log( `Precision off by ${addDecimalPlaces(precisionBalancedErrorPercent.toString(), 18)} %` )
+    console.log(`Precision off by ${addDecimalPlaces(precisionBalancedErrorPercent.toString(), 18)} %`)
 
     const precisionBalancedAllowedPercent = multiplyDecimalNumberBy1e18(allowedPrecisionPercentNumber)
 
@@ -735,7 +735,7 @@ function checkPrecisionWithinLimit(val1, val2, allowedPrecisionPercentNumber = M
 * some might argue to multiply the value with 1e18 but BigNumber.from(0.01 * 1e18) will also result in 'overflow' error
 * @param {Number} val
 */
-function multiplyDecimalNumberBy1e18 (val) {
+function multiplyDecimalNumberBy1e18(val) {
     return BigNumber.from(val * 1e10).mul(BigNumber.from(1e8))
 }
 
