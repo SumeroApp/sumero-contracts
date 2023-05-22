@@ -38,7 +38,7 @@ task("emp-create", "Deploys the EMP (Expiring Multi Party) Contract using UMA's 
         async (args, hre) => {
 
             const { deployments, getNamedAccounts } = hre;
-            const { deployer } = await getNamedAccounts();
+            const { deployer, ...rest } = await getNamedAccounts();
 
             const { getTxUrl } = require('../utils/helper');
             const colors = require('colors');
@@ -46,7 +46,7 @@ task("emp-create", "Deploys the EMP (Expiring Multi Party) Contract using UMA's 
 
             const { ExpiringMultiPartyCreatorEthers__factory } = require('@uma/contracts-node');
 
-            console.log(colors.bold("\n==> Running create-emp task..."));
+            console.log(colors.bold("\n==> Running create-emp task..."), { deployer, rest });
 
             let emp_creator_instance = await hre.ethers.getContract("ExpiringMultiPartyCreator", deployer);
             if (args.gnosisSafe) {
