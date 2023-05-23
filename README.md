@@ -51,7 +51,7 @@ Currently optimizer is set to 20 runs, which makes the deployment go through (it
 
 Make sure the environment variables DEPLOYER_SAFE have the address of gnosis safe and SAFE_SERVICE_URL has the corresponding [service url](https://docs.safe.global/learn/safe-core/safe-core-api/available-services)
 
-With the deploment script command append "--config hardhat.safe.config.js", this will config gnosis safe and let's you deploy using Safe.
+With the deployment script command append "--config hardhat.safe.config.js", this will config gnosis safe and let's you deploy using Safe.
 
 ## Hardhat
 

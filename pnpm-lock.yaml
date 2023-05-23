@@ -80,7 +80,7 @@ devDependencies:
     version: 1.0.9(hardhat@2.12.2)
   hardhat-safe-deployer:
     specifier: github:SumeroApp/hardhat-safe-deployer#develop
-    version: github.com/SumeroApp/hardhat-safe-deployer/0d7c01fc595315e848e2d4307eb34bed320167da(hardhat-deploy-ethers@0.3.0-beta.13)(hardhat@2.12.2)
+    version: github.com/SumeroApp/hardhat-safe-deployer/c1c36e87f839b17cc6e4645d80c5e38cf31ad251(hardhat-deploy-ethers@0.3.0-beta.13)(hardhat@2.12.2)
   prettier:
     specifier: ^2.6.2
     version: 2.6.2
@@ -2615,7 +2615,7 @@ packages:
     hasBin: true
     dependencies:
       caniuse-lite: 1.0.30001489
-      electron-to-chromium: 1.4.403
+      electron-to-chromium: 1.4.404
     dev: true
 
   /bs58@4.0.1:
@@ -3490,8 +3490,8 @@ packages:
     dev: true
     optional: true
 
-  /electron-to-chromium@1.4.403:
-    resolution: {integrity: sha512-evCMqXJWmbQHdlh307peXNguqVIMmcLGrQwXiR+Qc98js8jPDeT9rse1+EF2YRjWgueuzj1r4WWLAe4/U+xjMg==}
+  /electron-to-chromium@1.4.404:
+    resolution: {integrity: sha512-te57sWvQdpxmyd1GiswaodKdXdPgn9cN4ht8JlNa04QgtrfnUdWEo1261rY2vaC6TKaiHn0E7QerJWPKFCvMVw==}
     dev: true
 
   /elliptic@6.5.4:
@@ -4778,6 +4778,7 @@ packages:
       minimatch: 3.1.2
       once: 1.4.0
       path-is-absolute: 1.0.1
+    dev: true
 
   /global@4.4.0:
     resolution: {integrity: sha512-wv/LAoHdRE3BeTGz53FAamhGlPLhlssK45usmGFThIi4XqnBmjKQ16u+RNbP7WvigRZDxUsM0J3gcQ5yicaL0w==}
@@ -7490,7 +7491,7 @@ packages:
     resolution: {integrity: sha512-uWjbaKIK3T1OSVptzX7Nl6PvQ3qAGtKEtVRjRuazjfL3Bx5eI409VZSqgND+4UNnmzLVdPj9FqFJNPqBZFve4w==}
     hasBin: true
     dependencies:
-      glob: 7.2.3
+      glob: 7.2.0
 
   /ripemd160@2.0.2:
     resolution: {integrity: sha512-ii4iagi25WusVoiC4B4lq7pbXfAp3D9v5CwfkY33vffw2+pkDjY1D8GaN7spsxvCSx8dkPqOZCEZyfxcmJG2IA==}
@@ -9501,9 +9502,9 @@ packages:
       ethers: 5.5.4
     dev: true
 
-  github.com/SumeroApp/hardhat-safe-deployer/0d7c01fc595315e848e2d4307eb34bed320167da(hardhat-deploy-ethers@0.3.0-beta.13)(hardhat@2.12.2):
-    resolution: {tarball: https://codeload.github.com/SumeroApp/hardhat-safe-deployer/tar.gz/0d7c01fc595315e848e2d4307eb34bed320167da}
-    id: github.com/SumeroApp/hardhat-safe-deployer/0d7c01fc595315e848e2d4307eb34bed320167da
+  github.com/SumeroApp/hardhat-safe-deployer/c1c36e87f839b17cc6e4645d80c5e38cf31ad251(hardhat-deploy-ethers@0.3.0-beta.13)(hardhat@2.12.2):
+    resolution: {tarball: https://codeload.github.com/SumeroApp/hardhat-safe-deployer/tar.gz/c1c36e87f839b17cc6e4645d80c5e38cf31ad251}
+    id: github.com/SumeroApp/hardhat-safe-deployer/c1c36e87f839b17cc6e4645d80c5e38cf31ad251
     name: hardhat-safe-deployer
     version: 1.0.0
     prepare: true
