@@ -47,6 +47,12 @@ Currently optimizer is set to 20 runs, which makes the deployment go through (it
 
     This means it is a trade-off parameter between code size (deploy cost) and code execution cost (cost after deployment). A “runs” parameter of “1” will produce short but expensive code. In contrast, a larger “runs” parameter will produce longer but more gas efficient code.
 
+## Deploying Sumero Contracts with Gnosis Safe
+
+Make sure the environment variables DEPLOYER_SAFE have the address of gnosis safe and SAFE_SERVICE_URL has the corresponding [service url](https://docs.safe.global/learn/safe-core/safe-core-api/available-services)
+
+With the deploment script command append "--config hardhat.safe.config.js", this will config gnosis safe and let's you deploy using Safe.
+
 ## Hardhat
 
 1. hardhat.config.js is the main configuration file
