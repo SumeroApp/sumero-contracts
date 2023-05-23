@@ -38,7 +38,7 @@ task("emp-create", "Deploys the EMP (Expiring Multi Party) Contract using UMA's 
         async (args, hre) => {
 
             const { deployments, getNamedAccounts } = hre;
-            const { deployer, ...rest } = await getNamedAccounts();
+            const { deployer } = await getNamedAccounts();
 
             const { getTxUrl } = require('../utils/helper');
             const colors = require('colors');
@@ -46,7 +46,7 @@ task("emp-create", "Deploys the EMP (Expiring Multi Party) Contract using UMA's 
 
             const { ExpiringMultiPartyCreatorEthers__factory } = require('@uma/contracts-node');
 
-            console.log(colors.bold("\n==> Running create-emp task..."), { deployer, rest });
+            console.log(colors.bold("\n==> Running create-emp task..."));
 
             let emp_creator_instance = await hre.ethers.getContract("ExpiringMultiPartyCreator", deployer);
             if (args.gnosisSafe) {
@@ -70,7 +70,7 @@ task("emp-create", "Deploys the EMP (Expiring Multi Party) Contract using UMA's 
             const priceFeedIdentifierHex = ethers.utils.hexlify(ethers.utils.toUtf8Bytes(args.priceFeed));
             const priceFeedIdentifierPaddedHex = priceFeedIdentifierHex.padEnd(66, '0');
 
-            console.log("\n life time in days: ", Math.round((Number(args.expirationTimestamp) - (Date.now()/1000))/(60 * 60 * 24)), " => expires in: ", Math.round(Number(args.expirationTimestamp) - (Date.now()/1000)), " seconds");
+            console.log("\n life time in days: ", Math.round((Number(args.expirationTimestamp) - (Date.now() / 1000)) / (60 * 60 * 24)), " => expires in: ", Math.round(Number(args.expirationTimestamp) - (Date.now() / 1000)), " seconds");
             console.log(" expirationTimestamp: ", args.expirationTimestamp);
 
             // Contract tracks percentages and ratios below in FixedPoint vars, with 18 decimals of precision, so parseEther will work
