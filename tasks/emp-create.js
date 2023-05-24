@@ -70,7 +70,7 @@ task("emp-create", "Deploys the EMP (Expiring Multi Party) Contract using UMA's 
             const priceFeedIdentifierHex = ethers.utils.hexlify(ethers.utils.toUtf8Bytes(args.priceFeed));
             const priceFeedIdentifierPaddedHex = priceFeedIdentifierHex.padEnd(66, '0');
 
-            console.log("\n life time in days: ", Math.round((Number(args.expirationTimestamp) - (Date.now()/1000))/(60 * 60 * 24)), " => expires in: ", Math.round(Number(args.expirationTimestamp) - (Date.now()/1000)), " seconds");
+            console.log("\n life time in days: ", Math.round((Number(args.expirationTimestamp) - (Date.now() / 1000)) / (60 * 60 * 24)), " => expires in: ", Math.round(Number(args.expirationTimestamp) - (Date.now() / 1000)), " seconds");
             console.log(" expirationTimestamp: ", args.expirationTimestamp);
 
             // Contract tracks percentages and ratios below in FixedPoint vars, with 18 decimals of precision, so parseEther will work

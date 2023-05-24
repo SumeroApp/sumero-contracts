@@ -1,3 +1,4 @@
 const { getHardhatConfig } = require("./base.config");
 
-module.exports = getHardhatConfig({ setupSafe: false });
+
+module.exports = getHardhatConfig({ setupSafe: true });

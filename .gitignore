@@ -6,6 +6,7 @@ cache/
 artifacts/
 deployments/localhost/
 .vscode
-.*
+*.log
+.chainId
 gas-report.txt
 utils/Airdrop.xlsx
