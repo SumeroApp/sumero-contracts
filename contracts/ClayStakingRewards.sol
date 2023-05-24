@@ -193,7 +193,7 @@ contract ClayStakingRewards is Ownable, ReentrancyGuard, Pausable {
             tokenAddress != address(stakingToken),
             "Cannot withdraw the staking token"
         );
-        IERC20(tokenAddress).transfer(owner(), tokenAmount);
+        require(IERC20(tokenAddress).transfer(owner(), tokenAmount));
         emit Recovered(tokenAddress, tokenAmount);
     }
 
