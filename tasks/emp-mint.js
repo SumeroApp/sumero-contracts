@@ -127,6 +127,7 @@ task("emp-mint", "Mint the EMP")
             } catch (error) {
                 console.log(colors.red("\n Minting EMP failed: ....."));
                 console.log(error)
+                throw error
             }
         }
     );

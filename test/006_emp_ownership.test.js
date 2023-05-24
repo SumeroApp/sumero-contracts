@@ -79,11 +79,11 @@ describe("ExpiringMultiParty Contract", function () {
 
     it("should not be able to mint a position on emp after shutdown", async () => {
 
-        expect(await hre.run('emp-mint', {
+        await expect(hre.run('emp-mint', {
             empAddress: expiringMultiPartyAddress,
             collateralAmount: '800',
             additionalCollateralRatio: '0.25',
-        })).to.throw
+        })).to.be.revertedWith("Only callable pre-expiry")
 
     })
 
