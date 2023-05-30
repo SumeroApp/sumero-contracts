@@ -24,6 +24,7 @@ function getHardhatConfig(configOverrides = {}) {
   require("./tasks/emp-mint");
   require("./tasks/emp-expire");
   require("./tasks/emp-settle");
+  require("./tasks/emp-verify");
   require("./tasks/emp-create-liquidation");
   require("./tasks/emp-request-withdrawal");
   require("./tasks/add-impl-to-finder");
