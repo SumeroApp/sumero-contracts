@@ -54,7 +54,7 @@ task("emp-verify", "Verifies EMP on etherscan")
 
             try {
                 await run('verify', {
-                    address: args.empAddress,
+                    address: synthAddress,
                     constructorArguments: [await synth.name(), await synth.symbol(), await synth.decimals()],
                 });
                 console.log(colors.green("\n Synth successfully verified on etherscan..."));
