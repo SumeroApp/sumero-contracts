@@ -75,6 +75,9 @@ contract PricelessPositionManager is Lockable {
     // Finder contract used to look up addresses for UMA system contracts.
     FinderInterface public finder;
 
+    // Optimistic Oracle V1 for making price requests 
+    OptimisticOracleInterface public optimisticOracle;
+
     // Unique identifier for DVM price feed ticker.
     bytes32 public priceIdentifier;
     // Ancillary data to pass to the Optimistic Oracle system when requesting and fetching prices
@@ -229,6 +232,7 @@ contract PricelessPositionManager is Lockable {
         address _owner
     ) nonReentrant() {
         finder = FinderInterface(_finderAddress);
+        optimisticOracle = _getOptimisticOracle();
 
         require(_expirationTimestamp > block.timestamp);
         require(
@@ -930,7 +934,6 @@ contract PricelessPositionManager is Lockable {
 
     // Requests a price for transformed `priceIdentifier` at `requestedTime` from the Oracle, charging the caller for the OO proposer reward.
     function _requestOraclePrice_senderPays(uint256 requestedTime) internal {
-        OptimisticOracleInterface optimisticOracle = _getOptimisticOracle();
 
         // Pull final fee from sender
         collateralCurrency.safeTransferFrom(
@@ -953,13 +956,51 @@ contract PricelessPositionManager is Lockable {
         );
     }
 
+    // functions to edit parameters for a Optimistic Oracle Request 
+    function setCustomBond(uint256 bond)
+        external 
+        onlyPostExpiration 
+        onlyOwner 
+        returns (uint256 totalBond) 
+    {
+        return optimisticOracle.setBond(
+            priceIdentifier,
+            expirationTimestamp,
+            ancillaryData,
+            bond
+        );
+    }
+
+    function setCustomLiveness(uint256 customLiveness)
+        external 
+        onlyPostExpiration 
+        onlyOwner 
+    {
+        optimisticOracle.setCustomLiveness(
+            priceIdentifier,
+            expirationTimestamp,
+            ancillaryData,
+            customLiveness
+        );
+    }
+
+    function setRefundOnDispute()
+        external
+        onlyPostExpiration
+        onlyOwner
+    {
+        optimisticOracle.setRefundOnDispute(
+            priceIdentifier,
+            expirationTimestamp,
+            ancillaryData
+        );
+    }
+
     // Fetches a resolved Oracle price from the Oracle. Reverts if the Oracle hasn't resolved for this request.
     function _getOraclePrice(uint256 requestedTime)
         internal
         returns (FixedPoint.Unsigned memory)
     {
-        // Create an instance of the oracle and get the price. If the price is not resolved revert.
-        OptimisticOracleInterface optimisticOracle = _getOptimisticOracle();
         require(
             optimisticOracle.hasPrice(
                 address(this),
