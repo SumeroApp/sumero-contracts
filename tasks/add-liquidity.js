@@ -65,7 +65,6 @@ task("add-liquidity", "Adds liquidity to the pool.")
                     0, //amount2min
                     deployer,
                     timestamp,
-                    { gasLimit: 6700000 }
                 );
                 await tx.wait();
 
