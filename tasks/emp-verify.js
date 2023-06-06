@@ -33,16 +33,17 @@ task("emp-verify", "Verifies EMP on etherscan")
                 liquidationLiveness: await emp.liquidationLiveness(),
                 financialProductLibraryAddress: '0x0000000000000000000000000000000000000000',
                 tokenAddress: synthAddress,
-                finderAddress: '0xE60dBa66B85E10E7Fd18a67a6859E241A243950e',
+                finderAddress: '0x40f941E48A552bF496B154Af6bf55725f18D77c3',
                 owner: args.deployer
             }]
 
             console.log(colors.blue("\n 2-Verifiying EMP: ....."));
 
             try {
-                await run('verify', {
+                await run('verify:verify', {
                     address: args.empAddress,
                     constructorArguments: convertedParams,
+                    contract: "contracts/UMA/financial-templates/expiring-multiparty/ExpiringMultiParty.sol:ExpiringMultiParty"
                 });
                 console.log(colors.green("\n EMP successfully verified on etherscan..."));
 
@@ -53,9 +54,10 @@ task("emp-verify", "Verifies EMP on etherscan")
             console.log(colors.blue("\n 3-Verifiying Synth: ....."));
 
             try {
-                await run('verify', {
+                await run('verify:verify', {
                     address: synthAddress,
                     constructorArguments: [await synth.name(), await synth.symbol(), await synth.decimals()],
+                    contract: "contracts/UMA/financial-templates/common/SyntheticToken.sol:SyntheticToken"
                 });
                 console.log(colors.green("\n Synth successfully verified on etherscan..."));
 
