@@ -8,8 +8,8 @@ const func = async function (hre) {
     // Deploy our own Finder
     // const Finder = await deployments.get("Finder");
 
-    // Using Finder deployed by UMA on goerli
-    const Finder = { address: "0xE60dBa66B85E10E7Fd18a67a6859E241A243950e" };
+    // Using Finder deployed by UMA on mainnet
+    const Finder = { address: "0x40f941E48A552bF496B154Af6bf55725f18D77c3" };
 
     const TokenFactory = await deployments.get("TokenFactory");
 
@@ -21,7 +21,7 @@ const func = async function (hre) {
         args: [Finder.address, TokenFactory.address],
         libraries: { ExpiringMultiPartyLib: EMPLib.address },
         log: true,
-        skipIfAlreadyDeployed: false,
+        skipIfAlreadyDeployed: true,
     });
 };
 module.exports = func;
