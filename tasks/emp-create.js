@@ -112,7 +112,7 @@ task("emp-create", "Deploys the EMP (Expiring Multi Party) Contract using UMA's 
 
             console.log(colors.blue("\n Creating EMP via EMPC: ....."));
             try {
-                const createEmpTx = await emp_creator_instance.createExpiringMultiParty(createEmpParams, { gasLimit: 6700000 });
+                const createEmpTx = await emp_creator_instance.createExpiringMultiParty(createEmpParams);
                 const receipt = await createEmpTx.wait();
                 console.log("\nTransaction Receipt: \n", createEmpTx);
 

@@ -9,7 +9,10 @@ const func = async function (hre) {
     // const Finder = await deployments.get("Finder");
 
     // Using Finder deployed by UMA on mainnet
-    const Finder = { address: "0x40f941E48A552bF496B154Af6bf55725f18D77c3" };
+    // const Finder = { address: "0x40f941E48A552bF496B154Af6bf55725f18D77c3" };
+    
+    // For 006_emp_ownership test to work properly, we must use goerli address
+    const Finder = { address: "0xE60dBa66B85E10E7Fd18a67a6859E241A243950e" };
 
     const TokenFactory = await deployments.get("TokenFactory");
 
