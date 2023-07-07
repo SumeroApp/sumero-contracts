@@ -36,6 +36,7 @@ function getHardhatConfig(configOverrides = {}) {
   require("./tasks/transfer-clayToken-ownership");
   require("./tasks/transfer-contract-ownership");
   require("./tasks/transfer-all-ownerships");
+  require("./tasks/get-tUSDC");
   require("hardhat-gas-reporter");
 
   const solcVersion = "0.8.0";
@@ -62,7 +63,7 @@ function getHardhatConfig(configOverrides = {}) {
       // },
       hardhat: {
         forking: {
-          url: 'https://eth-goerli.public.blastapi.io'
+          url: 'https://eth.llamarpc.com'
         }
       },
       kovan: {
@@ -81,7 +82,7 @@ function getHardhatConfig(configOverrides = {}) {
         accounts: accounts('goerli'),
         chainId: 5,
       },
-      'dashboard': {
+      'mainnet': {
         url: "http://localhost:24012/rpc",
         timeout: 400000,
         live: true
