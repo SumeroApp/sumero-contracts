@@ -1,5 +1,5 @@
 const USDC_MAINNET_TRESSURY = '0x7713974908be4bed47172370115e8b1219f4a5f0';
-
+// Before runnig the script, check if hardhat local node is running. (Run using:  npx hardhat node)
 // npx hardhat get-tUSDC --token 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48 --to 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266 --amount 1000000 --network localhost
 task("get-tUSDC", "Approves ERC20 tokens to the given account")
     .addParam("token", "Token Address")
