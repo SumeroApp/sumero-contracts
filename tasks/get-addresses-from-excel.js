@@ -17,7 +17,7 @@ task("get-addresses-from-excel", "extracts addresses from excel file")
             const sheetName = workbook.SheetNames[0];
             console.log("Sheet Name:", sheetName);
             const worksheet = workbook.Sheets[sheetName];
-            const outputfilePath = './Airdrop_Array_Test_13thApril2023.json';
+            const outputfilePath = './Final_Clay_Airdrop_List.json';
 
             // EXTRACTING THE VALUES
             console.log(colors.blue("\nExtracting Addresses "));
@@ -25,7 +25,7 @@ task("get-addresses-from-excel", "extracts addresses from excel file")
             const addresses = [];
             const improperAddresses = [];
             let start = 1;
-            let end = 1503;
+            let end = 1512;
             for (let i = start; i < end; i++) {
                 const address = worksheet[`H${i}`];
                 if (address !== undefined && address !== null) {
@@ -41,9 +41,9 @@ task("get-addresses-from-excel", "extracts addresses from excel file")
             console.log(colors.green("\nExtracting Addresses Completed!"));
             console.log(colors.red("\nImproper Addresses: ", improperAddresses));
 
-            console.log(colors.green("\nExporting Addresses!"));
+            console.log(colors.green("\nExporting " + addresses.length + " Addresses!"));
 
-            fs.writeFile(outputfilePath, JSON.stringify(addresses), (err) => {
+            fs.writeFileSync(outputfilePath, JSON.stringify(addresses), (err) => {
                 if (err) throw err;
             });
             console.log(colors.green("\nExporting Completed!"));
