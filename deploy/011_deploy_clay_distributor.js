@@ -10,8 +10,8 @@ const func = async function (hre) {
 
     const Clay = await deployments.get("ClayToken");
     // run build-merkle task to generate Merkle Tree Root
-    const MerkleTreeRoot = "0xa28428b8c6cc47559f1fd90df3c5e1c0e7347c06edc9b12a87be9f7db2d5e54b";
-    const DropAmount = "1000";
+    const MerkleTreeRoot = "0x0b934cc75f95f19a19c4d48db5219d88711e1514a5fdd95a0158419dd14b459d";
+    const DropAmount = "5000";
     const DropAmountInWei = ethers.utils.parseUnits(DropAmount, 18);
 
     await deploy("ClayDistributor", {
